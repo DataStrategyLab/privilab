@@ -597,8 +597,6 @@ def test_docker_context_is_default_deny_and_minimal() -> None:
         "**/*.tmp",
         "**/*.temp",
         "**/.DS_Store",
-        "**/evals",
-        "**/evals/**",
         "**/output",
         "**/output/**",
         "**/outputs",
@@ -607,6 +605,8 @@ def test_docker_context_is_default_deny_and_minimal() -> None:
         "**/runtime/**",
     } <= set(rules)
     assert rules.index("**/.env*") > rules.index("!src/**")
+    assert "**/evals" not in rules
+    assert "**/evals/**" not in rules
 
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     local_copy_sources = {

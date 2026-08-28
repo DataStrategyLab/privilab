@@ -67,8 +67,6 @@
 **/.idea/**
 **/.vscode
 **/.vscode/**
-**/evals
-**/evals/**
 **/output
 **/output/**
 **/outputs

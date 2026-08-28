@@ -101,8 +101,6 @@ def test_sensitive_and_generated_state_is_excluded_from_docker_context() -> None
         "**/.idea/**",
         "**/.vscode",
         "**/.vscode/**",
-        "**/evals",
-        "**/evals/**",
         "**/output",
         "**/output/**",
         "**/outputs",
@@ -123,14 +121,20 @@ def test_sensitive_and_generated_state_is_excluded_from_docker_context() -> None
         "src/privilab/__pycache__/main.pyc",
         "src/privilab/.pytest_cache/state",
         "src/privilab/build/generated.whl",
-        "src/privilab/evals/run/output.json",
         "src/privilab/runtime/session.sqlite",
     }
-    for path in protected_examples:
+
+    def is_included(path: str) -> bool:
         matching_rules = [
             rule for rule in rules if fnmatchcase(path, rule.removeprefix("!"))
         ]
         assert matching_rules, f"no Docker context rule matched {path}"
-        assert not matching_rules[-1].startswith("!"), (
+        return matching_rules[-1].startswith("!")
+
+    for path in protected_examples:
+        assert not is_included(path), (
             f"sensitive/generated path would enter Docker context: {path}"
         )
+
+    assert is_included("src/privilab/evals/__init__.py")
+    assert not is_included("evals/golden/example.json")
