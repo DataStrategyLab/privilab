@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import re
 import stat
+import subprocess
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -296,6 +297,42 @@ def assert_reviewed_non_pypi_artifacts_match(
 def test_required_paths_are_present() -> None:
     missing = sorted(path for path in REQUIRED_PATHS if not (ROOT / path).exists())
     assert not missing, f"missing required repository paths: {missing}"
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        ".env",
+        ".env.production",
+        ".env-local",
+        ".envrc",
+        "demo.sqlite",
+        "demo.sqlite-wal",
+        "demo.sqlite-shm",
+        "demo.sqlite-journal",
+        "demo.sqlite3-wal",
+        "demo.db-wal",
+    ],
+)
+def test_sensitive_generated_local_files_are_ignored_by_git(
+    relative_path: str,
+) -> None:
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "--quiet", relative_path],
+        cwd=ROOT,
+        check=False,
+    )
+    assert result.returncode == 0, f"{relative_path} must be ignored by Git"
+
+
+def test_env_example_remains_intentionally_trackable() -> None:
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "--quiet", ".env.example"],
+        cwd=ROOT,
+        check=False,
+    )
+    assert result.returncode == 1
+    assert (ROOT / ".env.example").is_file()
 
 
 def test_bootstrap_scripts_are_executable() -> None:
