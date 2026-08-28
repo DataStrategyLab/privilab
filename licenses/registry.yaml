@@ -1,0 +1,645 @@
+# Third-party artifacts introduced by DSL-105.
+# Project-authored placeholders and generic services are intentionally excluded.
+
+- id: "pypi:annotated-doc"
+  kind: "dependency"
+  name: "annotated-doc"
+  source: "https://pypi.org/project/annotated-doc/0.0.5/"
+  version_or_commit: "0.0.5"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the annotated-doc 0.0.5 distribution published at the source above."
+  intended_use: "FastAPI signature documentation metadata (transitive runtime dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:annotated-types"
+  kind: "dependency"
+  name: "annotated-types"
+  source: "https://pypi.org/project/annotated-types/0.8.0/"
+  version_or_commit: "0.8.0"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the annotated-types 0.8.0 distribution published at the source above."
+  intended_use: "Pydantic type annotations (transitive runtime dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:anyio"
+  kind: "dependency"
+  name: "anyio"
+  source: "https://pypi.org/project/anyio/4.14.2/"
+  version_or_commit: "4.14.2"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the anyio 4.14.2 distribution published at the source above."
+  intended_use: "Starlette asynchronous runtime support (transitive runtime dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:click"
+  kind: "dependency"
+  name: "click"
+  source: "https://pypi.org/project/click/8.5.0/"
+  version_or_commit: "8.5.0"
+  reviewed_date: "2026-08-27"
+  license: "BSD-3-Clause"
+  license_source: "License file bundled in the click 8.5.0 distribution published at the source above."
+  intended_use: "Uvicorn command-line support (transitive runtime dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under BSD-3-Clause."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright, conditions, and disclaimer; do not use contributor names to endorse derived products."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:colorama"
+  kind: "dependency"
+  name: "colorama"
+  source: "https://pypi.org/project/colorama/0.4.6/"
+  version_or_commit: "0.4.6"
+  reviewed_date: "2026-08-27"
+  license: "BSD-3-Clause"
+  license_source: "License file bundled in the colorama 0.4.6 distribution published at the source above."
+  intended_use: "Locked Windows terminal support for Click (platform-conditional transitive dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under BSD-3-Clause."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright, conditions, and disclaimer; do not use contributor names to endorse derived products."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:fastapi"
+  kind: "dependency"
+  name: "fastapi"
+  source: "https://pypi.org/project/fastapi/0.141.1/"
+  version_or_commit: "0.141.1"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the fastapi 0.141.1 distribution published at the source above."
+  intended_use: "Approved minimal local HTTP application framework."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "pyproject.toml"
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:h11"
+  kind: "dependency"
+  name: "h11"
+  source: "https://pypi.org/project/h11/0.16.0/"
+  version_or_commit: "0.16.0"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the h11 0.16.0 distribution published at the source above."
+  intended_use: "Uvicorn HTTP/1.1 protocol implementation (transitive runtime dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:idna"
+  kind: "dependency"
+  name: "idna"
+  source: "https://pypi.org/project/idna/3.19/"
+  version_or_commit: "3.19"
+  reviewed_date: "2026-08-27"
+  license: "BSD-3-Clause"
+  license_source: "License file bundled in the idna 3.19 distribution published at the source above."
+  intended_use: "AnyIO internationalized-domain handling (transitive runtime dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under BSD-3-Clause."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright, conditions, and disclaimer; do not use contributor names to endorse derived products."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:iniconfig"
+  kind: "dependency"
+  name: "iniconfig"
+  source: "https://pypi.org/project/iniconfig/2.3.0/"
+  version_or_commit: "2.3.0"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the iniconfig 2.3.0 distribution published at the source above."
+  intended_use: "pytest configuration parsing (transitive development dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:jinja2"
+  kind: "dependency"
+  name: "Jinja2"
+  source: "https://pypi.org/project/Jinja2/3.1.6/"
+  version_or_commit: "3.1.6"
+  reviewed_date: "2026-08-27"
+  license: "BSD-3-Clause"
+  license_source: "License file bundled in the Jinja2 3.1.6 distribution published at the source above."
+  intended_use: "Approved server-rendered placeholder template engine."
+  permitted_use_basis: "Use and redistribution are permitted under BSD-3-Clause."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright, conditions, and disclaimer; do not use contributor names to endorse derived products."
+  repository_paths:
+    - "pyproject.toml"
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:librt"
+  kind: "dependency"
+  name: "librt"
+  source: "https://pypi.org/project/librt/0.15.0/"
+  version_or_commit: "0.15.0"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the librt 0.15.0 distribution published at the source above."
+  intended_use: "mypy runtime support (transitive development dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:markupsafe"
+  kind: "dependency"
+  name: "MarkupSafe"
+  source: "https://pypi.org/project/MarkupSafe/3.0.3/"
+  version_or_commit: "3.0.3"
+  reviewed_date: "2026-08-27"
+  license: "BSD-3-Clause"
+  license_source: "License file bundled in the MarkupSafe 3.0.3 distribution published at the source above."
+  intended_use: "Jinja output escaping (transitive runtime dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under BSD-3-Clause."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright, conditions, and disclaimer; do not use contributor names to endorse derived products."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:mypy"
+  kind: "dependency"
+  name: "mypy"
+  source: "https://pypi.org/project/mypy/1.20.2/"
+  version_or_commit: "1.20.2"
+  reviewed_date: "2026-08-27"
+  license: "MIT AND Apache-2.0"
+  license_source: "License file bundled in the mypy 1.20.2 distribution published at the source above."
+  intended_use: "Static type verification; distribution includes Apache-2.0-licensed typeshed content."
+  permitted_use_basis: "Use and redistribution are permitted under MIT AND Apache-2.0."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve all applicable license and notice text; comply with Apache-2.0 patent and NOTICE terms when that license applies."
+  repository_paths:
+    - "pyproject.toml"
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:mypy-extensions"
+  kind: "dependency"
+  name: "mypy-extensions"
+  source: "https://pypi.org/project/mypy-extensions/1.1.0/"
+  version_or_commit: "1.1.0"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the mypy-extensions 1.1.0 distribution published at the source above."
+  intended_use: "mypy typing extensions (transitive development dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:packaging"
+  kind: "dependency"
+  name: "packaging"
+  source: "https://pypi.org/project/packaging/26.3/"
+  version_or_commit: "26.3"
+  reviewed_date: "2026-08-27"
+  license: "Apache-2.0 OR BSD-2-Clause"
+  license_source: "License file bundled in the packaging 26.3 distribution published at the source above."
+  intended_use: "pytest version/specifier handling (transitive development dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under Apache-2.0 OR BSD-2-Clause."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve all applicable license and notice text; comply with Apache-2.0 patent and NOTICE terms when that license applies."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:pathspec"
+  kind: "dependency"
+  name: "pathspec"
+  source: "https://pypi.org/project/pathspec/1.1.1/"
+  version_or_commit: "1.1.1"
+  reviewed_date: "2026-08-27"
+  license: "MPL-2.0"
+  license_source: "License file bundled in the pathspec 1.1.1 distribution published at the source above."
+  intended_use: "mypy path matching (transitive development dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under MPL-2.0."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve notices and make source available for modified MPL-covered files as required by MPL-2.0."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:pluggy"
+  kind: "dependency"
+  name: "pluggy"
+  source: "https://pypi.org/project/pluggy/1.6.0/"
+  version_or_commit: "1.6.0"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the pluggy 1.6.0 distribution published at the source above."
+  intended_use: "pytest plugin mechanism (transitive development dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:pydantic"
+  kind: "dependency"
+  name: "pydantic"
+  source: "https://pypi.org/project/pydantic/2.13.4/"
+  version_or_commit: "2.13.4"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the pydantic 2.13.4 distribution published at the source above."
+  intended_use: "FastAPI request/application metadata support (transitive runtime dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:pydantic-core"
+  kind: "dependency"
+  name: "pydantic-core"
+  source: "https://pypi.org/project/pydantic-core/2.46.4/"
+  version_or_commit: "2.46.4"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the pydantic-core 2.46.4 distribution published at the source above."
+  intended_use: "Pydantic validation core (transitive runtime dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:pygments"
+  kind: "dependency"
+  name: "Pygments"
+  source: "https://pypi.org/project/Pygments/2.21.0/"
+  version_or_commit: "2.21.0"
+  reviewed_date: "2026-08-27"
+  license: "BSD-2-Clause"
+  license_source: "License file bundled in the Pygments 2.21.0 distribution published at the source above."
+  intended_use: "pytest terminal output highlighting (transitive development dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under BSD-2-Clause."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright, conditions, and disclaimer in source and binary redistributions."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:pytest"
+  kind: "dependency"
+  name: "pytest"
+  source: "https://pypi.org/project/pytest/8.4.2/"
+  version_or_commit: "8.4.2"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the pytest 8.4.2 distribution published at the source above."
+  intended_use: "Unit, integration, contract, and security verification."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "pyproject.toml"
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:pyyaml"
+  kind: "dependency"
+  name: "PyYAML"
+  source: "https://pypi.org/project/PyYAML/6.0.3/"
+  version_or_commit: "6.0.3"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the PyYAML 6.0.3 distribution published at the source above."
+  intended_use: "YAML schema and workflow contract validation."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "pyproject.toml"
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:ruff"
+  kind: "dependency"
+  name: "ruff"
+  source: "https://pypi.org/project/ruff/0.16.5/"
+  version_or_commit: "0.16.5"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the ruff 0.16.5 distribution published at the source above."
+  intended_use: "Formatting and lint verification."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "pyproject.toml"
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:starlette"
+  kind: "dependency"
+  name: "starlette"
+  source: "https://pypi.org/project/starlette/1.6.0/"
+  version_or_commit: "1.6.0"
+  reviewed_date: "2026-08-27"
+  license: "BSD-3-Clause"
+  license_source: "License file bundled in the starlette 1.6.0 distribution published at the source above."
+  intended_use: "FastAPI ASGI and templating foundation (transitive runtime dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under BSD-3-Clause."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright, conditions, and disclaimer; do not use contributor names to endorse derived products."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:typing-extensions"
+  kind: "dependency"
+  name: "typing-extensions"
+  source: "https://pypi.org/project/typing-extensions/4.16.0/"
+  version_or_commit: "4.16.0"
+  reviewed_date: "2026-08-27"
+  license: "PSF-2.0"
+  license_source: "License file bundled in the typing-extensions 4.16.0 distribution published at the source above."
+  intended_use: "Compatibility typing primitives (transitive dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under PSF-2.0."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve the PSF license and required notices; do not imply PSF endorsement."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:typing-inspection"
+  kind: "dependency"
+  name: "typing-inspection"
+  source: "https://pypi.org/project/typing-inspection/0.4.4/"
+  version_or_commit: "0.4.4"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "License file bundled in the typing-inspection 0.4.4 distribution published at the source above."
+  intended_use: "FastAPI/Pydantic annotation inspection (transitive runtime dependency)."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:uvicorn"
+  kind: "dependency"
+  name: "uvicorn"
+  source: "https://pypi.org/project/uvicorn/0.52.4/"
+  version_or_commit: "0.52.4"
+  reviewed_date: "2026-08-27"
+  license: "BSD-3-Clause"
+  license_source: "License file bundled in the uvicorn 0.52.4 distribution published at the source above."
+  intended_use: "Local-only placeholder ASGI preview server."
+  permitted_use_basis: "Use and redistribution are permitted under BSD-3-Clause."
+  attribution_required: true
+  attribution: "Preserve the upstream copyright and license notice with redistributed copies; this registry records the reviewed artifact and license source."
+  restrictions: "Preserve copyright, conditions, and disclaimer; do not use contributor names to endorse derived products."
+  repository_paths:
+    - "pyproject.toml"
+    - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "build:uv-build"
+  kind: "dependency"
+  name: "uv_build"
+  source: "https://github.com/astral-sh/uv/tree/0.12.6/crates/uv-build"
+  version_or_commit: "0.12.6"
+  reviewed_date: "2026-08-27"
+  license: "Apache-2.0 OR MIT"
+  license_source: "https://github.com/astral-sh/uv/tree/0.12.6#license"
+  intended_use: "Pinned Python build backend for the offline build check."
+  permitted_use_basis: "Use and redistribution are permitted under Apache-2.0 or MIT."
+  attribution_required: true
+  attribution: "Copyright Astral Software Inc.; preserve the selected upstream license and notice with redistributed copies."
+  restrictions: "Preserve all applicable license and notice text; comply with Apache-2.0 patent and NOTICE terms when that license is selected."
+  repository_paths:
+    - "pyproject.toml"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "tool:uv"
+  kind: "dependency"
+  name: "uv"
+  source: "https://github.com/astral-sh/uv/releases/tag/0.12.6"
+  version_or_commit: "0.12.6"
+  reviewed_date: "2026-08-27"
+  license: "Apache-2.0 OR MIT"
+  license_source: "https://github.com/astral-sh/uv/tree/0.12.6#license"
+  intended_use: "Checksum-verified bootstrap, Python management, lock verification, environment sync, and build checks."
+  permitted_use_basis: "Use and redistribution are permitted under Apache-2.0 or MIT."
+  attribution_required: true
+  attribution: "Copyright Astral Software Inc.; preserve the selected upstream license and notice with redistributed copies."
+  restrictions: "Preserve all applicable license and notice text; comply with Apache-2.0 patent and NOTICE terms when that license is selected."
+  repository_paths:
+    - "scripts/bootstrap.sh"
+    - "Makefile"
+    - "pyproject.toml"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "tool:gitleaks"
+  kind: "dependency"
+  name: "Gitleaks"
+  source: "https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1"
+  version_or_commit: "8.30.1"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "https://github.com/gitleaks/gitleaks/blob/v8.30.1/LICENSE"
+  intended_use: "Checksum-verified, local and CI secret scanning."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Copyright Gitleaks contributors; preserve the upstream copyright and MIT license notice with redistributed copies."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - "scripts/bootstrap.sh"
+    - "scripts/secret_scan.sh"
+    - "Makefile"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "runtime:python-build-standalone"
+  kind: "dependency"
+  name: "uv-managed CPython distribution"
+  source: "https://github.com/astral-sh/python-build-standalone"
+  version_or_commit: "CPython 3.13.15 selected by uv 0.12.6"
+  reviewed_date: "2026-08-27"
+  license: "PSF-2.0 and bundled component licenses"
+  license_source: "LICENSE.txt bundled in the installed uv-managed CPython 3.13.15 distribution."
+  intended_use: "Workspace-local Python interpreter for bootstrap, verification, and preview."
+  permitted_use_basis: "Use and redistribution are permitted under the PSF license and the licenses of bundled components."
+  attribution_required: true
+  attribution: "Preserve the bundled CPython and component license notices with redistributed runtime artifacts."
+  restrictions: "Review and preserve all bundled component notices when redistributing the managed Python distribution."
+  repository_paths:
+    - "scripts/bootstrap.sh"
+    - ".github/workflows/verify.yml"
+    - "pyproject.toml"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "container:python"
+  kind: "dependency"
+  name: "Python Official Image"
+  source: "https://hub.docker.com/_/python"
+  version_or_commit: "3.13.15-slim-bookworm@sha256:c45a22ea000adfd9cda29364bbe7edd23001ce5cc2ad15857cfbf7766943b9ca"
+  reviewed_date: "2026-08-27"
+  license: "Aggregate image; PSF-2.0 and Debian component licenses"
+  license_source: "https://github.com/docker-library/python/tree/master/3.13/bookworm"
+  intended_use: "Immutable base for the optional local-only container preview."
+  permitted_use_basis: "Use and redistribution depend on the PSF license and each included Debian component license."
+  attribution_required: true
+  attribution: "Preserve Python and Debian component license notices with redistributed images."
+  restrictions: "Review the image SBOM and all component licenses before redistributing the built image."
+  repository_paths:
+    - "Dockerfile"
+  reviewer: "Codex"
+  open_questions:
+    - "Review the final image SBOM and notices before any external redistribution; hosted deployment is not approved."
+
+- id: "container:uv"
+  kind: "dependency"
+  name: "uv distroless image"
+  source: "https://github.com/astral-sh/uv/pkgs/container/uv"
+  version_or_commit: "0.12.6@sha256:88bc6eb1ccd4b82efd0e1b530caffabddf50dc2bf612e66c14ea25b8ee8a4d3d"
+  reviewed_date: "2026-08-27"
+  license: "Apache-2.0 OR MIT"
+  license_source: "https://github.com/astral-sh/uv/tree/0.12.6#license"
+  intended_use: "Immutable source of uv binaries during the optional local container build."
+  permitted_use_basis: "Use and redistribution are permitted under Apache-2.0 or MIT."
+  attribution_required: true
+  attribution: "Copyright Astral Software Inc.; preserve the selected upstream license and notice with redistributed copies."
+  restrictions: "Preserve all applicable license and notice text; comply with Apache-2.0 patent and NOTICE terms when that license is selected."
+  repository_paths:
+    - "Dockerfile"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "action:checkout"
+  kind: "github-action"
+  name: "actions/checkout"
+  source: "https://github.com/actions/checkout"
+  version_or_commit: "3d3c42e5aac5ba805825da76410c181273ba90b1"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "https://github.com/actions/checkout/blob/3d3c42e5aac5ba805825da76410c181273ba90b1/LICENSE"
+  intended_use: "Read-only repository checkout for verify-ci."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Copyright GitHub; preserve the upstream copyright and MIT license notice with redistributed copies."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - ".github/workflows/verify.yml"
+  reviewer: "Codex"
+  open_questions: []
+- id: "action:setup-python"
+  kind: "github-action"
+  name: "actions/setup-python"
+  source: "https://github.com/actions/setup-python"
+  version_or_commit: "5fda3b95a4ea91299a34e894583c3862153e4b97"
+  reviewed_date: "2026-08-27"
+  license: "MIT"
+  license_source: "https://github.com/actions/setup-python/blob/5fda3b95a4ea91299a34e894583c3862153e4b97/LICENSE"
+  intended_use: "Install Python 3.13.15 for verify-ci before repository bootstrap."
+  permitted_use_basis: "Use and redistribution are permitted under MIT."
+  attribution_required: true
+  attribution: "Copyright GitHub; preserve the upstream copyright and MIT license notice with redistributed copies."
+  restrictions: "Preserve copyright and license notices in redistributed copies."
+  repository_paths:
+    - ".github/workflows/verify.yml"
+  reviewer: "Codex"
+  open_questions: []

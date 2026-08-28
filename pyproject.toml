@@ -1,0 +1,51 @@
+[build-system]
+requires = ["uv_build==0.12.6"]
+build-backend = "uv_build"
+
+[project]
+name = "privilab"
+version = "0.1.0"
+description = "Controlled legal-AI reference demo bootstrap"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "fastapi>=0.116,<1",
+  "jinja2>=3.1,<4",
+  "uvicorn>=0.35,<1",
+]
+
+[dependency-groups]
+dev = [
+  "mypy>=1.17,<2",
+  "pytest>=8.4,<9",
+  "pyyaml>=6,<7",
+  "ruff>=0.12,<1",
+]
+
+[tool.uv]
+required-version = "==0.12.6"
+package = true
+
+[tool.uv.build-backend]
+module-name = "privilab"
+module-root = "src"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+files = ["src", "tests", "scripts"]
+
+[[tool.mypy.overrides]]
+module = ["yaml"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers"
+testpaths = ["tests"]
