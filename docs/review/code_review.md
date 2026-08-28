@@ -18,11 +18,13 @@ bootstrap and secret scanning, dependency/lock files, licenses, permission/domai
 contracts, providers, retrieval/storage adapters, and Docker configuration are
 high risk.
 
-## Bootstrap limitation
+## CODEOWNERS identities
 
-`@tsintsiruk` is verified. Adaora's GitHub handle is not yet verified; until it
-is added, CODEOWNERS must not be described as final and the non-author approval
-must be evidenced separately by a verified GitHub reviewer.
+`@tsintsiruk` and `@adaora-orakwue` are the verified GitHub handles for Andrew
+and Adaora. CODEOWNERS is final for the current P0 repository structure.
+
+High-risk changes require the applicable CODEOWNER review controls and at least
+one non-author human approval. Andrew retains final merge and release authority.
 
 ## Findings
 

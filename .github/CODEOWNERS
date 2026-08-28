@@ -1,22 +1,27 @@
-# Bootstrap note: @tsintsiruk is verified. Adaora's verified GitHub handle is
-# still required before claiming CODEOWNERS or the non-author control is final.
+# Verified PriviLAB P0 CODEOWNERS.
+# Andrew: @tsintsiruk
+# Adaora: @adaora-orakwue
+#
+# High-risk changes require applicable CODEOWNER review controls and at least
+# one non-author human approval. Andrew retains final merge/release authority.
 
-* @tsintsiruk
-/.github/ @tsintsiruk
-/.codex/ @tsintsiruk
-/AGENTS.md @tsintsiruk
-/SECURITY.md @tsintsiruk
-/DATA_HANDLING.md @tsintsiruk
-/Dockerfile @tsintsiruk
-/Makefile @tsintsiruk
-/pyproject.toml @tsintsiruk
-/uv.lock @tsintsiruk
-/docs/architecture/ @tsintsiruk
-/docs/decisions/ @tsintsiruk
-/docs/review/ @tsintsiruk
-/licenses/ @tsintsiruk
-/scripts/bootstrap.sh @tsintsiruk
-/scripts/secret_scan.sh @tsintsiruk
-/src/privilab/adapters/ @tsintsiruk
-/src/privilab/config.py @tsintsiruk
-/src/privilab/domain/ @tsintsiruk
+* @tsintsiruk @adaora-orakwue
+
+/.github/ @tsintsiruk @adaora-orakwue
+/.codex/ @tsintsiruk @adaora-orakwue
+/AGENTS.md @tsintsiruk @adaora-orakwue
+/SECURITY.md @tsintsiruk @adaora-orakwue
+/DATA_HANDLING.md @tsintsiruk @adaora-orakwue
+/Dockerfile @tsintsiruk @adaora-orakwue
+/Makefile @tsintsiruk @adaora-orakwue
+/pyproject.toml @tsintsiruk @adaora-orakwue
+/uv.lock @tsintsiruk @adaora-orakwue
+/docs/architecture/ @tsintsiruk @adaora-orakwue
+/docs/decisions/ @tsintsiruk @adaora-orakwue
+/docs/review/ @tsintsiruk @adaora-orakwue
+/licenses/ @tsintsiruk @adaora-orakwue
+/scripts/bootstrap.sh @tsintsiruk @adaora-orakwue
+/scripts/secret_scan.sh @tsintsiruk @adaora-orakwue
+/src/privilab/adapters/ @tsintsiruk @adaora-orakwue
+/src/privilab/config.py @tsintsiruk @adaora-orakwue
+/src/privilab/domain/ @tsintsiruk @adaora-orakwue

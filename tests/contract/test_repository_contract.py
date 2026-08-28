@@ -588,11 +588,54 @@ def test_linear_mcp_exception_and_adr_filename_are_exact() -> None:
     assert not [path for path in ROOT.rglob("*") if "\\" in path.name]
 
 
-def test_codeowners_records_the_known_owner_and_open_item() -> None:
+def test_codeowners_and_review_controls_are_finalized() -> None:
     codeowners = (ROOT / ".github/CODEOWNERS").read_text(encoding="utf-8")
+    review_controls = (ROOT / "docs/review/code_review.md").read_text(encoding="utf-8")
+
     assert "@tsintsiruk" in codeowners
-    assert "Adaora's verified GitHub handle" in codeowners
-    assert "still required" in codeowners
+    assert "@adaora-orakwue" in codeowners
+    assert "Adaora's verified GitHub handle" not in codeowners
+    assert "still required" not in codeowners
+    assert "pending" not in codeowners.lower()
+
+    rules = {
+        parts[0]: set(parts[1:])
+        for line in codeowners.splitlines()
+        if (stripped := line.strip()) and not stripped.startswith("#")
+        if (parts := stripped.split())
+    }
+    expected_patterns = {
+        "*",
+        "/.github/",
+        "/.codex/",
+        "/AGENTS.md",
+        "/SECURITY.md",
+        "/DATA_HANDLING.md",
+        "/Dockerfile",
+        "/Makefile",
+        "/pyproject.toml",
+        "/uv.lock",
+        "/docs/architecture/",
+        "/docs/decisions/",
+        "/docs/review/",
+        "/licenses/",
+        "/scripts/bootstrap.sh",
+        "/scripts/secret_scan.sh",
+        "/src/privilab/adapters/",
+        "/src/privilab/config.py",
+        "/src/privilab/domain/",
+    }
+    assert set(rules) == expected_patterns
+    assert all(
+        owners == {"@tsintsiruk", "@adaora-orakwue"} for owners in rules.values()
+    )
+
+    assert "@tsintsiruk" in review_controls
+    assert "@adaora-orakwue" in review_controls
+    assert "CODEOWNERS is final" in review_controls
+    assert "one non-author human approval" in review_controls
+    assert "Andrew retains final merge and release authority" in review_controls
+    assert "pending" not in review_controls.lower()
 
 
 def test_bootstrap_dependency_set_excludes_out_of_scope_components() -> None:
