@@ -1,0 +1,22 @@
+# Bootstrap note: @tsintsiruk is verified. Adaora's verified GitHub handle is
+# still required before claiming CODEOWNERS or the non-author control is final.
+
+* @tsintsiruk
+/.github/ @tsintsiruk
+/.codex/ @tsintsiruk
+/AGENTS.md @tsintsiruk
+/SECURITY.md @tsintsiruk
+/DATA_HANDLING.md @tsintsiruk
+/Dockerfile @tsintsiruk
+/Makefile @tsintsiruk
+/pyproject.toml @tsintsiruk
+/uv.lock @tsintsiruk
+/docs/architecture/ @tsintsiruk
+/docs/decisions/ @tsintsiruk
+/docs/review/ @tsintsiruk
+/licenses/ @tsintsiruk
+/scripts/bootstrap.sh @tsintsiruk
+/scripts/secret_scan.sh @tsintsiruk
+/src/privilab/adapters/ @tsintsiruk
+/src/privilab/config.py @tsintsiruk
+/src/privilab/domain/ @tsintsiruk
