@@ -1,3 +1,5 @@
-# Context fixture placeholder
+# Context fixtures
 
-Synthetic context fixtures are owned by DSL-106 and later contract issues.
+`manifest.json` registers versioned, repository-authored synthetic request
+contexts. Each entry includes its content hash and license-registry reference.
+Run `make ci` to validate the manifest and fixture content offline.

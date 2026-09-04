@@ -1,0 +1,13 @@
+{
+  "schema_version": "1",
+  "fixtures": [
+    {
+      "id": "permission-results.synthetic.001",
+      "version": "1.0.0",
+      "path": "fixtures/permissions/synthetic_permission_results_v1.json",
+      "content_hash": "sha256:b64d9fd0029d4c081b9a849d1829e8d336de8fc863ccb31c70f8e562a236e8e6",
+      "synthetic": true,
+      "license_ref": "fixture:synthetic-permissions"
+    }
+  ]
+}

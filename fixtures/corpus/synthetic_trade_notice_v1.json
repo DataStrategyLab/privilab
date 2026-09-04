@@ -1,0 +1,6 @@
+{
+  "document_id": "synthetic-trade-notice-001",
+  "title": "Synthetic Trade Notice",
+  "text": "Synthetic notice text for fixture and provenance validation only.",
+  "synthetic": true
+}

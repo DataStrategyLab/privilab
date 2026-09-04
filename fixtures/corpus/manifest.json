@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "records": [
+    {
+      "id": "corpus.synthetic-trade-notice.001",
+      "version": "1.0.0",
+      "path": "fixtures/corpus/synthetic_trade_notice_v1.json",
+      "content_hash": "sha256:97916445e8bc983bc9945e864a88b303d2f8e7b32dc1e1ef973c598141b0c4a1",
+      "synthetic": true,
+      "origin": "Repository-authored synthetic fixture; no external source.",
+      "permitted_use_basis": "Repository-authored synthetic content.",
+      "license_ref": "fixture:synthetic-corpus"
+    }
+  ]
+}
