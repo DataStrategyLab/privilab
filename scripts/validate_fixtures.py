@@ -127,8 +127,14 @@ def validate_corpus(path: Path, registry: dict[str, dict[str, Any]]) -> None:
         if not isinstance(record, dict):
             raise ValueError(f"{path}: corpus records must be objects")
         require_fields(record, {"origin", "permitted_use_basis"}, path)
-        if not record["origin"] or not record["permitted_use_basis"]:
-            raise ValueError(f"{path}: corpus provenance fields must be non-empty")
+        provenance_values = (record["origin"], record["permitted_use_basis"])
+        if any(
+            not isinstance(value, str) or not value or value != value.strip()
+            for value in provenance_values
+        ):
+            raise ValueError(
+                f"{path}: corpus provenance fields must be non-empty, trimmed strings"
+            )
     validate_manifest(path, registry)
 
     for record in records:

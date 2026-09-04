@@ -105,6 +105,18 @@ def write_corpus_manifest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Pa
     return manifest
 
 
+def corpus_registry() -> dict[str, dict[str, object]]:
+    test_registry = registry()
+    test_registry["fixture:synthetic-corpus"] = {
+        **test_registry["fixture:synthetic-corpus"],
+        "repository_paths": [
+            "fixtures/corpus/manifest.json",
+            "fixtures/corpus/synthetic_trade_notice_v1.json",
+        ],
+    }
+    return test_registry
+
+
 def test_unknown_license_reference_fails_closed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -239,16 +251,32 @@ def test_corpus_validation_parses_manifest_selected_payload(
     )
     manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
 
-    test_registry = registry()
-    test_registry["fixture:synthetic-corpus"] = {
-        **test_registry["fixture:synthetic-corpus"],
-        "repository_paths": [
-            "fixtures/corpus/manifest.json",
-            "fixtures/corpus/synthetic_trade_notice_v1.json",
-        ],
-    }
     with pytest.raises(ValueError, match="invalid synthetic corpus payload"):
-        VALIDATOR.validate_corpus(manifest, test_registry)
+        VALIDATOR.validate_corpus(manifest, corpus_registry())
+
+
+@pytest.mark.parametrize(
+    ("field_name", "field_value"),
+    [
+        ("origin", True),
+        ("permitted_use_basis", ["unknown"]),
+        ("origin", "  Repository-authored synthetic fixture."),
+        ("permitted_use_basis", "   "),
+    ],
+)
+def test_corpus_provenance_requires_non_empty_trimmed_strings(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    field_name: str,
+    field_value: object,
+) -> None:
+    manifest = write_corpus_manifest(tmp_path, monkeypatch)
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["records"][0][field_name] = field_value
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="non-empty, trimmed strings"):
+        VALIDATOR.validate_corpus(manifest, corpus_registry())
 
 
 def test_permission_validation_uses_manifest_selected_payload(
