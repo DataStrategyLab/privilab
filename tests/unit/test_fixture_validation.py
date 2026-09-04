@@ -135,6 +135,44 @@ def test_license_reference_must_cover_fixture_paths(
         VALIDATOR.validate_manifest(manifest, registry())
 
 
+@pytest.mark.parametrize(
+    "context_payload",
+    [
+        {"client": None, "matter": None, "user": None, "workflow": None},
+        {
+            "client": {"client_id": False},
+            "matter": None,
+            "synthetic": True,
+            "user": None,
+            "workflow": None,
+        },
+        {
+            "client": None,
+            "matter": None,
+            "synthetic": False,
+            "user": None,
+            "workflow": None,
+        },
+    ],
+)
+def test_context_validation_parses_manifest_selected_payload(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, context_payload: dict[str, object]
+) -> None:
+    manifest = write_context_manifest(
+        tmp_path, monkeypatch, license_ref="fixture:synthetic-contexts"
+    )
+    fixture_path = manifest.parent / "synthetic_request_context_v1.json"
+    fixture_path.write_text(json.dumps(context_payload), encoding="utf-8")
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["fixtures"][0]["content_hash"] = VALIDATOR.content_hash(
+        fixture_path
+    )
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="invalid synthetic request context"):
+        VALIDATOR.validate_context_fixture(manifest, registry())
+
+
 def test_permission_validation_uses_manifest_selected_payload(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -10,6 +10,7 @@ from typing import Any
 
 import yaml
 
+from privilab.domain.context import SyntheticRequestContext
 from privilab.domain.permissions import PermissionResult
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -157,6 +158,24 @@ def validate_permission_fixture(
         raise ValueError("permission fixture must cover exactly the approved states")
 
 
+def validate_context_fixture(path: Path, registry: dict[str, dict[str, Any]]) -> None:
+    """Validate every context payload selected by a context manifest."""
+    manifest = load_json(path)
+    validate_manifest(path, registry)
+    entries = manifest.get("fixtures")
+    if not isinstance(entries, list):
+        raise ValueError(f"{path}: context manifest must contain fixtures")
+
+    for entry in entries:
+        fixture_path = resolve_fixture_path(path, entry["path"])
+        try:
+            SyntheticRequestContext.from_json(fixture_path.read_text(encoding="utf-8"))
+        except (OSError, TypeError, ValueError) as error:
+            raise ValueError(
+                f"{fixture_path}: invalid synthetic request context"
+            ) from error
+
+
 def validate() -> None:
     registry_value = yaml.safe_load(
         (ROOT / "licenses/registry.yaml").read_text(encoding="utf-8")
@@ -171,6 +190,8 @@ def validate() -> None:
             validate_corpus(manifest, registry)
         elif "permissions" in manifest.parts:
             validate_permission_fixture(manifest, registry)
+        elif "contexts" in manifest.parts:
+            validate_context_fixture(manifest, registry)
         else:
             validate_manifest(manifest, registry)
 
