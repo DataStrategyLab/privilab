@@ -20,6 +20,7 @@ MANIFESTS = (
     ROOT / "fixtures/corpus/manifest.json",
 )
 PERMISSION_STATES = {"ALLOW", "CONDITIONAL", "BLOCK", "UNKNOWN"}
+CORPUS_PAYLOAD_FIELDS = {"document_id", "title", "text", "synthetic"}
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -119,11 +120,35 @@ def validate_manifest(path: Path, registry: dict[str, dict[str, Any]]) -> set[st
 
 def validate_corpus(path: Path, registry: dict[str, dict[str, Any]]) -> None:
     manifest = load_json(path)
-    for record in manifest["records"]:
+    records = manifest.get("records")
+    if not isinstance(records, list):
+        raise ValueError(f"{path}: corpus manifest must contain records")
+    for record in records:
+        if not isinstance(record, dict):
+            raise ValueError(f"{path}: corpus records must be objects")
         require_fields(record, {"origin", "permitted_use_basis"}, path)
         if not record["origin"] or not record["permitted_use_basis"]:
             raise ValueError(f"{path}: corpus provenance fields must be non-empty")
     validate_manifest(path, registry)
+
+    for record in records:
+        fixture_path = resolve_fixture_path(path, record["path"])
+        try:
+            payload = load_json(fixture_path)
+            if set(payload) != CORPUS_PAYLOAD_FIELDS:
+                raise ValueError("corpus payload fields do not match the schema")
+            if payload["synthetic"] is not True:
+                raise ValueError("corpus payload must be synthetic")
+            for field_name in ("document_id", "title", "text"):
+                field_value = payload[field_name]
+                if not isinstance(field_value, str) or not field_value:
+                    raise ValueError(
+                        f"corpus payload {field_name} must be non-empty text"
+                    )
+        except (OSError, TypeError, ValueError) as error:
+            raise ValueError(
+                f"{fixture_path}: invalid synthetic corpus payload"
+            ) from error
 
 
 def validate_permission_fixture(

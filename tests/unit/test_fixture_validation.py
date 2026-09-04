@@ -72,6 +72,39 @@ def write_context_manifest(
     return manifest
 
 
+def write_corpus_manifest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    repository = tmp_path / "repository"
+    fixture_dir = repository / "fixtures/corpus"
+    fixture_dir.mkdir(parents=True)
+    fixture = fixture_dir / "synthetic_trade_notice_v1.json"
+    fixture.write_bytes(
+        (ROOT / "fixtures/corpus/synthetic_trade_notice_v1.json").read_bytes()
+    )
+    monkeypatch.setattr(VALIDATOR, "ROOT", repository)
+    manifest = fixture_dir / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": "1",
+                "records": [
+                    {
+                        "id": "corpus.synthetic.001",
+                        "version": "1.0.0",
+                        "path": "fixtures/corpus/synthetic_trade_notice_v1.json",
+                        "content_hash": VALIDATOR.content_hash(fixture),
+                        "synthetic": True,
+                        "origin": "Repository-authored synthetic fixture.",
+                        "permitted_use_basis": "Repository-authored synthetic content.",
+                        "license_ref": "fixture:synthetic-corpus",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    return manifest
+
+
 def test_unknown_license_reference_fails_closed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -171,6 +204,51 @@ def test_context_validation_parses_manifest_selected_payload(
 
     with pytest.raises(ValueError, match="invalid synthetic request context"):
         VALIDATOR.validate_context_fixture(manifest, registry())
+
+
+@pytest.mark.parametrize(
+    "corpus_payload",
+    [
+        "not valid JSON",
+        json.dumps(
+            {
+                "document_id": "synthetic-document-001",
+                "title": "Synthetic document",
+                "text": "Synthetic content.",
+                "synthetic": False,
+            }
+        ),
+        json.dumps(
+            {
+                "document_id": "synthetic-document-001",
+                "title": "Synthetic document",
+                "synthetic": True,
+            }
+        ),
+    ],
+)
+def test_corpus_validation_parses_manifest_selected_payload(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, corpus_payload: str
+) -> None:
+    manifest = write_corpus_manifest(tmp_path, monkeypatch)
+    fixture_path = manifest.parent / "synthetic_trade_notice_v1.json"
+    fixture_path.write_text(corpus_payload, encoding="utf-8")
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["records"][0]["content_hash"] = VALIDATOR.content_hash(
+        fixture_path
+    )
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    test_registry = registry()
+    test_registry["fixture:synthetic-corpus"] = {
+        **test_registry["fixture:synthetic-corpus"],
+        "repository_paths": [
+            "fixtures/corpus/manifest.json",
+            "fixtures/corpus/synthetic_trade_notice_v1.json",
+        ],
+    }
+    with pytest.raises(ValueError, match="invalid synthetic corpus payload"):
+        VALIDATOR.validate_corpus(manifest, test_registry)
 
 
 def test_permission_validation_uses_manifest_selected_payload(
