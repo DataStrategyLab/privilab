@@ -6,7 +6,7 @@ import hashlib
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 
@@ -56,14 +56,25 @@ def resolve_fixture_path(manifest_path: Path, raw_path: object) -> Path:
     return fixture_path
 
 
-def validate_manifest(path: Path, registry: dict[str, dict[str, Any]]) -> set[str]:
+def validate_manifest(
+    path: Path,
+    registry: dict[str, dict[str, Any]],
+    collection_key: Literal["fixtures", "records"],
+) -> set[str]:
     manifest = load_json(path)
-    require_fields(manifest, {"schema_version"}, path)
+    require_fields(manifest, {"schema_version", collection_key}, path)
     if manifest["schema_version"] != "1":
         raise ValueError(f"{path}: unsupported schema_version")
-    entries = manifest.get("fixtures", manifest.get("records"))
+    alternate_key = "records" if collection_key == "fixtures" else "fixtures"
+    if alternate_key in manifest:
+        raise ValueError(
+            f"{path}: manifest must contain only the {collection_key} collection"
+        )
+    entries = manifest[collection_key]
     if not isinstance(entries, list) or not entries:
-        raise ValueError(f"{path}: manifest must contain fixtures or records")
+        raise ValueError(
+            f"{path}: manifest must contain a non-empty {collection_key} collection"
+        )
 
     seen: set[str] = set()
     referenced_paths: set[Path] = set()
@@ -135,7 +146,7 @@ def validate_corpus(path: Path, registry: dict[str, dict[str, Any]]) -> None:
             raise ValueError(
                 f"{path}: corpus provenance fields must be non-empty, trimmed strings"
             )
-    validate_manifest(path, registry)
+    validate_manifest(path, registry, "records")
 
     for record in records:
         fixture_path = resolve_fixture_path(path, record["path"])
@@ -147,9 +158,9 @@ def validate_corpus(path: Path, registry: dict[str, dict[str, Any]]) -> None:
                 raise ValueError("corpus payload must be synthetic")
             for field_name in ("document_id", "title", "text"):
                 field_value = payload[field_name]
-                if not isinstance(field_value, str) or not field_value:
+                if not isinstance(field_value, str) or not field_value.strip():
                     raise ValueError(
-                        f"corpus payload {field_name} must be non-empty text"
+                        f"corpus payload {field_name} must contain non-whitespace text"
                     )
         except (OSError, TypeError, ValueError) as error:
             raise ValueError(
@@ -161,7 +172,7 @@ def validate_permission_fixture(
     path: Path, registry: dict[str, dict[str, Any]]
 ) -> None:
     manifest = load_json(path)
-    validate_manifest(path, registry)
+    validate_manifest(path, registry, "fixtures")
     entries = manifest.get("fixtures")
     if not isinstance(entries, list):
         raise ValueError(f"{path}: permission manifest must contain fixtures")
@@ -192,7 +203,7 @@ def validate_permission_fixture(
 def validate_context_fixture(path: Path, registry: dict[str, dict[str, Any]]) -> None:
     """Validate every context payload selected by a context manifest."""
     manifest = load_json(path)
-    validate_manifest(path, registry)
+    validate_manifest(path, registry, "fixtures")
     entries = manifest.get("fixtures")
     if not isinstance(entries, list):
         raise ValueError(f"{path}: context manifest must contain fixtures")
@@ -224,7 +235,7 @@ def validate() -> None:
         elif "contexts" in manifest.parts:
             validate_context_fixture(manifest, registry)
         else:
-            validate_manifest(manifest, registry)
+            raise ValueError(f"unsupported fixture manifest path: {manifest}")
 
 
 if __name__ == "__main__":

@@ -125,7 +125,7 @@ def test_unknown_license_reference_fails_closed(
     )
 
     with pytest.raises(ValueError, match="unknown license reference"):
-        VALIDATOR.validate_manifest(manifest, registry())
+        VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
 
 
 def test_stale_fixture_hash_fails_closed(
@@ -139,7 +139,7 @@ def test_stale_fixture_hash_fails_closed(
     )
 
     with pytest.raises(ValueError, match="stale content hash"):
-        VALIDATOR.validate_manifest(manifest, registry())
+        VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
 
 
 def test_fixture_path_cannot_escape_its_directory(
@@ -153,7 +153,7 @@ def test_fixture_path_cannot_escape_its_directory(
     manifest.write_text(json.dumps(payload), encoding="utf-8")
 
     with pytest.raises(ValueError, match="inside its fixture directory"):
-        VALIDATOR.validate_manifest(manifest, registry())
+        VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
 
 
 def test_unmanifested_fixture_fails_closed(
@@ -166,7 +166,7 @@ def test_unmanifested_fixture_fails_closed(
     unregistered.write_text("{}", encoding="utf-8")
 
     with pytest.raises(ValueError, match="must be registered in the manifest"):
-        VALIDATOR.validate_manifest(manifest, registry())
+        VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
 
 
 def test_license_reference_must_cover_fixture_paths(
@@ -177,7 +177,25 @@ def test_license_reference_must_cover_fixture_paths(
     )
 
     with pytest.raises(ValueError, match="does not cover fixture"):
-        VALIDATOR.validate_manifest(manifest, registry())
+        VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
+
+
+def test_corpus_manifest_rejects_shadow_fixtures_collection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = write_corpus_manifest(tmp_path, monkeypatch)
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    record = manifest_payload["records"][0]
+    manifest_payload["fixtures"] = [record.copy()]
+    record.pop("id")
+    record.pop("version")
+    record["content_hash"] = "sha256:" + "0" * 64
+    record["synthetic"] = False
+    record["license_ref"] = "license:missing"
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="only the records collection"):
+        VALIDATOR.validate_corpus(manifest, corpus_registry())
 
 
 @pytest.mark.parametrize(
@@ -245,6 +263,25 @@ def test_corpus_validation_parses_manifest_selected_payload(
     manifest = write_corpus_manifest(tmp_path, monkeypatch)
     fixture_path = manifest.parent / "synthetic_trade_notice_v1.json"
     fixture_path.write_text(corpus_payload, encoding="utf-8")
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["records"][0]["content_hash"] = VALIDATOR.content_hash(
+        fixture_path
+    )
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="invalid synthetic corpus payload"):
+        VALIDATOR.validate_corpus(manifest, corpus_registry())
+
+
+@pytest.mark.parametrize("field_name", ["document_id", "title", "text"])
+def test_corpus_payload_text_fields_reject_whitespace_only_values(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, field_name: str
+) -> None:
+    manifest = write_corpus_manifest(tmp_path, monkeypatch)
+    fixture_path = manifest.parent / "synthetic_trade_notice_v1.json"
+    payload = json.loads(fixture_path.read_text(encoding="utf-8"))
+    payload[field_name] = " \t\n"
+    fixture_path.write_text(json.dumps(payload), encoding="utf-8")
     manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
     manifest_payload["records"][0]["content_hash"] = VALIDATOR.content_hash(
         fixture_path
