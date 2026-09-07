@@ -64,6 +64,61 @@ def test_manifest_dispatch_is_independent_of_checkout_ancestor_names(
     ]
 
 
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        "fixtures/model_outputs/unregistered.json",
+        "fixtures/new_fixture_kind/unregistered.txt",
+    ],
+)
+def test_validate_rejects_files_outside_manifest_managed_directories(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    relative_path: str,
+) -> None:
+    repository = tmp_path / "repository"
+    licenses = repository / "licenses"
+    licenses.mkdir(parents=True)
+    (licenses / "registry.yaml").write_text("[]", encoding="utf-8")
+    unregistered = repository / relative_path
+    unregistered.parent.mkdir(parents=True)
+    unregistered.write_text("unregistered fixture content", encoding="utf-8")
+
+    def accept_manifest(_path: Path, _registry: object) -> None:
+        pass
+
+    monkeypatch.setattr(VALIDATOR, "ROOT", repository)
+    monkeypatch.setattr(VALIDATOR, "validate_context_fixture", accept_manifest)
+    monkeypatch.setattr(VALIDATOR, "validate_permission_fixture", accept_manifest)
+    monkeypatch.setattr(VALIDATOR, "validate_corpus", accept_manifest)
+
+    with pytest.raises(ValueError, match="outside validated manifest directories"):
+        VALIDATOR.validate()
+
+
+def test_validate_allows_explicit_fixture_documentation_placeholders(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = tmp_path / "repository"
+    licenses = repository / "licenses"
+    licenses.mkdir(parents=True)
+    (licenses / "registry.yaml").write_text("[]", encoding="utf-8")
+    for relative_path in VALIDATOR.FIXTURE_DOCUMENTATION_PATHS:
+        documentation = repository / relative_path
+        documentation.parent.mkdir(parents=True, exist_ok=True)
+        documentation.write_text("Fixture documentation.", encoding="utf-8")
+
+    def accept_manifest(_path: Path, _registry: object) -> None:
+        pass
+
+    monkeypatch.setattr(VALIDATOR, "ROOT", repository)
+    monkeypatch.setattr(VALIDATOR, "validate_context_fixture", accept_manifest)
+    monkeypatch.setattr(VALIDATOR, "validate_permission_fixture", accept_manifest)
+    monkeypatch.setattr(VALIDATOR, "validate_corpus", accept_manifest)
+
+    VALIDATOR.validate()
+
+
 def test_fixture_hash_is_reproducible() -> None:
     fixture = ROOT / "fixtures/contexts/synthetic_request_context_v1.json"
 

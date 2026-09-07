@@ -25,6 +25,12 @@ MANIFEST_ENTRY_FIELDS = {
     "license_ref",
 }
 CORPUS_RECORD_FIELDS = MANIFEST_ENTRY_FIELDS | {"origin", "permitted_use_basis"}
+FIXTURE_DOCUMENTATION_PATHS = {
+    Path("fixtures/contexts/README.md"),
+    Path("fixtures/corpus/README.md"),
+    Path("fixtures/model_outputs/README.md"),
+    Path("fixtures/permissions/README.md"),
+}
 
 
 # PyYAML does not expose SafeLoader typing to mypy.
@@ -295,6 +301,35 @@ def validate_context_fixture(path: Path, registry: dict[str, dict[str, Any]]) ->
             ) from error
 
 
+def validate_fixture_inventory(manifests: set[Path]) -> None:
+    """Reject fixture content outside directories with dedicated validation."""
+    fixture_root = ROOT / "fixtures"
+    fixture_files = {
+        candidate.absolute()
+        for candidate in fixture_root.rglob("*")
+        if candidate.is_file() or candidate.is_symlink()
+    }
+    managed_directories = {manifest.parent.absolute() for manifest in manifests}
+    documentation_files = {
+        (ROOT / relative_path).absolute()
+        for relative_path in FIXTURE_DOCUMENTATION_PATHS
+    }
+    unmanaged_files = {
+        fixture_file
+        for fixture_file in fixture_files - documentation_files
+        if not any(
+            fixture_file.is_relative_to(directory) for directory in managed_directories
+        )
+    }
+    if unmanaged_files:
+        relative_paths = sorted(
+            path.relative_to(ROOT.absolute()).as_posix() for path in unmanaged_files
+        )
+        raise ValueError(
+            f"fixture files outside validated manifest directories: {relative_paths}"
+        )
+
+
 def validate() -> None:
     registry_value = yaml.load(
         (ROOT / "licenses/registry.yaml").read_text(encoding="utf-8"),
@@ -323,6 +358,7 @@ def validate() -> None:
     }
     for manifest, validator in manifest_validators.items():
         validator(manifest, registry)
+    validate_fixture_inventory(set(manifest_validators))
 
 
 if __name__ == "__main__":
