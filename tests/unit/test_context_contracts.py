@@ -96,3 +96,27 @@ def test_synthetic_context_parses_its_canonical_json() -> None:
 def test_synthetic_context_rejects_payloads_outside_its_contract(payload: str) -> None:
     with pytest.raises(ValueError):
         SyntheticRequestContext.from_json(payload)
+
+
+@pytest.mark.parametrize(
+    ("payload", "field_name"),
+    [
+        (
+            '{"client":null,"matter":null,"synthetic":false,"synthetic":true,'
+            '"user":null,"workflow":null}',
+            "synthetic",
+        ),
+        (
+            '{"client":{"client_id":"first","client_id":"second"},'
+            '"matter":null,"synthetic":true,"user":null,"workflow":null}',
+            "client_id",
+        ),
+    ],
+)
+def test_synthetic_context_rejects_duplicate_fields(
+    payload: str, field_name: str
+) -> None:
+    with pytest.raises(
+        ValueError, match=f"duplicate request context field '{field_name}'"
+    ):
+        SyntheticRequestContext.from_json(payload)

@@ -23,6 +23,17 @@ def _validate_optional_type(
         raise TypeError(f"{field_name} must be {expected_type.__name__} or None")
 
 
+def _object_without_duplicate_fields(
+    pairs: list[tuple[str, object]],
+) -> dict[str, object]:
+    value: dict[str, object] = {}
+    for field_name, field_value in pairs:
+        if field_name in value:
+            raise ValueError(f"duplicate request context field {field_name!r}")
+        value[field_name] = field_value
+    return value
+
+
 @dataclass(frozen=True, slots=True)
 class UserIdentity:
     """Application-controlled identifier for a request user."""
@@ -139,7 +150,10 @@ class SyntheticRequestContext:
     def from_json(cls, payload: str) -> Self:
         """Parse a synthetic request context without deriving any values."""
         try:
-            decoded: object = json.loads(payload)
+            decoded: object = json.loads(
+                payload,
+                object_pairs_hook=_object_without_duplicate_fields,
+            )
         except (json.JSONDecodeError, TypeError) as error:
             raise ValueError("request context must be valid JSON") from error
         if not isinstance(decoded, dict):
