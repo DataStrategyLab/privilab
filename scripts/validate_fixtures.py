@@ -14,11 +14,6 @@ from privilab.domain.context import SyntheticRequestContext
 from privilab.domain.permissions import PermissionResult
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFESTS = (
-    ROOT / "fixtures/contexts/manifest.json",
-    ROOT / "fixtures/permissions/manifest.json",
-    ROOT / "fixtures/corpus/manifest.json",
-)
 PERMISSION_STATES = {"ALLOW", "CONDITIONAL", "BLOCK", "UNKNOWN"}
 CORPUS_PAYLOAD_FIELDS = {"document_id", "title", "text", "synthetic"}
 MANIFEST_ENTRY_FIELDS = {
@@ -261,15 +256,13 @@ def validate() -> None:
     registry = {entry["id"]: entry for entry in registry_value}
     if len(registry) != len(registry_value):
         raise ValueError("license registry IDs must be unique")
-    for manifest in MANIFESTS:
-        if manifest.name == "manifest.json" and "corpus" in manifest.parts:
-            validate_corpus(manifest, registry)
-        elif "permissions" in manifest.parts:
-            validate_permission_fixture(manifest, registry)
-        elif "contexts" in manifest.parts:
-            validate_context_fixture(manifest, registry)
-        else:
-            raise ValueError(f"unsupported fixture manifest path: {manifest}")
+    manifest_validators = {
+        ROOT / "fixtures/contexts/manifest.json": validate_context_fixture,
+        ROOT / "fixtures/permissions/manifest.json": validate_permission_fixture,
+        ROOT / "fixtures/corpus/manifest.json": validate_corpus,
+    }
+    for manifest, validator in manifest_validators.items():
+        validator(manifest, registry)
 
 
 if __name__ == "__main__":

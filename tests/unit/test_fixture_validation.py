@@ -27,6 +27,43 @@ def test_dsl106_fixture_substrate_validates() -> None:
     VALIDATOR.validate()
 
 
+def test_manifest_dispatch_is_independent_of_checkout_ancestor_names(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = tmp_path / "corpus/privilab"
+    licenses = repository / "licenses"
+    licenses.mkdir(parents=True)
+    (licenses / "registry.yaml").write_text("[]", encoding="utf-8")
+    manifests = (
+        repository / "fixtures/contexts/manifest.json",
+        repository / "fixtures/permissions/manifest.json",
+        repository / "fixtures/corpus/manifest.json",
+    )
+    calls: list[tuple[str, Path]] = []
+
+    def record_context(path: Path, _registry: object) -> None:
+        calls.append(("context", path))
+
+    def record_permission(path: Path, _registry: object) -> None:
+        calls.append(("permission", path))
+
+    def record_corpus(path: Path, _registry: object) -> None:
+        calls.append(("corpus", path))
+
+    monkeypatch.setattr(VALIDATOR, "ROOT", repository)
+    monkeypatch.setattr(VALIDATOR, "validate_context_fixture", record_context)
+    monkeypatch.setattr(VALIDATOR, "validate_permission_fixture", record_permission)
+    monkeypatch.setattr(VALIDATOR, "validate_corpus", record_corpus)
+
+    VALIDATOR.validate()
+
+    assert calls == [
+        ("context", manifests[0]),
+        ("permission", manifests[1]),
+        ("corpus", manifests[2]),
+    ]
+
+
 def test_fixture_hash_is_reproducible() -> None:
     fixture = ROOT / "fixtures/contexts/synthetic_request_context_v1.json"
 
