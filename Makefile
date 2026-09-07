@@ -10,7 +10,7 @@ UVICORN := .venv/bin/uvicorn
 export UV_CACHE_DIR := $(CURDIR)/.local/uv-cache
 export UV_PYTHON_INSTALL_DIR := $(CURDIR)/.local/python
 
-.PHONY: bootstrap ci ci-stages guard contract format-check lint typecheck \
+.PHONY: bootstrap ci ci-stages guard contract fixture-validation format-check lint typecheck \
 	build-check tests fixture-smoke secret-scan clean-state preview \
 	container-build container-preview
 
@@ -35,12 +35,16 @@ ci: guard
 		exit 1; \
 	fi
 
-ci-stages: contract format-check lint typecheck build-check tests fixture-smoke secret-scan clean-state
+ci-stages: contract fixture-validation format-check lint typecheck build-check tests fixture-smoke secret-scan clean-state
 
 contract:
 	@echo "==> validate configuration, schemas, and repository contract"
 	@UV_OFFLINE=1 "$(UV)" lock --check --offline
 	@"$(PYTEST)" -q tests/contract
+
+fixture-validation: guard
+	@echo "==> validate DSL-106 fixtures, corpus, and license references"
+	@"$(PYTHON)" scripts/validate_fixtures.py
 
 format-check:
 	@echo "==> format check"

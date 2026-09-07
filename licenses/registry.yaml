@@ -1,5 +1,4 @@
-# Third-party artifacts introduced by DSL-105.
-# Project-authored placeholders and generic services are intentionally excluded.
+# Third-party artifacts and approved project-authored synthetic fixtures.
 
 - id: "pypi:annotated-doc"
   kind: "dependency"
@@ -16,6 +15,63 @@
   restrictions: "Preserve copyright and license notices in redistributed copies."
   repository_paths:
     - "uv.lock"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "fixture:synthetic-contexts"
+  kind: "fixture"
+  name: "Repository-authored synthetic request contexts"
+  source: "Repository-authored fixture"
+  version_or_commit: "1.0.0"
+  reviewed_date: "2026-09-04"
+  license: "Synthetic content (no external license)"
+  license_source: "Repository-authored synthetic content; no external source."
+  intended_use: "Deterministic context-contract fixture validation."
+  permitted_use_basis: "Repository-authored synthetic content."
+  attribution_required: false
+  attribution: "None; authored for this repository."
+  restrictions: "Synthetic demonstration content only; not legal advice or matter data."
+  repository_paths:
+    - "fixtures/contexts/manifest.json"
+    - "fixtures/contexts/synthetic_request_context_v1.json"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "fixture:synthetic-permissions"
+  kind: "fixture"
+  name: "Repository-authored synthetic permission results"
+  source: "Repository-authored fixture"
+  version_or_commit: "1.0.0"
+  reviewed_date: "2026-09-04"
+  license: "Synthetic content (no external license)"
+  license_source: "Repository-authored synthetic content; no external source."
+  intended_use: "Deterministic permission-state contract fixture validation."
+  permitted_use_basis: "Repository-authored synthetic content."
+  attribution_required: false
+  attribution: "None; authored for this repository."
+  restrictions: "Synthetic demonstration content only; not permission policy or authorization."
+  repository_paths:
+    - "fixtures/permissions/manifest.json"
+    - "fixtures/permissions/synthetic_permission_results_v1.json"
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "fixture:synthetic-corpus"
+  kind: "fixture"
+  name: "Repository-authored synthetic corpus record"
+  source: "Repository-authored fixture"
+  version_or_commit: "1.0.0"
+  reviewed_date: "2026-09-04"
+  license: "Synthetic content (no external license)"
+  license_source: "Repository-authored synthetic content; no external source."
+  intended_use: "Deterministic corpus provenance and hash validation."
+  permitted_use_basis: "Repository-authored synthetic content."
+  attribution_required: false
+  attribution: "None; authored for this repository."
+  restrictions: "Synthetic demonstration content only; not legal research source material."
+  repository_paths:
+    - "fixtures/corpus/manifest.json"
+    - "fixtures/corpus/synthetic_trade_notice_v1.json"
   reviewer: "Codex"
   open_questions: []
 

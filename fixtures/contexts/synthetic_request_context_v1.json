@@ -1,0 +1,20 @@
+{
+  "client": {
+    "client_id": "synthetic-client-001"
+  },
+  "matter": {
+    "matter_id": "synthetic-matter-001"
+  },
+  "synthetic": true,
+  "user": {
+    "identity": {
+      "user_id": "synthetic-user-001"
+    },
+    "role": {
+      "role_id": "synthetic-researcher"
+    }
+  },
+  "workflow": {
+    "workflow_id": "synthetic-workflow-001"
+  }
+}

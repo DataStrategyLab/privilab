@@ -1,0 +1,23 @@
+{
+  "fixtures": [
+    {
+      "condition_ids": [],
+      "state": "ALLOW"
+    },
+    {
+      "condition_ids": [
+        "condition-synthetic-001"
+      ],
+      "state": "CONDITIONAL"
+    },
+    {
+      "condition_ids": [],
+      "state": "BLOCK"
+    },
+    {
+      "condition_ids": [],
+      "state": "UNKNOWN"
+    }
+  ],
+  "synthetic": true
+}

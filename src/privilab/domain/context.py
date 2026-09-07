@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, Self, cast
 
 
 def _validate_identifier(value: object, field_name: str) -> None:
@@ -21,6 +21,17 @@ def _validate_optional_type(
 ) -> None:
     if value is not None and not isinstance(value, expected_type):
         raise TypeError(f"{field_name} must be {expected_type.__name__} or None")
+
+
+def _object_without_duplicate_fields(
+    pairs: list[tuple[str, object]],
+) -> dict[str, object]:
+    value: dict[str, object] = {}
+    for field_name, field_value in pairs:
+        if field_name in value:
+            raise ValueError(f"duplicate request context field {field_name!r}")
+        value[field_name] = field_value
+    return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,4 +144,60 @@ class SyntheticRequestContext:
             allow_nan=False,
             sort_keys=True,
             separators=(",", ":"),
+        )
+
+    @classmethod
+    def from_json(cls, payload: str) -> Self:
+        """Parse a synthetic request context without deriving any values."""
+        try:
+            decoded: object = json.loads(
+                payload,
+                object_pairs_hook=_object_without_duplicate_fields,
+            )
+        except (json.JSONDecodeError, TypeError) as error:
+            raise ValueError("request context must be valid JSON") from error
+        if not isinstance(decoded, dict):
+            raise ValueError("request context JSON must be an object")
+        value = cast(dict[str, object], decoded)
+        if set(value) != {"client", "matter", "synthetic", "user", "workflow"}:
+            raise ValueError("request context fields do not match the contract")
+        if value["synthetic"] is not True:
+            raise ValueError("request context must be synthetic")
+
+        def optional_identifier(
+            raw_value: object, field_name: str, identifier_name: str
+        ) -> str | None:
+            if raw_value is None:
+                return None
+            if not isinstance(raw_value, dict) or set(raw_value) != {identifier_name}:
+                raise ValueError(f"{field_name} fields do not match the contract")
+            identifier = raw_value[identifier_name]
+            if not isinstance(identifier, str):
+                raise ValueError(f"{field_name} identifier must be a string")
+            return identifier
+
+        client_id = optional_identifier(value["client"], "client", "client_id")
+        matter_id = optional_identifier(value["matter"], "matter", "matter_id")
+        workflow_id = optional_identifier(value["workflow"], "workflow", "workflow_id")
+
+        raw_user = value["user"]
+        if raw_user is None:
+            user = None
+        else:
+            if not isinstance(raw_user, dict) or set(raw_user) != {"identity", "role"}:
+                raise ValueError("user fields do not match the contract")
+            user_id = optional_identifier(
+                raw_user["identity"], "user identity", "user_id"
+            )
+            role_id = optional_identifier(raw_user["role"], "user role", "role_id")
+            user = UserContext(
+                identity=None if user_id is None else UserIdentity(user_id),
+                role=None if role_id is None else Role(role_id),
+            )
+
+        return cls(
+            user=user,
+            client=None if client_id is None else ClientContext(client_id),
+            matter=None if matter_id is None else MatterContext(matter_id),
+            workflow=None if workflow_id is None else WorkflowContext(workflow_id),
         )

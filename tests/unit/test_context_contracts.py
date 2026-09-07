@@ -72,3 +72,51 @@ def test_equivalent_contexts_have_identical_canonical_json() -> None:
 
     assert first == second
     assert first.to_json() == second.to_json()
+
+
+def test_synthetic_context_parses_its_canonical_json() -> None:
+    context = SyntheticRequestContext(
+        user=UserContext(UserIdentity("synthetic-user-002"), Role("reviewer")),
+        client=ClientContext("synthetic-client-002"),
+        matter=MatterContext("synthetic-matter-002"),
+        workflow=WorkflowContext("synthetic-workflow-002"),
+    )
+
+    assert SyntheticRequestContext.from_json(context.to_json()) == context
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        '{"client":null,"matter":null,"user":null,"workflow":null}',
+        '{"client":{"client_id":false},"matter":null,"synthetic":true,"user":null,"workflow":null}',
+        '{"client":null,"matter":null,"synthetic":false,"user":null,"workflow":null}',
+    ],
+)
+def test_synthetic_context_rejects_payloads_outside_its_contract(payload: str) -> None:
+    with pytest.raises(ValueError):
+        SyntheticRequestContext.from_json(payload)
+
+
+@pytest.mark.parametrize(
+    ("payload", "field_name"),
+    [
+        (
+            '{"client":null,"matter":null,"synthetic":false,"synthetic":true,'
+            '"user":null,"workflow":null}',
+            "synthetic",
+        ),
+        (
+            '{"client":{"client_id":"first","client_id":"second"},'
+            '"matter":null,"synthetic":true,"user":null,"workflow":null}',
+            "client_id",
+        ),
+    ],
+)
+def test_synthetic_context_rejects_duplicate_fields(
+    payload: str, field_name: str
+) -> None:
+    with pytest.raises(
+        ValueError, match=f"duplicate request context field '{field_name}'"
+    ):
+        SyntheticRequestContext.from_json(payload)
