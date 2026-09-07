@@ -76,7 +76,7 @@ def write_context_manifest(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     *,
-    license_ref: str,
+    license_ref: object,
     content_hash: str | None = None,
 ) -> Path:
     repository = tmp_path / "repository"
@@ -210,6 +210,43 @@ def test_unknown_license_reference_fails_closed(
         VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
 
 
+@pytest.mark.parametrize(
+    "license_ref",
+    [True, "", " ", " fixture:synthetic-contexts "],
+)
+def test_manifest_license_references_require_non_empty_trimmed_strings(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    license_ref: object,
+) -> None:
+    manifest = write_context_manifest(tmp_path, monkeypatch, license_ref=license_ref)
+
+    with pytest.raises(ValueError, match="non-empty, trimmed strings"):
+        VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
+
+
+@pytest.mark.parametrize(
+    "registry_id",
+    [True, "", " ", " fixture:synthetic-contexts "],
+)
+def test_license_registry_ids_require_non_empty_trimmed_strings(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    registry_id: object,
+) -> None:
+    repository = tmp_path / "repository"
+    licenses = repository / "licenses"
+    licenses.mkdir(parents=True)
+    (licenses / "registry.yaml").write_text(
+        yaml.safe_dump([{"id": registry_id}]),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(VALIDATOR, "ROOT", repository)
+
+    with pytest.raises(ValueError, match="non-empty, trimmed strings"):
+        VALIDATOR.validate()
+
+
 def test_stale_fixture_hash_fails_closed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -222,6 +259,23 @@ def test_stale_fixture_hash_fails_closed(
 
     with pytest.raises(ValueError, match="stale content hash"):
         VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
+
+
+def test_manifest_rejects_duplicate_json_fields(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = write_context_manifest(
+        tmp_path, monkeypatch, license_ref="fixture:synthetic-contexts"
+    )
+    manifest_text = manifest.read_text(encoding="utf-8").replace(
+        '"schema_version": "1"',
+        '"schema_version": "0", "schema_version": "1"',
+        1,
+    )
+    manifest.write_text(manifest_text, encoding="utf-8")
+
+    with pytest.raises(ValueError, match="duplicate JSON field 'schema_version'"):
+        VALIDATOR.validate_context_fixture(manifest, registry())
 
 
 def test_fixture_path_cannot_escape_its_directory(
@@ -486,6 +540,29 @@ def test_context_validation_parses_manifest_selected_payload(
         VALIDATOR.validate_context_fixture(manifest, registry())
 
 
+def test_context_payload_rejects_duplicate_json_fields(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = write_context_manifest(
+        tmp_path, monkeypatch, license_ref="fixture:synthetic-contexts"
+    )
+    fixture_path = manifest.parent / "synthetic_request_context_v1.json"
+    fixture_text = fixture_path.read_text(encoding="utf-8").replace(
+        '"synthetic": true',
+        '"synthetic": false,\n  "synthetic": true',
+        1,
+    )
+    fixture_path.write_text(fixture_text, encoding="utf-8")
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["fixtures"][0]["content_hash"] = VALIDATOR.content_hash(
+        fixture_path
+    )
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="invalid synthetic request context"):
+        VALIDATOR.validate_context_fixture(manifest, registry())
+
+
 @pytest.mark.parametrize(
     "corpus_payload",
     [
@@ -579,6 +656,32 @@ def test_permission_validation_uses_manifest_selected_payload(
     )
 
     with pytest.raises(ValueError, match="must cover exactly the approved states"):
+        VALIDATOR.validate_permission_fixture(manifest, permission_registry())
+
+
+def test_permission_payload_rejects_duplicate_json_fields(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    payload = json.loads(
+        (ROOT / "fixtures/permissions/synthetic_permission_results_v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    manifest = write_permission_manifest(tmp_path, monkeypatch, payload)
+    fixture_path = manifest.parent / "selected_permission_results.json"
+    fixture_text = fixture_path.read_text(encoding="utf-8").replace(
+        '"synthetic": true',
+        '"synthetic": false, "synthetic": true',
+        1,
+    )
+    fixture_path.write_text(fixture_text, encoding="utf-8")
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["fixtures"][0]["content_hash"] = VALIDATOR.content_hash(
+        fixture_path
+    )
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="duplicate JSON field 'synthetic'"):
         VALIDATOR.validate_permission_fixture(manifest, permission_registry())
 
 

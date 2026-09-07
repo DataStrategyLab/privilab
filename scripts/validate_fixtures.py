@@ -28,7 +28,20 @@ CORPUS_RECORD_FIELDS = MANIFEST_ENTRY_FIELDS | {"origin", "permitted_use_basis"}
 
 
 def load_json(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text(encoding="utf-8"))
+    def object_without_duplicate_fields(
+        pairs: list[tuple[str, Any]],
+    ) -> dict[str, Any]:
+        value: dict[str, Any] = {}
+        for field_name, field_value in pairs:
+            if field_name in value:
+                raise ValueError(f"{path}: duplicate JSON field {field_name!r}")
+            value[field_name] = field_value
+        return value
+
+    value = json.loads(
+        path.read_text(encoding="utf-8"),
+        object_pairs_hook=object_without_duplicate_fields,
+    )
     if not isinstance(value, dict):
         raise ValueError(f"{path}: top-level value must be an object")
     return value
@@ -119,6 +132,14 @@ def validate_manifest(
         if entry["content_hash"] != content_hash(fixture_path):
             raise ValueError(f"{path}: stale content hash for {entry['path']}")
         license_ref = entry["license_ref"]
+        if (
+            not isinstance(license_ref, str)
+            or not license_ref
+            or license_ref != license_ref.strip()
+        ):
+            raise ValueError(
+                f"{path}: license references must be non-empty, trimmed strings"
+            )
         if license_ref not in registry:
             raise ValueError(f"{path}: unknown license reference {license_ref}")
         license_entry = registry[license_ref]
@@ -240,7 +261,8 @@ def validate_context_fixture(path: Path, registry: dict[str, dict[str, Any]]) ->
     for entry in entries:
         fixture_path = resolve_fixture_path(path, entry["path"])
         try:
-            SyntheticRequestContext.from_json(fixture_path.read_text(encoding="utf-8"))
+            payload = load_json(fixture_path)
+            SyntheticRequestContext.from_json(json.dumps(payload))
         except (OSError, TypeError, ValueError) as error:
             raise ValueError(
                 f"{fixture_path}: invalid synthetic request context"
@@ -253,9 +275,20 @@ def validate() -> None:
     )
     if not isinstance(registry_value, list):
         raise ValueError("licenses/registry.yaml must contain a list")
-    registry = {entry["id"]: entry for entry in registry_value}
-    if len(registry) != len(registry_value):
-        raise ValueError("license registry IDs must be unique")
+    registry: dict[str, dict[str, Any]] = {}
+    for entry in registry_value:
+        if not isinstance(entry, dict):
+            raise ValueError("license registry entries must be objects")
+        registry_id = entry.get("id")
+        if (
+            not isinstance(registry_id, str)
+            or not registry_id
+            or registry_id != registry_id.strip()
+        ):
+            raise ValueError("license registry IDs must be non-empty, trimmed strings")
+        if registry_id in registry:
+            raise ValueError("license registry IDs must be unique")
+        registry[registry_id] = entry
     manifest_validators = {
         ROOT / "fixtures/contexts/manifest.json": validate_context_fixture,
         ROOT / "fixtures/permissions/manifest.json": validate_permission_fixture,
