@@ -21,6 +21,15 @@ MANIFESTS = (
 )
 PERMISSION_STATES = {"ALLOW", "CONDITIONAL", "BLOCK", "UNKNOWN"}
 CORPUS_PAYLOAD_FIELDS = {"document_id", "title", "text", "synthetic"}
+MANIFEST_ENTRY_FIELDS = {
+    "id",
+    "version",
+    "path",
+    "content_hash",
+    "synthetic",
+    "license_ref",
+}
+CORPUS_RECORD_FIELDS = MANIFEST_ENTRY_FIELDS | {"origin", "permitted_use_basis"}
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -79,14 +88,14 @@ def validate_manifest(
     seen: set[str] = set()
     referenced_paths: set[Path] = set()
     manifest_relative_path = path.resolve().relative_to(ROOT.resolve()).as_posix()
+    expected_entry_fields = (
+        CORPUS_RECORD_FIELDS if collection_key == "records" else MANIFEST_ENTRY_FIELDS
+    )
     for entry in entries:
         if not isinstance(entry, dict):
             raise ValueError(f"{path}: manifest entries must be objects")
-        require_fields(
-            entry,
-            {"id", "version", "path", "content_hash", "synthetic", "license_ref"},
-            path,
-        )
+        if set(entry) != expected_entry_fields:
+            raise ValueError(f"{path}: manifest entry fields do not match the schema")
         fixture_id = entry["id"]
         if (
             not isinstance(fixture_id, str)
