@@ -226,6 +226,7 @@ def validate_corpus(path: Path, registry: dict[str, dict[str, Any]]) -> None:
             )
     validate_manifest(path, registry, "records")
 
+    seen_document_ids: set[str] = set()
     for record in records:
         fixture_path = resolve_fixture_path(path, record["path"])
         try:
@@ -234,7 +235,19 @@ def validate_corpus(path: Path, registry: dict[str, dict[str, Any]]) -> None:
                 raise ValueError("corpus payload fields do not match the schema")
             if payload["synthetic"] is not True:
                 raise ValueError("corpus payload must be synthetic")
-            for field_name in ("document_id", "title", "text"):
+            document_id = payload["document_id"]
+            if (
+                not isinstance(document_id, str)
+                or not document_id
+                or document_id != document_id.strip()
+                or document_id in seen_document_ids
+            ):
+                raise ValueError(
+                    "corpus payload document IDs must be unique non-empty, "
+                    "trimmed strings"
+                )
+            seen_document_ids.add(document_id)
+            for field_name in ("title", "text"):
                 field_value = payload[field_name]
                 if not isinstance(field_value, str) or not field_value.strip():
                     raise ValueError(

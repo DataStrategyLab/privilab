@@ -702,6 +702,51 @@ def test_corpus_payload_text_fields_reject_whitespace_only_values(
 
 
 @pytest.mark.parametrize(
+    "second_document_id",
+    [
+        "synthetic-trade-notice-001",
+        " synthetic-trade-notice-001 ",
+    ],
+)
+def test_corpus_document_ids_require_unique_trimmed_strings(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    second_document_id: str,
+) -> None:
+    manifest = write_corpus_manifest(tmp_path, monkeypatch)
+    first_fixture = manifest.parent / "synthetic_trade_notice_v1.json"
+    second_fixture = manifest.parent / "synthetic_trade_notice_v2.json"
+    second_payload = json.loads(first_fixture.read_text(encoding="utf-8"))
+    second_payload["document_id"] = second_document_id
+    second_fixture.write_text(json.dumps(second_payload), encoding="utf-8")
+
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    second_record = {
+        **manifest_payload["records"][0],
+        "id": "corpus.synthetic.002",
+        "path": "fixtures/corpus/synthetic_trade_notice_v2.json",
+        "content_hash": VALIDATOR.content_hash(second_fixture),
+    }
+    manifest_payload["records"].append(second_record)
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    test_registry = corpus_registry()
+    test_registry["fixture:synthetic-corpus"] = {
+        **test_registry["fixture:synthetic-corpus"],
+        "repository_paths": [
+            "fixtures/corpus/manifest.json",
+            "fixtures/corpus/synthetic_trade_notice_v1.json",
+            "fixtures/corpus/synthetic_trade_notice_v2.json",
+        ],
+    }
+
+    with pytest.raises(ValueError, match="invalid synthetic corpus payload") as error:
+        VALIDATOR.validate_corpus(manifest, test_registry)
+    assert error.value.__cause__ is not None
+    assert "unique non-empty, trimmed strings" in str(error.value.__cause__)
+
+
+@pytest.mark.parametrize(
     ("field_name", "field_value"),
     [
         ("origin", True),
