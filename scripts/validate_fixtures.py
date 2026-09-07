@@ -12,6 +12,7 @@ import yaml
 
 from privilab.domain.context import SyntheticRequestContext
 from privilab.domain.permissions import PermissionResult
+from privilab.domain.research import CitationReference, ResearchResult
 
 ROOT = Path(__file__).resolve().parents[1]
 PERMISSION_STATES = {"ALLOW", "CONDITIONAL", "BLOCK", "UNKNOWN"}
@@ -31,6 +32,24 @@ FIXTURE_DOCUMENTATION_PATHS = {
     Path("fixtures/model_outputs/README.md"),
     Path("fixtures/permissions/README.md"),
 }
+MODEL_OUTPUT_FIXTURES = {
+    "model-output.synthetic-happy-path.001": (
+        "1.0.0",
+        "fixtures/model_outputs/synthetic_happy_path_v1.json",
+        "happy-path",
+    ),
+    "model-output.synthetic-citation-failure.001": (
+        "1.0.0",
+        "fixtures/model_outputs/synthetic_citation_failure_v1.json",
+        "citation-failure",
+    ),
+    "model-output.synthetic-malformed.001": (
+        "1.0.0",
+        "fixtures/model_outputs/synthetic_malformed_output_v1.json",
+        "malformed-output",
+    ),
+}
+MODEL_OUTPUT_LICENSE_REF = "fixture:synthetic-model-outputs"
 
 
 # PyYAML does not expose SafeLoader typing to mypy.
@@ -314,6 +333,106 @@ def validate_context_fixture(path: Path, registry: dict[str, dict[str, Any]]) ->
             ) from error
 
 
+def validate_model_output_fixture(
+    path: Path, registry: dict[str, dict[str, Any]]
+) -> None:
+    """Validate the exact controlled DSL-110 model-output scenarios."""
+    manifest = load_json(path)
+    fixture_ids = validate_manifest(path, registry, "fixtures")
+    if fixture_ids != set(MODEL_OUTPUT_FIXTURES):
+        raise ValueError(
+            "model-output manifest must contain exactly the approved scenarios"
+        )
+    license_entry = registry.get(MODEL_OUTPUT_LICENSE_REF)
+    if (
+        license_entry is None
+        or license_entry.get("source") != "Repository-authored fixture"
+        or license_entry.get("permitted_use_basis")
+        != "Repository-authored synthetic content."
+    ):
+        raise ValueError(
+            "model-output fixtures must use the repository-authored synthetic "
+            "license/source entry"
+        )
+    entries = manifest.get("fixtures")
+    if not isinstance(entries, list):
+        raise ValueError(f"{path}: model-output manifest must contain fixtures")
+
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise ValueError(f"{path}: model-output manifest entries must be objects")
+        fixture_id = entry.get("id")
+        if not isinstance(fixture_id, str) or fixture_id not in MODEL_OUTPUT_FIXTURES:
+            raise ValueError(f"{path}: unsupported model-output fixture")
+        expected_version, expected_path, scenario = MODEL_OUTPUT_FIXTURES[fixture_id]
+        if (
+            entry.get("version") != expected_version
+            or entry.get("path") != expected_path
+            or entry.get("license_ref") != MODEL_OUTPUT_LICENSE_REF
+        ):
+            raise ValueError(
+                f"{path}: model-output fixture metadata does not match the "
+                f"{scenario} scenario"
+            )
+
+        fixture_path = resolve_fixture_path(path, entry["path"])
+        output_json = fixture_path.read_text(encoding="utf-8")
+        if scenario == "malformed-output":
+            payload = load_json(fixture_path)
+            raw_citations = payload.get("citations")
+            if (
+                set(payload) != {"answer_text", "citations"}
+                or not isinstance(payload.get("answer_text"), str)
+                or not payload["answer_text"].strip()
+                or not isinstance(raw_citations, list)
+                or len(raw_citations) != 1
+                or not isinstance(raw_citations[0], dict)
+                or raw_citations[0] != {"source_id": "synthetic-source-001"}
+            ):
+                raise ValueError(
+                    f"{fixture_path}: malformed-output fixture must contain the "
+                    "approved missing-chunk_id failure"
+                )
+            try:
+                ResearchResult.from_json(output_json)
+            except ValueError as error:
+                if str(error) != "citation fields do not match the contract":
+                    raise ValueError(
+                        f"{fixture_path}: malformed-output fixture failed in an "
+                        "unexpected way"
+                    ) from error
+            else:
+                raise ValueError(
+                    f"{fixture_path}: malformed-output fixture must remain malformed"
+                )
+            continue
+
+        try:
+            result = ResearchResult.from_json(output_json)
+        except (TypeError, ValueError) as error:
+            raise ValueError(
+                f"{fixture_path}: invalid structured model-output fixture"
+            ) from error
+        if scenario == "happy-path" and result.citations != (
+            CitationReference("synthetic-source-001", "synthetic-chunk-001"),
+            CitationReference("synthetic-source-002", "synthetic-chunk-002"),
+        ):
+            raise ValueError(
+                f"{fixture_path}: happy-path fixture citations do not match "
+                "the approved scenario"
+            )
+        if scenario == "citation-failure" and result.citations != (
+            CitationReference(
+                "synthetic-source-not-supplied",
+                "synthetic-chunk-not-supplied",
+            ),
+        ):
+            raise ValueError(
+                f"{fixture_path}: citation-failure fixture does not contain "
+                "the approved unsupported reference"
+            )
+
+
 def validate_fixture_inventory(manifests: set[Path]) -> None:
     """Reject fixture content outside directories with dedicated validation."""
     fixture_root = ROOT / "fixtures"
@@ -368,6 +487,7 @@ def validate() -> None:
         ROOT / "fixtures/contexts/manifest.json": validate_context_fixture,
         ROOT / "fixtures/permissions/manifest.json": validate_permission_fixture,
         ROOT / "fixtures/corpus/manifest.json": validate_corpus,
+        ROOT / "fixtures/model_outputs/manifest.json": validate_model_output_fixture,
     }
     for manifest, validator in manifest_validators.items():
         validator(manifest, registry)

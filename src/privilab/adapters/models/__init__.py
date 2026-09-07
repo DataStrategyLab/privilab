@@ -1,1 +1,5 @@
-"""Placeholder: FixtureModelProvider begins in DSL-110; live work is blocked."""
+"""Approved deterministic model-provider adapters."""
+
+from privilab.adapters.models.fixture import FixtureModelProvider
+
+__all__ = ["FixtureModelProvider"]

@@ -75,6 +75,27 @@
   reviewer: "Codex"
   open_questions: []
 
+- id: "fixture:synthetic-model-outputs"
+  kind: "fixture"
+  name: "Repository-authored synthetic model outputs"
+  source: "Repository-authored fixture"
+  version_or_commit: "1.0.0"
+  reviewed_date: "2026-09-07"
+  license: "Synthetic content (no external license)"
+  license_source: "Repository-authored synthetic content; no external source."
+  intended_use: "Deterministic fixture-model result, citation-failure, and malformed-output validation."
+  permitted_use_basis: "Repository-authored synthetic content."
+  attribution_required: false
+  attribution: "None; authored for this repository."
+  restrictions: "Synthetic demonstration content only; not legal advice, matter data, or live model output."
+  repository_paths:
+    - "fixtures/model_outputs/manifest.json"
+    - "fixtures/model_outputs/synthetic_happy_path_v1.json"
+    - "fixtures/model_outputs/synthetic_citation_failure_v1.json"
+    - "fixtures/model_outputs/synthetic_malformed_output_v1.json"
+  reviewer: "Codex"
+  open_questions: []
+
 - id: "pypi:annotated-types"
   kind: "dependency"
   name: "annotated-types"
