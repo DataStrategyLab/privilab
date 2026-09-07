@@ -88,11 +88,21 @@ def validate_manifest(
             path,
         )
         fixture_id = entry["id"]
-        if not isinstance(fixture_id, str) or not fixture_id or fixture_id in seen:
-            raise ValueError(f"{path}: fixture IDs must be unique non-empty strings")
+        if (
+            not isinstance(fixture_id, str)
+            or not fixture_id
+            or fixture_id != fixture_id.strip()
+            or fixture_id in seen
+        ):
+            raise ValueError(
+                f"{path}: fixture IDs must be unique non-empty, trimmed strings"
+            )
         seen.add(fixture_id)
-        if not isinstance(entry["version"], str) or not entry["version"]:
-            raise ValueError(f"{path}: fixture versions must be non-empty strings")
+        version = entry["version"]
+        if not isinstance(version, str) or not version or version != version.strip():
+            raise ValueError(
+                f"{path}: fixture versions must be non-empty, trimmed strings"
+            )
         if entry["synthetic"] is not True:
             raise ValueError(f"{path}: DSL-106 fixtures must be synthetic")
         fixture_path = resolve_fixture_path(path, entry["path"])
@@ -181,6 +191,10 @@ def validate_permission_fixture(
     for entry in entries:
         fixture_path = resolve_fixture_path(path, entry["path"])
         payload = load_json(fixture_path)
+        if set(payload) != {"fixtures", "synthetic"}:
+            raise ValueError(
+                f"{fixture_path}: permission fixture fields do not match the schema"
+            )
         if payload.get("synthetic") is not True:
             raise ValueError(f"{fixture_path}: permission fixture must be synthetic")
         results = payload.get("fixtures")

@@ -117,6 +117,51 @@ def corpus_registry() -> dict[str, dict[str, object]]:
     return test_registry
 
 
+def write_permission_manifest(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    payload: dict[str, object],
+) -> Path:
+    repository = tmp_path / "repository"
+    fixture_dir = repository / "fixtures/permissions"
+    fixture_dir.mkdir(parents=True)
+    payload_path = fixture_dir / "selected_permission_results.json"
+    payload_path.write_text(json.dumps(payload), encoding="utf-8")
+    manifest = fixture_dir / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": "1",
+                "fixtures": [
+                    {
+                        "id": "permission-results.selected.001",
+                        "version": "1.0.0",
+                        "path": "fixtures/permissions/selected_permission_results.json",
+                        "content_hash": VALIDATOR.content_hash(payload_path),
+                        "synthetic": True,
+                        "license_ref": "fixture:synthetic-permissions",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(VALIDATOR, "ROOT", repository)
+    return manifest
+
+
+def permission_registry() -> dict[str, dict[str, object]]:
+    test_registry = registry()
+    test_registry["fixture:synthetic-permissions"] = {
+        **test_registry["fixture:synthetic-permissions"],
+        "repository_paths": [
+            "fixtures/permissions/manifest.json",
+            "fixtures/permissions/selected_permission_results.json",
+        ],
+    }
+    return test_registry
+
+
 def test_unknown_license_reference_fails_closed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -177,6 +222,41 @@ def test_license_reference_must_cover_fixture_paths(
     )
 
     with pytest.raises(ValueError, match="does not cover fixture"):
+        VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
+
+
+@pytest.mark.parametrize(
+    ("field_name", "field_value", "message"),
+    [
+        ("id", " ", "fixture IDs must be unique non-empty, trimmed strings"),
+        (
+            "id",
+            " context.synthetic.001 ",
+            "fixture IDs must be unique non-empty, trimmed strings",
+        ),
+        ("version", "\t", "fixture versions must be non-empty, trimmed strings"),
+        (
+            "version",
+            " 1.0.0 ",
+            "fixture versions must be non-empty, trimmed strings",
+        ),
+    ],
+)
+def test_manifest_ids_and_versions_require_non_empty_trimmed_strings(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    field_name: str,
+    field_value: str,
+    message: str,
+) -> None:
+    manifest = write_context_manifest(
+        tmp_path, monkeypatch, license_ref="fixture:synthetic-contexts"
+    )
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["fixtures"][0][field_name] = field_value
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
         VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
 
 
@@ -319,47 +399,29 @@ def test_corpus_provenance_requires_non_empty_trimmed_strings(
 def test_permission_validation_uses_manifest_selected_payload(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    repository = tmp_path / "repository"
-    fixture_dir = repository / "fixtures/permissions"
-    fixture_dir.mkdir(parents=True)
-    payload_path = fixture_dir / "selected_permission_results.json"
-    payload_path.write_text(
-        json.dumps(
-            {
-                "fixtures": [{"condition_ids": [], "state": "ALLOW"}],
-                "synthetic": True,
-            }
-        ),
-        encoding="utf-8",
+    manifest = write_permission_manifest(
+        tmp_path,
+        monkeypatch,
+        {
+            "fixtures": [{"condition_ids": [], "state": "ALLOW"}],
+            "synthetic": True,
+        },
     )
-    manifest = fixture_dir / "manifest.json"
-    manifest.write_text(
-        json.dumps(
-            {
-                "schema_version": "1",
-                "fixtures": [
-                    {
-                        "id": "permission-results.selected.001",
-                        "version": "1.0.0",
-                        "path": "fixtures/permissions/selected_permission_results.json",
-                        "content_hash": VALIDATOR.content_hash(payload_path),
-                        "synthetic": True,
-                        "license_ref": "fixture:synthetic-permissions",
-                    }
-                ],
-            }
-        ),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(VALIDATOR, "ROOT", repository)
-    test_registry = registry()
-    test_registry["fixture:synthetic-permissions"] = {
-        **test_registry["fixture:synthetic-permissions"],
-        "repository_paths": [
-            "fixtures/permissions/manifest.json",
-            "fixtures/permissions/selected_permission_results.json",
-        ],
-    }
 
     with pytest.raises(ValueError, match="must cover exactly the approved states"):
-        VALIDATOR.validate_permission_fixture(manifest, test_registry)
+        VALIDATOR.validate_permission_fixture(manifest, permission_registry())
+
+
+def test_permission_payload_rejects_unexpected_envelope_fields(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    payload = json.loads(
+        (ROOT / "fixtures/permissions/synthetic_permission_results_v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    payload["unexpected"] = "schema drift"
+    manifest = write_permission_manifest(tmp_path, monkeypatch, payload)
+
+    with pytest.raises(ValueError, match="fields do not match the schema"):
+        VALIDATOR.validate_permission_fixture(manifest, permission_registry())
