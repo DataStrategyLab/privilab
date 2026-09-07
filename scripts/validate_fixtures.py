@@ -27,6 +27,32 @@ MANIFEST_ENTRY_FIELDS = {
 CORPUS_RECORD_FIELDS = MANIFEST_ENTRY_FIELDS | {"origin", "permitted_use_basis"}
 
 
+# PyYAML does not expose SafeLoader typing to mypy.
+class DuplicateKeySafeLoader(yaml.SafeLoader):  # type: ignore[misc]
+    """Safe YAML loader that rejects ambiguous mappings."""
+
+
+def construct_mapping_without_duplicate_fields(
+    loader: DuplicateKeySafeLoader,
+    node: Any,
+    deep: bool = False,
+) -> dict[Any, Any]:
+    loader.flatten_mapping(node)
+    value: dict[Any, Any] = {}
+    for key_node, value_node in node.value:
+        field_name = loader.construct_object(key_node, deep=deep)
+        if field_name in value:
+            raise ValueError(f"duplicate YAML field {field_name!r}")
+        value[field_name] = loader.construct_object(value_node, deep=deep)
+    return value
+
+
+DuplicateKeySafeLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+    construct_mapping_without_duplicate_fields,
+)
+
+
 def load_json(path: Path) -> dict[str, Any]:
     def object_without_duplicate_fields(
         pairs: list[tuple[str, Any]],
@@ -270,8 +296,9 @@ def validate_context_fixture(path: Path, registry: dict[str, dict[str, Any]]) ->
 
 
 def validate() -> None:
-    registry_value = yaml.safe_load(
-        (ROOT / "licenses/registry.yaml").read_text(encoding="utf-8")
+    registry_value = yaml.load(
+        (ROOT / "licenses/registry.yaml").read_text(encoding="utf-8"),
+        Loader=DuplicateKeySafeLoader,
     )
     if not isinstance(registry_value, list):
         raise ValueError("licenses/registry.yaml must contain a list")

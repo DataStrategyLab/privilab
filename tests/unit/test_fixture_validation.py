@@ -247,6 +247,33 @@ def test_license_registry_ids_require_non_empty_trimmed_strings(
         VALIDATOR.validate()
 
 
+@pytest.mark.parametrize(
+    "registry_entry",
+    [
+        '- id: false\n  id: "fixture:synthetic-contexts"',
+        '- id: "fixture:synthetic-contexts"\n  kind: dependency\n  kind: fixture',
+        (
+            '- id: "fixture:synthetic-contexts"\n'
+            "  permitted_use_basis: false\n"
+            '  permitted_use_basis: "Repository-authored synthetic content."'
+        ),
+    ],
+)
+def test_license_registry_rejects_duplicate_yaml_fields(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    registry_entry: str,
+) -> None:
+    repository = tmp_path / "repository"
+    licenses = repository / "licenses"
+    licenses.mkdir(parents=True)
+    (licenses / "registry.yaml").write_text(registry_entry, encoding="utf-8")
+    monkeypatch.setattr(VALIDATOR, "ROOT", repository)
+
+    with pytest.raises(ValueError, match="duplicate YAML field"):
+        VALIDATOR.validate()
+
+
 def test_stale_fixture_hash_fails_closed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
