@@ -214,6 +214,25 @@ def test_unmanifested_fixture_fails_closed(
         VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
 
 
+def test_manifest_entries_cannot_share_a_resolved_fixture_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = write_context_manifest(
+        tmp_path, monkeypatch, license_ref="fixture:synthetic-contexts"
+    )
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    duplicate = {
+        **manifest_payload["fixtures"][0],
+        "id": "fixture.duplicate-path.002",
+        "version": "2.0.0",
+    }
+    manifest_payload["fixtures"].append(duplicate)
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="paths must reference unique files"):
+        VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
+
+
 def test_license_reference_must_cover_fixture_paths(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -222,6 +241,20 @@ def test_license_reference_must_cover_fixture_paths(
     )
 
     with pytest.raises(ValueError, match="does not cover fixture"):
+        VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
+
+
+def test_license_registry_version_must_match_manifest_version(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = write_context_manifest(
+        tmp_path, monkeypatch, license_ref="fixture:synthetic-contexts"
+    )
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["fixtures"][0]["version"] = "2.0.0"
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="registry version .* does not match manifest"):
         VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
 
 

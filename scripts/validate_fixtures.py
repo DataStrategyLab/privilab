@@ -118,6 +118,8 @@ def validate_manifest(
         if entry["synthetic"] is not True:
             raise ValueError(f"{path}: DSL-106 fixtures must be synthetic")
         fixture_path = resolve_fixture_path(path, entry["path"])
+        if fixture_path in referenced_paths:
+            raise ValueError(f"{path}: fixture paths must reference unique files")
         referenced_paths.add(fixture_path)
         if entry["content_hash"] != content_hash(fixture_path):
             raise ValueError(f"{path}: stale content hash for {entry['path']}")
@@ -137,6 +139,10 @@ def validate_manifest(
         ):
             raise ValueError(
                 f"{path}: license reference {license_ref} does not cover fixture"
+            )
+        if license_entry.get("version_or_commit") != version:
+            raise ValueError(
+                f"{path}: registry version for {license_ref} does not match manifest"
             )
 
     manifest_files = {
