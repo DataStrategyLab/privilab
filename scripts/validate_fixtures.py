@@ -145,14 +145,16 @@ def validate_manifest(
                 f"{path}: registry version for {license_ref} does not match manifest"
             )
 
-    manifest_files = {
-        candidate.resolve()
-        for candidate in path.parent.rglob("*.json")
-        if candidate.resolve() != path.resolve()
+    excluded_files = {path.absolute(), (path.parent / "README.md").absolute()}
+    fixture_files = {
+        candidate.absolute()
+        for candidate in path.parent.rglob("*")
+        if (candidate.is_file() or candidate.is_symlink())
+        and candidate.absolute() not in excluded_files
     }
-    if manifest_files != referenced_paths:
+    if fixture_files != referenced_paths:
         raise ValueError(
-            f"{path}: all JSON fixtures must be registered in the manifest"
+            f"{path}: all fixture files must be registered in the manifest"
         )
     return seen
 

@@ -226,6 +226,45 @@ def test_nested_manifest_named_json_file_fails_closed(
         VALIDATOR.validate_corpus(manifest, corpus_registry())
 
 
+@pytest.mark.parametrize(
+    "relative_path",
+    ["unregistered.txt", "unregistered.csv", "unregistered.JSON"],
+)
+def test_unregistered_fixture_file_extensions_fail_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, relative_path: str
+) -> None:
+    manifest = write_corpus_manifest(tmp_path, monkeypatch)
+    unregistered = manifest.parent / relative_path
+    unregistered.write_text("synthetic unregistered content", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="all fixture files must be registered"):
+        VALIDATOR.validate_corpus(manifest, corpus_registry())
+
+
+def test_unregistered_symlink_alias_does_not_collapse_onto_registered_fixture(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = write_corpus_manifest(tmp_path, monkeypatch)
+    alias = manifest.parent / "payload-alias.json"
+    alias.symlink_to("synthetic_trade_notice_v1.json")
+
+    with pytest.raises(ValueError, match="all fixture files must be registered"):
+        VALIDATOR.validate_corpus(manifest, corpus_registry())
+
+
+def test_unregistered_directory_symlink_fails_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = write_corpus_manifest(tmp_path, monkeypatch)
+    target = tmp_path / "unscanned-fixtures"
+    target.mkdir()
+    alias = manifest.parent / "fixture-directory-alias"
+    alias.symlink_to(target, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="all fixture files must be registered"):
+        VALIDATOR.validate_corpus(manifest, corpus_registry())
+
+
 def test_manifest_entries_cannot_share_a_resolved_fixture_path(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
