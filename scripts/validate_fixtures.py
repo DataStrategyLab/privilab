@@ -148,7 +148,7 @@ def validate_manifest(
     manifest_files = {
         candidate.resolve()
         for candidate in path.parent.rglob("*.json")
-        if candidate.name != "manifest.json"
+        if candidate.resolve() != path.resolve()
     }
     if manifest_files != referenced_paths:
         raise ValueError(

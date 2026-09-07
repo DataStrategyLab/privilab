@@ -214,6 +214,18 @@ def test_unmanifested_fixture_fails_closed(
         VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
 
 
+def test_nested_manifest_named_json_file_fails_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = write_corpus_manifest(tmp_path, monkeypatch)
+    nested_manifest = manifest.parent / "archive/manifest.json"
+    nested_manifest.parent.mkdir()
+    nested_manifest.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must be registered in the manifest"):
+        VALIDATOR.validate_corpus(manifest, corpus_registry())
+
+
 def test_manifest_entries_cannot_share_a_resolved_fixture_path(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
