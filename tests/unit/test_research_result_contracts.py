@@ -82,6 +82,22 @@ def test_research_result_rejects_duplicate_json_fields() -> None:
         ResearchResult.from_json(payload)
 
 
+def test_excessively_nested_json_is_normalized_at_the_decoder_boundary() -> None:
+    depth = 10_000
+    payload = "[" * depth + "null" + "]" * depth
+
+    with pytest.raises(RecursionError):
+        json.loads(payload)
+
+    with pytest.raises(
+        ValueError, match="^research result must be valid JSON$"
+    ) as error:
+        ResearchResult.from_json(payload)
+
+    assert type(error.value) is ValueError
+    assert isinstance(error.value.__cause__, RecursionError)
+
+
 @pytest.mark.parametrize(
     ("source_id", "chunk_id"),
     [

@@ -86,7 +86,7 @@ class ResearchResult:
                 payload,
                 object_pairs_hook=_object_without_duplicate_fields,
             )
-        except (json.JSONDecodeError, TypeError) as error:
+        except (json.JSONDecodeError, RecursionError, TypeError) as error:
             raise ValueError("research result must be valid JSON") from error
         if not isinstance(decoded, dict):
             raise ValueError("research result JSON must be an object")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 from pathlib import Path
 
 import pytest
@@ -118,6 +119,26 @@ def test_malformed_output_has_a_stable_explicit_failure() -> None:
         "citation fields do not match the contract",
         "citation fields do not match the contract",
     ]
+
+
+def test_excessively_nested_output_is_normalized_to_provider_failure() -> None:
+    depth = 10_000
+    output_json = "[" * depth + "null" + "]" * depth
+    provider = FixtureModelProvider(output_json)
+
+    with pytest.raises(RecursionError):
+        json.loads(output_json)
+
+    with pytest.raises(MalformedModelOutputError) as error:
+        provider.generate(model_request())
+
+    assert str(error.value) == (
+        "model output does not satisfy the research-result contract"
+    )
+    domain_error = error.value.__cause__
+    assert type(domain_error) is ValueError
+    assert str(domain_error) == "research result must be valid JSON"
+    assert isinstance(domain_error.__cause__, RecursionError)
 
 
 def test_model_request_and_source_chunks_are_minimal_immutable_values() -> None:
