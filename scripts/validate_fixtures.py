@@ -71,14 +71,17 @@ def validate_manifest(
     collection_key: Literal["fixtures", "records"],
 ) -> set[str]:
     manifest = load_json(path)
-    require_fields(manifest, {"schema_version", collection_key}, path)
-    if manifest["schema_version"] != "1":
-        raise ValueError(f"{path}: unsupported schema_version")
+    expected_manifest_fields = {"schema_version", collection_key}
+    manifest_fields = set(manifest)
     alternate_key = "records" if collection_key == "fixtures" else "fixtures"
-    if alternate_key in manifest:
+    if manifest_fields != expected_manifest_fields:
+        if alternate_key not in manifest:
+            raise ValueError(f"{path}: manifest fields do not match the schema")
         raise ValueError(
             f"{path}: manifest must contain only the {collection_key} collection"
         )
+    if manifest["schema_version"] != "1":
+        raise ValueError(f"{path}: unsupported schema_version")
     entries = manifest[collection_key]
     if not isinstance(entries, list) or not entries:
         raise ValueError(

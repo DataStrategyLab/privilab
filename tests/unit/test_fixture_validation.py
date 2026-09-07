@@ -225,9 +225,20 @@ def test_license_reference_must_cover_fixture_paths(
         VALIDATOR.validate_manifest(manifest, registry(), "fixtures")
 
 
+@pytest.mark.parametrize(
+    ("schema_level", "message"),
+    [
+        ("manifest", "manifest fields do not match the schema"),
+        ("entry", "entry fields do not match the schema"),
+    ],
+)
 @pytest.mark.parametrize("manifest_kind", ["context", "permission", "corpus"])
-def test_manifest_entries_reject_undeclared_fields(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, manifest_kind: str
+def test_manifest_schemas_reject_undeclared_fields(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    manifest_kind: str,
+    schema_level: str,
+    message: str,
 ) -> None:
     if manifest_kind == "context":
         manifest = write_context_manifest(
@@ -253,10 +264,13 @@ def test_manifest_entries_reject_undeclared_fields(
         validator = VALIDATOR.validate_corpus
 
     manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
-    manifest_payload[collection_key][0]["unexpected"] = "schema drift"
+    if schema_level == "manifest":
+        manifest_payload["unexpected"] = "schema drift"
+    else:
+        manifest_payload[collection_key][0]["unexpected"] = "schema drift"
     manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
 
-    with pytest.raises(ValueError, match="entry fields do not match the schema"):
+    with pytest.raises(ValueError, match=message):
         validator(manifest, test_registry)
 
 
