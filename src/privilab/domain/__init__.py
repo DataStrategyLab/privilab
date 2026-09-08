@@ -10,14 +10,30 @@ from privilab.domain.context import (
     WorkflowContext,
 )
 from privilab.domain.permissions import ConditionId, PermissionResult, PermissionState
+from privilab.domain.retrieval import (
+    AccessScope,
+    ChunkId,
+    RetrievalChunk,
+    RetrievalSource,
+    RetrievedChunk,
+    SourceEntitlement,
+    SourceId,
+)
 
 __all__ = [
     "ClientContext",
+    "AccessScope",
+    "ChunkId",
     "ConditionId",
     "MatterContext",
     "PermissionResult",
     "PermissionState",
     "Role",
+    "RetrievedChunk",
+    "RetrievalChunk",
+    "RetrievalSource",
+    "SourceEntitlement",
+    "SourceId",
     "SyntheticRequestContext",
     "UserContext",
     "UserIdentity",

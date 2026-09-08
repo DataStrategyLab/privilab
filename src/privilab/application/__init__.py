@@ -11,6 +11,7 @@ from privilab.application.permissions import (
     parse_permission_policy,
     permits_protected_progression,
 )
+from privilab.application.retrieval import RetrievalProvider, access_scope_for
 
 __all__ = [
     "PermissionContextField",
@@ -19,6 +20,8 @@ __all__ = [
     "PermissionRule",
     "PermissionRuleEffect",
     "PermissionSelector",
+    "RetrievalProvider",
+    "access_scope_for",
     "evaluate_permission",
     "parse_permission_policy",
     "permits_protected_progression",
