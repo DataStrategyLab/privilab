@@ -64,8 +64,8 @@ WITH authorized_sources AS (
     SELECT authorized_chunks.source_id, authorized_chunks.chunk_id,
            authorized_chunks.ordinal,
            (
-               length(highlight(chunks_fts, 1, char(1), char(2)))
-               - length(authorized_chunks.text)
+               length(CAST(highlight(chunks_fts, 1, char(1), char(2)) AS BLOB))
+               - length(CAST(authorized_chunks.text AS BLOB))
            ) / 2.0 AS match_count
     FROM chunks_fts
     JOIN authorized_chunks ON authorized_chunks.chunk_id = chunks_fts.chunk_id
@@ -74,7 +74,7 @@ WITH authorized_sources AS (
     SELECT authorized_matches.source_id, authorized_matches.chunk_id,
            authorized_matches.ordinal,
            authorized_matches.match_count * 1.0
-           / length(authorized_chunks.text) AS score
+           / length(CAST(authorized_chunks.text AS BLOB)) AS score
     FROM authorized_matches
     JOIN authorized_chunks
       ON authorized_chunks.chunk_id = authorized_matches.chunk_id

@@ -194,6 +194,27 @@ def test_source_requires_exact_complete_entitlement_and_stable_chunks() -> None:
         )
 
 
+def test_source_and_chunk_text_allow_surrounding_whitespace() -> None:
+    source_id = SourceId("source-a")
+    chunk = RetrievalChunk(
+        ChunkId("chunk-a"), source_id, 0, "\n  synthetic text with padding  \t"
+    )
+
+    source = RetrievalSource(source_id, "  Synthetic source  ", (chunk,))
+
+    assert source.title == "  Synthetic source  "
+    assert source.chunks[0].text == "\n  synthetic text with padding  \t"
+
+
+@pytest.mark.parametrize("text", ["", " \t\n "])
+def test_source_and_chunk_text_reject_only_whitespace(text: str) -> None:
+    source_id = SourceId("source-a")
+    with pytest.raises(ValueError, match="non-whitespace"):
+        RetrievalChunk(ChunkId("chunk-a"), source_id, 0, text)
+    with pytest.raises(ValueError, match="non-whitespace"):
+        RetrievalSource(source_id, text, ())
+
+
 def test_retrieval_provider_contract_requires_scope_and_keyword_limit() -> None:
     signature = inspect.signature(RetrievalProvider.retrieve)
 

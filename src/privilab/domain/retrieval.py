@@ -13,7 +13,10 @@ def _validate_identifier(value: object, field_name: str) -> None:
 
 
 def _validate_text(value: object, field_name: str) -> None:
-    _validate_identifier(value, field_name)
+    if not isinstance(value, str):
+        raise TypeError(f"{field_name} must be a string")
+    if not value.strip():
+        raise ValueError(f"{field_name} must contain non-whitespace text")
 
 
 @dataclass(frozen=True, slots=True, order=True)
