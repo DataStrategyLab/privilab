@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sqlite3
 from pathlib import Path
 
@@ -47,6 +48,8 @@ CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
 );
 """
 
+_QUERY_TERM_PATTERN = re.compile(r"[A-Za-z0-9_]+")
+
 _RETRIEVE_SQL = """
 WITH authorized_sources AS (
     SELECT source_id
@@ -56,24 +59,60 @@ WITH authorized_sources AS (
       AND client_id = ?
       AND matter_id = ?
       AND workflow_id = ?
-), authorized_matches AS (
-    SELECT chunks.source_id, chunks.chunk_id, chunks.ordinal
-    FROM chunks_fts
-    JOIN chunks ON chunks.chunk_id = chunks_fts.chunk_id
+), authorized_chunks AS (
+    SELECT chunks.source_id, chunks.chunk_id, chunks.ordinal, chunks.text
+    FROM chunks
     JOIN authorized_sources ON authorized_sources.source_id = chunks.source_id
+), authorized_matches AS (
+    SELECT authorized_chunks.source_id, authorized_chunks.chunk_id,
+           authorized_chunks.ordinal
+    FROM chunks_fts
+    JOIN authorized_chunks ON authorized_chunks.chunk_id = chunks_fts.chunk_id
     WHERE chunks_fts MATCH ?
+), query_terms(term) AS (
+    VALUES {query_term_values}
+), term_document_frequency AS (
+    SELECT query_terms.term, COUNT(authorized_chunks.chunk_id) AS document_count
+    FROM query_terms
+    LEFT JOIN authorized_chunks
+      ON instr(lower(authorized_chunks.text), lower(query_terms.term)) > 0
+    GROUP BY query_terms.term
+), scored_matches AS (
+    SELECT authorized_matches.source_id, authorized_matches.chunk_id,
+           authorized_matches.ordinal,
+           SUM(
+               (
+                   length(lower(authorized_chunks.text))
+                   - length(
+                       replace(
+                           lower(authorized_chunks.text),
+                           lower(query_terms.term),
+                           ""
+                       )
+                   )
+               ) / length(query_terms.term) * 1.0
+               / term_document_frequency.document_count
+           ) AS score
+    FROM authorized_matches
+    JOIN authorized_chunks
+      ON authorized_chunks.chunk_id = authorized_matches.chunk_id
+    JOIN query_terms
+      ON instr(lower(authorized_chunks.text), lower(query_terms.term)) > 0
+    JOIN term_document_frequency
+      ON term_document_frequency.term = query_terms.term
+    GROUP BY authorized_matches.source_id, authorized_matches.chunk_id,
+             authorized_matches.ordinal
 )
-SELECT authorized_matches.source_id,
-       authorized_matches.chunk_id,
-       authorized_matches.ordinal,
+SELECT scored_matches.source_id,
+       scored_matches.chunk_id,
+       scored_matches.ordinal,
        sources.title,
        chunks.text
-FROM authorized_matches
-JOIN sources ON sources.source_id = authorized_matches.source_id
-JOIN chunks ON chunks.chunk_id = authorized_matches.chunk_id
--- Do not use FTS5 bm25(): its collection statistics span every access scope.
-ORDER BY authorized_matches.source_id, authorized_matches.ordinal,
-         authorized_matches.chunk_id
+FROM scored_matches
+JOIN sources ON sources.source_id = scored_matches.source_id
+JOIN chunks ON chunks.chunk_id = scored_matches.chunk_id
+ORDER BY scored_matches.score DESC, scored_matches.source_id,
+         scored_matches.ordinal, scored_matches.chunk_id
 LIMIT ?
 """
 
@@ -155,10 +194,17 @@ class SQLiteFtsRetrievalProvider:
             raise TypeError("access_scope must be an AccessScope")
         if type(limit) is not int or not 1 <= limit <= _MAX_LIMIT:
             raise ValueError(f"limit must be an integer from 1 to {_MAX_LIMIT}")
+        query_terms = tuple(
+            sorted({term.lower() for term in _QUERY_TERM_PATTERN.findall(query)})
+        )
+        if not query_terms:
+            raise ValueError("query must contain at least one searchable term")
+        query_term_values = ", ".join("(?)" for _ in query_terms)
+        retrieve_sql = _RETRIEVE_SQL.format(query_term_values=query_term_values)
 
         try:
             rows = self._connection.execute(
-                _RETRIEVE_SQL,
+                retrieve_sql,
                 (
                     access_scope.user_id,
                     access_scope.role_id,
@@ -166,6 +212,7 @@ class SQLiteFtsRetrievalProvider:
                     access_scope.matter_id,
                     access_scope.workflow_id,
                     query,
+                    *query_terms,
                     limit,
                 ),
             ).fetchall()

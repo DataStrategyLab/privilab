@@ -224,7 +224,7 @@ def test_ordering_limit_and_input_validation_are_deterministic(
             provider.retrieve("notice", scope_for(), limit=invalid_limit)
 
 
-def test_unauthorized_index_content_cannot_change_scoped_order_or_limit(
+def test_authorized_corpus_relevance_and_limit_ignore_other_scopes(
     provider: SQLiteFtsRetrievalProvider,
 ) -> None:
     provider.index_source(
@@ -251,7 +251,7 @@ def test_unauthorized_index_content_cannot_change_scoped_order_or_limit(
     after = provider.retrieve("notice confidential", scope_for(), limit=1)
 
     assert [(item.source_id.value, item.chunk_id.value) for item in before] == [
-        ("source-a", "source-a.chunk-000")
+        ("source-b", "source-b.chunk-000")
     ]
     assert after == before
 
