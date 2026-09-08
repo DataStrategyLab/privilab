@@ -17,6 +17,8 @@ def _validate_text(value: object, field_name: str) -> None:
         raise TypeError(f"{field_name} must be a string")
     if not value.strip():
         raise ValueError(f"{field_name} must contain non-whitespace text")
+    if "\x00" in value:
+        raise ValueError(f"{field_name} must not contain NUL characters")
 
 
 @dataclass(frozen=True, slots=True, order=True)

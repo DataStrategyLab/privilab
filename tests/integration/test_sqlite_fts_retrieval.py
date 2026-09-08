@@ -280,27 +280,6 @@ def test_unicode_fts_matches_remain_retrievable_and_ranked(
     assert cjk_results[0].source_id == SourceId("source-cjk")
 
 
-def test_nul_containing_text_has_a_complete_deterministic_score(
-    provider: SQLiteFtsRetrievalProvider,
-) -> None:
-    provider.index_source(
-        source(
-            "source-a-nul",
-            (("source-a-nul.chunk-000", 0, "\x00notice"),),
-        )
-    )
-    provider.index_source(
-        source(
-            "source-z-plain",
-            (("source-z-plain.chunk-000", 0, "notice context"),),
-        )
-    )
-
-    results = provider.retrieve("notice", scope_for(), limit=1)
-
-    assert results[0].source_id == SourceId("source-a-nul")
-
-
 def test_provider_supports_synchronous_worker_thread_calls(
     provider: SQLiteFtsRetrievalProvider,
 ) -> None:

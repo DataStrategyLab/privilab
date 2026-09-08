@@ -215,6 +215,14 @@ def test_source_and_chunk_text_reject_only_whitespace(text: str) -> None:
         RetrievalSource(source_id, text, ())
 
 
+def test_source_and_chunk_text_reject_nul_characters() -> None:
+    source_id = SourceId("source-a")
+    with pytest.raises(ValueError, match="NUL"):
+        RetrievalChunk(ChunkId("chunk-a"), source_id, 0, "synthetic\x00text")
+    with pytest.raises(ValueError, match="NUL"):
+        RetrievalSource(source_id, "Synthetic\x00source", ())
+
+
 def test_retrieval_provider_contract_requires_scope_and_keyword_limit() -> None:
     signature = inspect.signature(RetrievalProvider.retrieve)
 

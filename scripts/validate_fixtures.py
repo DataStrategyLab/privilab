@@ -249,7 +249,11 @@ def validate_corpus(path: Path, registry: dict[str, dict[str, Any]]) -> None:
             seen_document_ids.add(document_id)
             for field_name in ("title", "text"):
                 field_value = payload[field_name]
-                if not isinstance(field_value, str) or not field_value.strip():
+                if (
+                    not isinstance(field_value, str)
+                    or not field_value.strip()
+                    or "\x00" in field_value
+                ):
                     raise ValueError(
                         f"corpus payload {field_name} must contain non-whitespace text"
                     )
