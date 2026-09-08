@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 import sqlite3
 from pathlib import Path
 
@@ -48,8 +47,6 @@ CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
 );
 """
 
-_QUERY_TERM_PATTERN = re.compile(r"[A-Za-z0-9_]+")
-
 _RETRIEVE_SQL = """
 WITH authorized_sources AS (
     SELECT source_id
@@ -65,43 +62,22 @@ WITH authorized_sources AS (
     JOIN authorized_sources ON authorized_sources.source_id = chunks.source_id
 ), authorized_matches AS (
     SELECT authorized_chunks.source_id, authorized_chunks.chunk_id,
-           authorized_chunks.ordinal
+           authorized_chunks.ordinal,
+           (
+               length(highlight(chunks_fts, 1, char(1), char(2)))
+               - length(authorized_chunks.text)
+           ) / 2.0 AS match_count
     FROM chunks_fts
     JOIN authorized_chunks ON authorized_chunks.chunk_id = chunks_fts.chunk_id
     WHERE chunks_fts MATCH ?
-), query_terms(term) AS (
-    VALUES {query_term_values}
-), term_document_frequency AS (
-    SELECT query_terms.term, COUNT(authorized_chunks.chunk_id) AS document_count
-    FROM query_terms
-    LEFT JOIN authorized_chunks
-      ON instr(lower(authorized_chunks.text), lower(query_terms.term)) > 0
-    GROUP BY query_terms.term
 ), scored_matches AS (
     SELECT authorized_matches.source_id, authorized_matches.chunk_id,
            authorized_matches.ordinal,
-           SUM(
-               (
-                   length(lower(authorized_chunks.text))
-                   - length(
-                       replace(
-                           lower(authorized_chunks.text),
-                           lower(query_terms.term),
-                           ""
-                       )
-                   )
-               ) / length(query_terms.term) * 1.0
-               / term_document_frequency.document_count
-           ) AS score
+           authorized_matches.match_count * 1.0
+           / length(authorized_chunks.text) AS score
     FROM authorized_matches
     JOIN authorized_chunks
       ON authorized_chunks.chunk_id = authorized_matches.chunk_id
-    JOIN query_terms
-      ON instr(lower(authorized_chunks.text), lower(query_terms.term)) > 0
-    JOIN term_document_frequency
-      ON term_document_frequency.term = query_terms.term
-    GROUP BY authorized_matches.source_id, authorized_matches.chunk_id,
-             authorized_matches.ordinal
 )
 SELECT scored_matches.source_id,
        scored_matches.chunk_id,
@@ -194,17 +170,10 @@ class SQLiteFtsRetrievalProvider:
             raise TypeError("access_scope must be an AccessScope")
         if type(limit) is not int or not 1 <= limit <= _MAX_LIMIT:
             raise ValueError(f"limit must be an integer from 1 to {_MAX_LIMIT}")
-        query_terms = tuple(
-            sorted({term.lower() for term in _QUERY_TERM_PATTERN.findall(query)})
-        )
-        if not query_terms:
-            raise ValueError("query must contain at least one searchable term")
-        query_term_values = ", ".join("(?)" for _ in query_terms)
-        retrieve_sql = _RETRIEVE_SQL.format(query_term_values=query_term_values)
 
         try:
             rows = self._connection.execute(
-                retrieve_sql,
+                _RETRIEVE_SQL,
                 (
                     access_scope.user_id,
                     access_scope.role_id,
@@ -212,7 +181,6 @@ class SQLiteFtsRetrievalProvider:
                     access_scope.matter_id,
                     access_scope.workflow_id,
                     query,
-                    *query_terms,
                     limit,
                 ),
             ).fetchall()

@@ -256,6 +256,29 @@ def test_authorized_corpus_relevance_and_limit_ignore_other_scopes(
     assert after == before
 
 
+def test_unicode_fts_matches_remain_retrievable_and_ranked(
+    provider: SQLiteFtsRetrievalProvider,
+) -> None:
+    provider.index_source(
+        source(
+            "source-cafe",
+            (("source-cafe.chunk-000", 0, "café café synthetic notice"),),
+        )
+    )
+    provider.index_source(
+        source(
+            "source-cjk",
+            (("source-cjk.chunk-000", 0, "合成 通知"),),
+        )
+    )
+
+    cafe_results = provider.retrieve("cafe", scope_for())
+    cjk_results = provider.retrieve("通知", scope_for())
+
+    assert cafe_results[0].source_id == SourceId("source-cafe")
+    assert cjk_results[0].source_id == SourceId("source-cjk")
+
+
 def test_indexing_enforces_stable_foreign_key_and_uniqueness_constraints(
     provider: SQLiteFtsRetrievalProvider,
 ) -> None:
