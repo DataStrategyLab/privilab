@@ -10,6 +10,14 @@ def _validate_identifier(value: object, field_name: str) -> None:
         raise TypeError(f"{field_name} must be a string")
     if not value or value != value.strip():
         raise ValueError(f"{field_name} must be a non-empty, trimmed string")
+    _validate_utf8(value, field_name)
+
+
+def _validate_utf8(value: str, field_name: str) -> None:
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as error:
+        raise ValueError(f"{field_name} must be UTF-8 encodable") from error
 
 
 def _validate_text(value: object, field_name: str) -> None:
@@ -19,6 +27,7 @@ def _validate_text(value: object, field_name: str) -> None:
         raise ValueError(f"{field_name} must contain non-whitespace text")
     if "\x00" in value:
         raise ValueError(f"{field_name} must not contain NUL characters")
+    _validate_utf8(value, field_name)
 
 
 @dataclass(frozen=True, slots=True, order=True)

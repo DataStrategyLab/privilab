@@ -15,6 +15,10 @@ from privilab.domain.retrieval import (
 )
 
 _MAX_LIMIT = 100
+_FTS5_QUERY_ERROR_MARKERS = (
+    "fts5: syntax error",
+    "unterminated string",
+)
 
 _SCHEMA = """
 PRAGMA foreign_keys = ON;
@@ -92,6 +96,12 @@ ORDER BY scored_matches.score DESC, scored_matches.source_id,
          scored_matches.ordinal, scored_matches.chunk_id
 LIMIT ?
 """
+
+
+def _is_fts5_query_error(error: sqlite3.OperationalError) -> bool:
+    """Return whether SQLite rejected the bound MATCH expression syntax."""
+    error_message = str(error).lower()
+    return any(marker in error_message for marker in _FTS5_QUERY_ERROR_MARKERS)
 
 
 class SQLiteFtsRetrievalProvider:
@@ -190,7 +200,9 @@ class SQLiteFtsRetrievalProvider:
                     ),
                 ).fetchall()
         except sqlite3.OperationalError as error:
-            raise ValueError("query is not valid FTS5 syntax") from error
+            if _is_fts5_query_error(error):
+                raise ValueError("query is not valid FTS5 syntax") from error
+            raise
         return tuple(
             RetrievedChunk(
                 source_id=SourceId(row[0]),

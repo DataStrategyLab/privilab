@@ -295,6 +295,19 @@ def test_provider_supports_synchronous_worker_thread_calls(
     assert results[0].source_id == SourceId("source-worker")
 
 
+def test_non_query_sqlite_operational_errors_remain_actionable(
+    provider: SQLiteFtsRetrievalProvider, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class LockedConnection:
+        def execute(self, *_args: object) -> None:
+            raise sqlite3.OperationalError("database is locked")
+
+    monkeypatch.setattr(provider, "_connection", LockedConnection())
+
+    with pytest.raises(sqlite3.OperationalError, match="database is locked"):
+        provider.retrieve("notice", scope_for())
+
+
 def test_indexing_enforces_stable_foreign_key_and_uniqueness_constraints(
     provider: SQLiteFtsRetrievalProvider,
 ) -> None:

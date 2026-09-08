@@ -56,6 +56,11 @@ def test_missing_context_is_representable_without_deciding_an_outcome() -> None:
     }
 
 
+def test_context_identifiers_reject_lone_surrogates() -> None:
+    with pytest.raises(ValueError, match="UTF-8"):
+        UserIdentity("\ud800")
+
+
 def test_equivalent_contexts_have_identical_canonical_json() -> None:
     first = SyntheticRequestContext(
         user=UserContext(UserIdentity("synthetic-user-002"), Role("reviewer")),

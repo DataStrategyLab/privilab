@@ -166,6 +166,14 @@ def test_stable_identifiers_reject_invalid_values(value: object) -> None:
         ChunkId(value)  # type: ignore[arg-type]
 
 
+def test_retrieval_identifiers_and_text_reject_lone_surrogates() -> None:
+    source_id = SourceId("source-a")
+    with pytest.raises(ValueError, match="UTF-8"):
+        SourceId("\ud800")
+    with pytest.raises(ValueError, match="UTF-8"):
+        RetrievalChunk(ChunkId("chunk-a"), source_id, 0, "synthetic\ud800text")
+
+
 def test_source_requires_exact_complete_entitlement_and_stable_chunks() -> None:
     source_id = SourceId("source-a")
     chunk = RetrievalChunk(ChunkId("chunk-a"), source_id, 0, "synthetic text")

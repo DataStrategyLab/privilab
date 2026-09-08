@@ -12,6 +12,10 @@ def _validate_identifier(value: object, field_name: str) -> None:
         raise TypeError(f"{field_name} must be a string")
     if not value or value != value.strip():
         raise ValueError(f"{field_name} must be a non-empty, trimmed string")
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as error:
+        raise ValueError(f"{field_name} must be UTF-8 encodable") from error
 
 
 def _validate_optional_type(
