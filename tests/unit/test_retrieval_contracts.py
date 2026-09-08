@@ -4,15 +4,17 @@ import inspect
 
 import pytest
 
-from privilab.application import RetrievalProvider, access_scope_for
+from privilab.application import (
+    PermissionPolicy,
+    RetrievalProvider,
+    access_scope_for,
+    parse_permission_policy,
+)
 from privilab.domain import (
     AccessScope,
     ChunkId,
     ClientContext,
-    ConditionId,
     MatterContext,
-    PermissionResult,
-    PermissionState,
     RetrievalChunk,
     RetrievalSource,
     Role,
@@ -34,8 +36,47 @@ def full_context() -> SyntheticRequestContext:
     )
 
 
+def policy_for(
+    effect: str = "ALLOW",
+    *,
+    match: dict[str, str] | None = None,
+    condition_ids: list[str] | None = None,
+) -> PermissionPolicy:
+    return parse_permission_policy(
+        {
+            "schema_version": 1,
+            "policy_id": "retrieval-policy",
+            "policy_version": "1.0.0",
+            "synthetic": True,
+            "required_context": [
+                "user_id",
+                "role_id",
+                "client_id",
+                "matter_id",
+                "workflow_id",
+            ],
+            "rules": [
+                {
+                    "rule_id": "retrieval-rule",
+                    "effect": effect,
+                    "match": match
+                    if match is not None
+                    else {
+                        "user_id": "user-a",
+                        "role_id": "role-a",
+                        "client_id": "client-a",
+                        "matter_id": "matter-a",
+                        "workflow_id": "workflow-a",
+                    },
+                    "condition_ids": condition_ids or [],
+                }
+            ],
+        }
+    )
+
+
 def test_access_scope_is_available_only_through_permission_gate() -> None:
-    scope = access_scope_for(full_context(), PermissionResult(PermissionState.ALLOW))
+    scope = access_scope_for(full_context(), policy_for())
 
     assert scope is not None
     assert (scope.user_id, scope.role_id, scope.client_id) == (
@@ -48,18 +89,15 @@ def test_access_scope_is_available_only_through_permission_gate() -> None:
 
 
 @pytest.mark.parametrize(
-    "result",
+    "policy",
     [
-        PermissionResult(PermissionState.BLOCK),
-        PermissionResult(PermissionState.UNKNOWN),
-        PermissionResult(
-            PermissionState.CONDITIONAL,
-            frozenset({ConditionId("review-required")}),
-        ),
+        policy_for("BLOCK"),
+        policy_for("ALLOW", match={"user_id": "other-user"}),
+        policy_for("ALLOW", condition_ids=["review-required"]),
     ],
 )
-def test_only_effective_allow_mints_access_scope(result: PermissionResult) -> None:
-    assert access_scope_for(full_context(), result) is None
+def test_only_effective_allow_mints_access_scope(policy: PermissionPolicy) -> None:
+    assert access_scope_for(full_context(), policy) is None
 
 
 @pytest.mark.parametrize(
@@ -77,7 +115,47 @@ def test_only_effective_allow_mints_access_scope(result: PermissionResult) -> No
 def test_incomplete_context_cannot_mint_access_scope(
     context: SyntheticRequestContext,
 ) -> None:
-    assert access_scope_for(context, PermissionResult(PermissionState.ALLOW)) is None
+    assert access_scope_for(context, policy_for()) is None
+
+
+def test_scope_factory_evaluates_the_supplied_context_not_a_cached_result() -> None:
+    policy = parse_permission_policy(
+        {
+            "schema_version": 1,
+            "policy_id": "context-bound-policy",
+            "policy_version": "1.0.0",
+            "synthetic": True,
+            "required_context": ["user_id"],
+            "rules": [
+                {
+                    "rule_id": "block-user-b",
+                    "effect": "BLOCK",
+                    "match": {"user_id": "user-b"},
+                    "condition_ids": [],
+                },
+                {
+                    "rule_id": "allow-user-a",
+                    "effect": "ALLOW",
+                    "match": {"user_id": "user-a"},
+                    "condition_ids": [],
+                },
+            ],
+        }
+    )
+
+    assert access_scope_for(full_context(), policy) is not None
+    assert (
+        access_scope_for(
+            SyntheticRequestContext(
+                user=UserContext(UserIdentity("user-b"), Role("role-a")),
+                client=ClientContext("client-a"),
+                matter=MatterContext("matter-a"),
+                workflow=WorkflowContext("workflow-a"),
+            ),
+            policy,
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize("value", ["", " source-a", "source-a ", 1])
@@ -126,6 +204,6 @@ def test_retrieval_provider_contract_requires_scope_and_keyword_limit() -> None:
 
 def test_scope_factory_rejects_wrong_contract_types() -> None:
     with pytest.raises(TypeError, match="SyntheticRequestContext"):
-        access_scope_for(None, PermissionResult(PermissionState.ALLOW))  # type: ignore[arg-type]
-    with pytest.raises(TypeError, match="PermissionResult"):
+        access_scope_for(None, policy_for())  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="PermissionPolicy"):
         access_scope_for(full_context(), None)  # type: ignore[arg-type]

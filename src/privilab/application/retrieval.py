@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from privilab.application.permissions import permits_protected_progression
-from privilab.domain import PermissionResult, SyntheticRequestContext
+from privilab.application.permissions import (
+    PermissionPolicy,
+    evaluate_permission,
+    permits_protected_progression,
+)
+from privilab.domain import ConditionId, SyntheticRequestContext
 from privilab.domain.retrieval import (
     AccessScope,
     RetrievedChunk,
@@ -15,13 +19,27 @@ from privilab.domain.retrieval import (
 
 def access_scope_for(
     context: SyntheticRequestContext,
-    permission_result: PermissionResult,
+    policy: PermissionPolicy,
+    *,
+    satisfied_conditions: frozenset[ConditionId] = frozenset(),
 ) -> AccessScope | None:
-    """Mint an exact retrieval scope only for effective permission ALLOW."""
+    """Evaluate this context and mint a scope only for effective ALLOW."""
     if not isinstance(context, SyntheticRequestContext):
         raise TypeError("context must be a SyntheticRequestContext")
-    if not isinstance(permission_result, PermissionResult):
-        raise TypeError("permission_result must be a PermissionResult")
+    if not isinstance(policy, PermissionPolicy):
+        raise TypeError("policy must be a PermissionPolicy")
+    if not isinstance(satisfied_conditions, frozenset) or any(
+        not isinstance(condition_id, ConditionId)
+        for condition_id in satisfied_conditions
+    ):
+        raise TypeError(
+            "satisfied_conditions must be a frozenset of ConditionId values"
+        )
+    permission_result = evaluate_permission(
+        policy,
+        context,
+        satisfied_conditions=satisfied_conditions,
+    )
     if not permits_protected_progression(permission_result):
         return None
 

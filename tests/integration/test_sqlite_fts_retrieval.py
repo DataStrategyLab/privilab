@@ -8,14 +8,12 @@ from pathlib import Path
 import pytest
 
 from privilab.adapters.retrieval import SQLiteFtsRetrievalProvider
-from privilab.application import access_scope_for
+from privilab.application import access_scope_for, parse_permission_policy
 from privilab.domain import (
     AccessScope,
     ChunkId,
     ClientContext,
     MatterContext,
-    PermissionResult,
-    PermissionState,
     RetrievalChunk,
     RetrievalSource,
     Role,
@@ -46,8 +44,51 @@ def context(
     )
 
 
+ALLOW_POLICY = parse_permission_policy(
+    {
+        "schema_version": 1,
+        "policy_id": "integration-retrieval-policy",
+        "policy_version": "1.0.0",
+        "synthetic": True,
+        "required_context": [
+            "user_id",
+            "role_id",
+            "client_id",
+            "matter_id",
+            "workflow_id",
+        ],
+        "rules": [
+            {
+                "rule_id": "allow-context",
+                "effect": "ALLOW",
+                "match": {
+                    "user_id": "user-a",
+                    "role_id": "role-a",
+                    "client_id": "client-a",
+                    "matter_id": "matter-a",
+                    "workflow_id": "workflow-a",
+                },
+                "condition_ids": [],
+            },
+            {
+                "rule_id": "allow-second-context",
+                "effect": "ALLOW",
+                "match": {
+                    "user_id": "user-b",
+                    "role_id": "role-b",
+                    "client_id": "client-b",
+                    "matter_id": "matter-b",
+                    "workflow_id": "workflow-b",
+                },
+                "condition_ids": [],
+            },
+        ],
+    }
+)
+
+
 def scope_for(**kwargs: str) -> AccessScope:
-    scope = access_scope_for(context(**kwargs), PermissionResult(PermissionState.ALLOW))
+    scope = access_scope_for(context(**kwargs), ALLOW_POLICY)
     assert scope is not None
     return scope
 
@@ -181,6 +222,38 @@ def test_ordering_limit_and_input_validation_are_deterministic(
     for invalid_limit in (0, 101, True):
         with pytest.raises(ValueError):
             provider.retrieve("notice", scope_for(), limit=invalid_limit)
+
+
+def test_unauthorized_index_content_cannot_change_scoped_order_or_limit(
+    provider: SQLiteFtsRetrievalProvider,
+) -> None:
+    provider.index_source(
+        source(
+            "source-a",
+            (("source-a.chunk-000", 0, "notice confidential"),),
+        )
+    )
+    provider.index_source(
+        source(
+            "source-b",
+            (("source-b.chunk-000", 0, "notice notice confidential"),),
+        )
+    )
+
+    before = provider.retrieve("notice confidential", scope_for(), limit=1)
+    provider.index_source(
+        source(
+            "source-unauthorized",
+            (("source-unauthorized.chunk-000", 0, "notice confidential"),),
+            entitlements=(("user-b", "role-a", "client-a", "matter-a", "workflow-a"),),
+        )
+    )
+    after = provider.retrieve("notice confidential", scope_for(), limit=1)
+
+    assert [(item.source_id.value, item.chunk_id.value) for item in before] == [
+        ("source-a", "source-a.chunk-000")
+    ]
+    assert after == before
 
 
 def test_indexing_enforces_stable_foreign_key_and_uniqueness_constraints(

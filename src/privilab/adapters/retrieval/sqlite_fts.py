@@ -57,8 +57,7 @@ WITH authorized_sources AS (
       AND matter_id = ?
       AND workflow_id = ?
 ), authorized_matches AS (
-    SELECT chunks.source_id, chunks.chunk_id, chunks.ordinal,
-           bm25(chunks_fts) AS rank
+    SELECT chunks.source_id, chunks.chunk_id, chunks.ordinal
     FROM chunks_fts
     JOIN chunks ON chunks.chunk_id = chunks_fts.chunk_id
     JOIN authorized_sources ON authorized_sources.source_id = chunks.source_id
@@ -72,7 +71,8 @@ SELECT authorized_matches.source_id,
 FROM authorized_matches
 JOIN sources ON sources.source_id = authorized_matches.source_id
 JOIN chunks ON chunks.chunk_id = authorized_matches.chunk_id
-ORDER BY authorized_matches.rank, authorized_matches.source_id,
+-- Do not use FTS5 bm25(): its collection statistics span every access scope.
+ORDER BY authorized_matches.source_id, authorized_matches.ordinal,
          authorized_matches.chunk_id
 LIMIT ?
 """

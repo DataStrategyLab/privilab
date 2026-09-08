@@ -6,15 +6,16 @@ from pathlib import Path
 import pytest
 
 from privilab.adapters.retrieval import SQLiteFtsRetrievalProvider
-from privilab.application import access_scope_for
+from privilab.application import (
+    PermissionPolicy,
+    access_scope_for,
+    parse_permission_policy,
+)
 from privilab.domain import (
     AccessScope,
     ChunkId,
     ClientContext,
-    ConditionId,
     MatterContext,
-    PermissionResult,
-    PermissionState,
     RetrievalChunk,
     RetrievalSource,
     Role,
@@ -43,10 +44,47 @@ def make_context(**overrides: str) -> SyntheticRequestContext:
     )
 
 
-def authorized_scope(**overrides: str) -> AccessScope:
-    scope = access_scope_for(
-        make_context(**overrides), PermissionResult(PermissionState.ALLOW)
+def policy_for(
+    effect: str = "ALLOW",
+    *,
+    match: dict[str, str] | None = None,
+    condition_ids: list[str] | None = None,
+) -> PermissionPolicy:
+    return parse_permission_policy(
+        {
+            "schema_version": 1,
+            "policy_id": "security-retrieval-policy",
+            "policy_version": "1.0.0",
+            "synthetic": True,
+            "required_context": [
+                "user_id",
+                "role_id",
+                "client_id",
+                "matter_id",
+                "workflow_id",
+            ],
+            "rules": [
+                {
+                    "rule_id": "security-rule",
+                    "effect": effect,
+                    "match": match
+                    if match is not None
+                    else {
+                        "user_id": "user-a",
+                        "role_id": "role-a",
+                        "client_id": "client-a",
+                        "matter_id": "matter-a",
+                        "workflow_id": "workflow-a",
+                    },
+                    "condition_ids": condition_ids or [],
+                }
+            ],
+        }
     )
+
+
+def authorized_scope(**overrides: str) -> AccessScope:
+    scope = access_scope_for(make_context(**overrides), policy_for(match={}))
     assert scope is not None
     return scope
 
@@ -106,20 +144,17 @@ def test_each_context_dimension_is_an_exact_isolation_boundary(
 
 
 @pytest.mark.parametrize(
-    "result",
+    "policy",
     [
-        PermissionResult(PermissionState.BLOCK),
-        PermissionResult(PermissionState.UNKNOWN),
-        PermissionResult(
-            PermissionState.CONDITIONAL,
-            frozenset({ConditionId("condition-review")}),
-        ),
+        policy_for("BLOCK"),
+        policy_for("ALLOW", match={"user_id": "user-b"}),
+        policy_for("ALLOW", condition_ids=["condition-review"]),
     ],
 )
 def test_non_allow_permission_states_cannot_reach_provider(
-    provider: SQLiteFtsRetrievalProvider, result: PermissionResult
+    provider: SQLiteFtsRetrievalProvider, policy: PermissionPolicy
 ) -> None:
-    assert access_scope_for(make_context(), result) is None
+    assert access_scope_for(make_context(), policy) is None
     with pytest.raises(TypeError, match="AccessScope"):
         provider.retrieve("boundarytoken", None)  # type: ignore[arg-type]
 
