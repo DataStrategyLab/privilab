@@ -1,0 +1,9 @@
+{
+  "answer_text": "Synthetic fixture answer with an intentionally unsupported citation.",
+  "citations": [
+    {
+      "source_id": "synthetic-source-not-supplied",
+      "chunk_id": "synthetic-chunk-not-supplied"
+    }
+  ]
+}

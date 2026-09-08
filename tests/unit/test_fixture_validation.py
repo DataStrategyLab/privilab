@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -38,6 +39,7 @@ def test_manifest_dispatch_is_independent_of_checkout_ancestor_names(
         repository / "fixtures/contexts/manifest.json",
         repository / "fixtures/permissions/manifest.json",
         repository / "fixtures/corpus/manifest.json",
+        repository / "fixtures/model_outputs/manifest.json",
     )
     calls: list[tuple[str, Path]] = []
 
@@ -50,10 +52,14 @@ def test_manifest_dispatch_is_independent_of_checkout_ancestor_names(
     def record_corpus(path: Path, _registry: object) -> None:
         calls.append(("corpus", path))
 
+    def record_model_output(path: Path, _registry: object) -> None:
+        calls.append(("model-output", path))
+
     monkeypatch.setattr(VALIDATOR, "ROOT", repository)
     monkeypatch.setattr(VALIDATOR, "validate_context_fixture", record_context)
     monkeypatch.setattr(VALIDATOR, "validate_permission_fixture", record_permission)
     monkeypatch.setattr(VALIDATOR, "validate_corpus", record_corpus)
+    monkeypatch.setattr(VALIDATOR, "validate_model_output_fixture", record_model_output)
 
     VALIDATOR.validate()
 
@@ -61,13 +67,13 @@ def test_manifest_dispatch_is_independent_of_checkout_ancestor_names(
         ("context", manifests[0]),
         ("permission", manifests[1]),
         ("corpus", manifests[2]),
+        ("model-output", manifests[3]),
     ]
 
 
 @pytest.mark.parametrize(
     "relative_path",
     [
-        "fixtures/model_outputs/unregistered.json",
         "fixtures/new_fixture_kind/unregistered.txt",
     ],
 )
@@ -91,6 +97,7 @@ def test_validate_rejects_files_outside_manifest_managed_directories(
     monkeypatch.setattr(VALIDATOR, "validate_context_fixture", accept_manifest)
     monkeypatch.setattr(VALIDATOR, "validate_permission_fixture", accept_manifest)
     monkeypatch.setattr(VALIDATOR, "validate_corpus", accept_manifest)
+    monkeypatch.setattr(VALIDATOR, "validate_model_output_fixture", accept_manifest)
 
     with pytest.raises(ValueError, match="outside validated manifest directories"):
         VALIDATOR.validate()
@@ -115,6 +122,7 @@ def test_validate_allows_explicit_fixture_documentation_placeholders(
     monkeypatch.setattr(VALIDATOR, "validate_context_fixture", accept_manifest)
     monkeypatch.setattr(VALIDATOR, "validate_permission_fixture", accept_manifest)
     monkeypatch.setattr(VALIDATOR, "validate_corpus", accept_manifest)
+    monkeypatch.setattr(VALIDATOR, "validate_model_output_fixture", accept_manifest)
 
     VALIDATOR.validate()
 
@@ -252,6 +260,40 @@ def permission_registry() -> dict[str, dict[str, object]]:
         ],
     }
     return test_registry
+
+
+def write_model_output_fixture_tree(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> Path:
+    repository = tmp_path / "repository"
+    fixture_dir = repository / "fixtures/model_outputs"
+    shutil.copytree(ROOT / "fixtures/model_outputs", fixture_dir)
+    monkeypatch.setattr(VALIDATOR, "ROOT", repository)
+    return fixture_dir / "manifest.json"
+
+
+def model_output_registry() -> dict[str, dict[str, object]]:
+    test_registry = registry()
+    test_registry["fixture:synthetic-model-outputs"] = {
+        **test_registry["fixture:synthetic-model-outputs"],
+        "repository_paths": [
+            "fixtures/model_outputs/manifest.json",
+            "fixtures/model_outputs/synthetic_happy_path_v1.json",
+            "fixtures/model_outputs/synthetic_citation_failure_v1.json",
+            "fixtures/model_outputs/synthetic_malformed_output_v1.json",
+        ],
+    }
+    return test_registry
+
+
+def update_manifested_fixture_hash(manifest: Path, fixture_id: str) -> None:
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    entry = next(
+        item for item in manifest_payload["fixtures"] if item["id"] == fixture_id
+    )
+    fixture_path = VALIDATOR.ROOT / entry["path"]
+    entry["content_hash"] = VALIDATOR.content_hash(fixture_path)
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
 
 
 def test_unknown_license_reference_fails_closed(
@@ -489,7 +531,9 @@ def test_license_registry_version_must_match_manifest_version(
         ("entry", "entry fields do not match the schema"),
     ],
 )
-@pytest.mark.parametrize("manifest_kind", ["context", "permission", "corpus"])
+@pytest.mark.parametrize(
+    "manifest_kind", ["context", "permission", "corpus", "model-output"]
+)
 def test_manifest_schemas_reject_undeclared_fields(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -514,11 +558,16 @@ def test_manifest_schemas_reject_undeclared_fields(
         collection_key = "fixtures"
         test_registry = permission_registry()
         validator = VALIDATOR.validate_permission_fixture
-    else:
+    elif manifest_kind == "corpus":
         manifest = write_corpus_manifest(tmp_path, monkeypatch)
         collection_key = "records"
         test_registry = corpus_registry()
         validator = VALIDATOR.validate_corpus
+    else:
+        manifest = write_model_output_fixture_tree(tmp_path, monkeypatch)
+        collection_key = "fixtures"
+        test_registry = model_output_registry()
+        validator = VALIDATOR.validate_model_output_fixture
 
     manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
     if schema_level == "manifest":
@@ -825,3 +874,97 @@ def test_permission_payload_rejects_unexpected_envelope_fields(
 
     with pytest.raises(ValueError, match="fields do not match the schema"):
         VALIDATOR.validate_permission_fixture(manifest, permission_registry())
+
+
+def test_controlled_model_output_scenarios_validate() -> None:
+    VALIDATOR.validate_model_output_fixture(
+        ROOT / "fixtures/model_outputs/manifest.json",
+        model_output_registry(),
+    )
+
+
+@pytest.mark.parametrize(
+    ("field_name", "field_value", "message"),
+    [
+        ("synthetic", False, "must be synthetic"),
+        ("license_ref", "fixture:missing", "unknown license reference"),
+        ("content_hash", "sha256:" + "0" * 64, "stale content hash"),
+    ],
+)
+def test_model_output_fixtures_retain_generic_manifest_controls(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    field_name: str,
+    field_value: object,
+    message: str,
+) -> None:
+    manifest = write_model_output_fixture_tree(tmp_path, monkeypatch)
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["fixtures"][0][field_name] = field_value
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        VALIDATOR.validate_model_output_fixture(manifest, model_output_registry())
+
+
+def test_model_output_manifest_requires_the_exact_approved_scenarios(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = write_model_output_fixture_tree(tmp_path, monkeypatch)
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["fixtures"][0]["id"] = "model-output.synthetic-unknown.001"
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="exactly the approved scenarios"):
+        VALIDATOR.validate_model_output_fixture(manifest, model_output_registry())
+
+
+def test_model_output_validator_rejects_arbitrary_malformed_shapes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = write_model_output_fixture_tree(tmp_path, monkeypatch)
+    fixture_path = (
+        VALIDATOR.ROOT / "fixtures/model_outputs/synthetic_malformed_output_v1.json"
+    )
+    fixture_path.write_text(
+        json.dumps(
+            {
+                "answer_text": "A different malformed synthetic output.",
+                "citations": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    update_manifested_fixture_hash(manifest, "model-output.synthetic-malformed.001")
+
+    with pytest.raises(ValueError, match="approved missing-chunk_id failure"):
+        VALIDATOR.validate_model_output_fixture(manifest, model_output_registry())
+
+
+def test_deliberately_malformed_model_output_cannot_be_replaced_by_a_valid_result(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = write_model_output_fixture_tree(tmp_path, monkeypatch)
+    fixture_path = (
+        VALIDATOR.ROOT / "fixtures/model_outputs/synthetic_malformed_output_v1.json"
+    )
+    payload = json.loads(fixture_path.read_text(encoding="utf-8"))
+    payload["citations"][0]["chunk_id"] = "synthetic-chunk-001"
+    fixture_path.write_text(json.dumps(payload), encoding="utf-8")
+    update_manifested_fixture_hash(manifest, "model-output.synthetic-malformed.001")
+
+    with pytest.raises(ValueError, match="approved missing-chunk_id failure"):
+        VALIDATOR.validate_model_output_fixture(manifest, model_output_registry())
+
+
+def test_unregistered_model_output_fixture_fails_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = write_model_output_fixture_tree(tmp_path, monkeypatch)
+    (manifest.parent / "unregistered.json").write_text(
+        '{"answer_text":"Unregistered.","citations":[]}',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="must be registered in the manifest"):
+        VALIDATOR.validate_model_output_fixture(manifest, model_output_registry())

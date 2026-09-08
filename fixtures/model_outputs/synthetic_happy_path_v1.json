@@ -1,0 +1,13 @@
+{
+  "answer_text": "Synthetic fixture answer based only on caller-supplied source chunks.",
+  "citations": [
+    {
+      "source_id": "synthetic-source-001",
+      "chunk_id": "synthetic-chunk-001"
+    },
+    {
+      "source_id": "synthetic-source-002",
+      "chunk_id": "synthetic-chunk-002"
+    }
+  ]
+}
