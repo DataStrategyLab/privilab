@@ -141,6 +141,23 @@ def test_excessively_nested_output_is_normalized_to_provider_failure() -> None:
     assert isinstance(domain_error.__cause__, RecursionError)
 
 
+def test_surrogate_output_is_normalized_to_provider_failure() -> None:
+    output_json = r'{"answer_text":"Synthetic \ud800 answer.","citations":[]}'
+    decoded = json.loads(output_json)
+    provider = FixtureModelProvider(output_json)
+
+    assert 0xD800 <= ord(decoded["answer_text"][10]) <= 0xDFFF
+    with pytest.raises(MalformedModelOutputError) as error:
+        provider.generate(model_request())
+
+    assert str(error.value) == (
+        "model output does not satisfy the research-result contract"
+    )
+    domain_error = error.value.__cause__
+    assert type(domain_error) is ValueError
+    assert str(domain_error) == "research result contains an invalid value"
+
+
 def test_model_request_and_source_chunks_are_minimal_immutable_values() -> None:
     request = model_request()
 
