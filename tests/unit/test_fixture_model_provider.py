@@ -184,6 +184,71 @@ def test_model_request_rejects_duplicate_source_chunk_references() -> None:
         ModelRequest("Synthetic task.", (chunk, chunk))
 
 
+def test_model_request_rejects_surrogate_in_task_text() -> None:
+    with pytest.raises(
+        ValueError, match="^task_text must contain only Unicode scalar values$"
+    ) as error:
+        ModelRequest("Synthetic \ud800 task.", ())
+
+    assert type(error.value) is ValueError
+
+
+@pytest.mark.parametrize(
+    ("field_name", "field_value"),
+    [
+        ("text", "Synthetic \udfff text."),
+        ("source_id", "synthetic-source-\ud800"),
+        ("chunk_id", "synthetic-chunk-\udfff"),
+    ],
+)
+def test_model_source_chunk_rejects_surrogates(
+    field_name: str,
+    field_value: str,
+) -> None:
+    values = {
+        "source_id": "synthetic-source-001",
+        "chunk_id": "synthetic-chunk-001",
+        "text": "Synthetic source text.",
+    }
+    values[field_name] = field_value
+
+    with pytest.raises(
+        ValueError,
+        match=rf"^{field_name} must contain only Unicode scalar values$",
+    ) as error:
+        ModelSourceChunk(**values)
+
+    assert type(error.value) is ValueError
+
+
+def test_model_request_accepts_unicode_scalars_and_encodes_as_utf8() -> None:
+    chunk = ModelSourceChunk(
+        source_id="source-café-😀",
+        chunk_id="chunk-東京-🚀",
+        text="Résumé of the synthetic 東京 source 😀.",
+    )
+    request = ModelRequest("Analyze the synthetic café source 🚀.", (chunk,))
+
+    values = (
+        request.task_text,
+        chunk.source_id,
+        chunk.chunk_id,
+        chunk.text,
+    )
+    assert all(value.encode("utf-8").decode("utf-8") == value for value in values)
+
+
+def test_request_boundary_preserves_existing_text_validation() -> None:
+    with pytest.raises(ValueError, match="task_text must contain non-whitespace text"):
+        ModelRequest(" \t", ())
+    with pytest.raises(ValueError, match="text must contain non-whitespace text"):
+        ModelSourceChunk("synthetic-source-001", "synthetic-chunk-001", " \n")
+    with pytest.raises(ValueError, match="source_id must be a non-empty, trimmed"):
+        ModelSourceChunk(" synthetic-source-001", "synthetic-chunk-001", "Text.")
+    with pytest.raises(ValueError, match="chunk_id must be a non-empty, trimmed"):
+        ModelSourceChunk("synthetic-source-001", "synthetic-chunk-001 ", "Text.")
+
+
 def test_fixture_provider_rejects_values_outside_its_typed_boundary() -> None:
     provider = FixtureModelProvider(fixture_output("synthetic_happy_path_v1.json"))
 

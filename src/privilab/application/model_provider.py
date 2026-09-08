@@ -8,11 +8,17 @@ from typing import Protocol
 from privilab.domain.research import ResearchResult
 
 
+def _validate_unicode_scalars(value: str, field_name: str) -> None:
+    if any(0xD800 <= ord(character) <= 0xDFFF for character in value):
+        raise ValueError(f"{field_name} must contain only Unicode scalar values")
+
+
 def _validate_identifier(value: object, field_name: str) -> None:
     if not isinstance(value, str):
         raise TypeError(f"{field_name} must be a string")
     if not value or value != value.strip():
         raise ValueError(f"{field_name} must be a non-empty, trimmed string")
+    _validate_unicode_scalars(value, field_name)
 
 
 def _validate_text(value: object, field_name: str) -> None:
@@ -20,6 +26,7 @@ def _validate_text(value: object, field_name: str) -> None:
         raise TypeError(f"{field_name} must be a string")
     if not value.strip():
         raise ValueError(f"{field_name} must contain non-whitespace text")
+    _validate_unicode_scalars(value, field_name)
 
 
 class MalformedModelOutputError(ValueError):
