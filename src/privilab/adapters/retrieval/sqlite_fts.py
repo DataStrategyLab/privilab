@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
+from threading import RLock
 
 from privilab.domain.retrieval import (
     AccessScope,
@@ -99,19 +100,22 @@ class SQLiteFtsRetrievalProvider:
     def __init__(self, database_path: str | Path) -> None:
         if not isinstance(database_path, (str, Path)):
             raise TypeError("database_path must be a string or Path")
-        self._connection = sqlite3.connect(str(database_path))
-        self._connection.execute("PRAGMA foreign_keys = ON")
-        self._connection.executescript(_SCHEMA)
+        self._lock = RLock()
+        self._connection = sqlite3.connect(str(database_path), check_same_thread=False)
+        with self._lock:
+            self._connection.execute("PRAGMA foreign_keys = ON")
+            self._connection.executescript(_SCHEMA)
 
     def close(self) -> None:
         """Close the provider's local database connection."""
-        self._connection.close()
+        with self._lock:
+            self._connection.close()
 
     def index_source(self, source: RetrievalSource) -> None:
         """Atomically index trusted source metadata, chunks, and entitlements."""
         if not isinstance(source, RetrievalSource):
             raise TypeError("source must be a RetrievalSource")
-        with self._connection:
+        with self._lock, self._connection:
             self._connection.execute(
                 "INSERT INTO sources (source_id, title) VALUES (?, ?)",
                 (source.source_id.value, source.title),
@@ -172,18 +176,19 @@ class SQLiteFtsRetrievalProvider:
             raise ValueError(f"limit must be an integer from 1 to {_MAX_LIMIT}")
 
         try:
-            rows = self._connection.execute(
-                _RETRIEVE_SQL,
-                (
-                    access_scope.user_id,
-                    access_scope.role_id,
-                    access_scope.client_id,
-                    access_scope.matter_id,
-                    access_scope.workflow_id,
-                    query,
-                    limit,
-                ),
-            ).fetchall()
+            with self._lock:
+                rows = self._connection.execute(
+                    _RETRIEVE_SQL,
+                    (
+                        access_scope.user_id,
+                        access_scope.role_id,
+                        access_scope.client_id,
+                        access_scope.matter_id,
+                        access_scope.workflow_id,
+                        query,
+                        limit,
+                    ),
+                ).fetchall()
         except sqlite3.OperationalError as error:
             raise ValueError("query is not valid FTS5 syntax") from error
         return tuple(

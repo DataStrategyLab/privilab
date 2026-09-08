@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from collections.abc import Generator
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -298,6 +299,21 @@ def test_nul_containing_text_has_a_complete_deterministic_score(
     results = provider.retrieve("notice", scope_for(), limit=1)
 
     assert results[0].source_id == SourceId("source-a-nul")
+
+
+def test_provider_supports_synchronous_worker_thread_calls(
+    provider: SQLiteFtsRetrievalProvider,
+) -> None:
+    worker_source = source(
+        "source-worker",
+        (("source-worker.chunk-000", 0, "notice indexed by worker"),),
+    )
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        executor.submit(provider.index_source, worker_source).result()
+        results = executor.submit(provider.retrieve, "notice", scope_for()).result()
+
+    assert results[0].source_id == SourceId("source-worker")
 
 
 def test_indexing_enforces_stable_foreign_key_and_uniqueness_constraints(
