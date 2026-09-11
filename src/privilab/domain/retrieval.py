@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+_SQLITE_INTEGER_MAX = 2**63 - 1
+
 
 def _validate_identifier(value: object, field_name: str) -> None:
     if not isinstance(value, str):
@@ -147,8 +149,13 @@ class RetrievalChunk:
             raise TypeError("chunk_id must be a ChunkId")
         if not isinstance(self.source_id, SourceId):
             raise TypeError("source_id must be a SourceId")
-        if type(self.ordinal) is not int or self.ordinal < 0:
-            raise ValueError("ordinal must be a non-negative integer")
+        if (
+            type(self.ordinal) is not int
+            or not 0 <= self.ordinal <= _SQLITE_INTEGER_MAX
+        ):
+            raise ValueError(
+                "ordinal must fit a non-negative SQLite signed 64-bit integer"
+            )
         _validate_text(self.text, "chunk text")
 
 
@@ -203,8 +210,13 @@ class RetrievedChunk:
             raise TypeError("source_id must be a SourceId")
         if not isinstance(self.chunk_id, ChunkId):
             raise TypeError("chunk_id must be a ChunkId")
-        if type(self.ordinal) is not int or self.ordinal < 0:
-            raise ValueError("ordinal must be a non-negative integer")
+        if (
+            type(self.ordinal) is not int
+            or not 0 <= self.ordinal <= _SQLITE_INTEGER_MAX
+        ):
+            raise ValueError(
+                "ordinal must fit a non-negative SQLite signed 64-bit integer"
+            )
         _validate_text(self.title, "source title")
         _validate_text(self.text, "chunk text")
 

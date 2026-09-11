@@ -114,7 +114,8 @@ def _is_fts5_query_error(error: sqlite3.OperationalError, query: str) -> bool:
     return (
         bool(missing_column)
         and re.search(
-            rf"(?<!\w)(?:{escaped_column}|\"{escaped_column}\"|\{{{escaped_column}\}})\s*:",
+            rf"(?<!\w)(?:{escaped_column}|\"{escaped_column}\"|"
+            rf"\{{{escaped_column}(?:\s+\w+)*\}})\s*:",
             query,
             flags=re.IGNORECASE,
         )

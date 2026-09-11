@@ -174,6 +174,12 @@ def test_retrieval_identifiers_and_text_reject_lone_surrogates() -> None:
         RetrievalChunk(ChunkId("chunk-a"), source_id, 0, "synthetic\ud800text")
 
 
+@pytest.mark.parametrize("ordinal", [-1, 2**63, True])
+def test_retrieval_chunk_ordinal_must_fit_sqlite_integer(ordinal: int) -> None:
+    with pytest.raises(ValueError, match="SQLite signed 64-bit"):
+        RetrievalChunk(ChunkId("chunk-a"), SourceId("source-a"), ordinal, "synthetic")
+
+
 def test_source_requires_exact_complete_entitlement_and_stable_chunks() -> None:
     source_id = SourceId("source-a")
     chunk = RetrievalChunk(ChunkId("chunk-a"), source_id, 0, "synthetic text")

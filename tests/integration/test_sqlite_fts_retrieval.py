@@ -227,6 +227,7 @@ def test_ordering_limit_and_input_validation_are_deterministic(
         "foo :bar",
         '"foo":bar',
         "{foo}:bar",
+        "{foo text}:bar",
         "*hello",
         "NEAR(hello, x)",
         None,
