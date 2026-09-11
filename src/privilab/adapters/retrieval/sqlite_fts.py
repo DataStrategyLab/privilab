@@ -17,7 +17,9 @@ from privilab.domain.retrieval import (
 _MAX_LIMIT = 100
 _FTS5_QUERY_ERROR_MARKERS = (
     "fts5: syntax error",
+    "fts5: parser stack overflow",
     "unterminated string",
+    "unknown special query:",
 )
 
 _SCHEMA = """
@@ -98,10 +100,30 @@ LIMIT ?
 """
 
 
-def _is_fts5_query_error(error: sqlite3.OperationalError) -> bool:
+def _is_fts5_query_error(error: sqlite3.OperationalError, query: str) -> bool:
     """Return whether SQLite rejected the bound MATCH expression syntax."""
     error_message = str(error).lower()
-    return any(marker in error_message for marker in _FTS5_QUERY_ERROR_MARKERS)
+    if any(marker in error_message for marker in _FTS5_QUERY_ERROR_MARKERS):
+        return True
+    if not error_message.startswith("no such column:"):
+        return False
+    missing_column = error_message.partition(":")[2].strip()
+    return bool(missing_column) and f"{missing_column}:" in query.lower()
+
+
+def _validate_query(query: object) -> str:
+    """Validate untrusted FTS input before handing it to SQLite."""
+    if not isinstance(query, str):
+        raise TypeError("query must be a string")
+    if not query or query != query.strip():
+        raise ValueError("query must be a non-empty, trimmed string")
+    if "\x00" in query:
+        raise ValueError("query must not contain NUL characters")
+    try:
+        query.encode("utf-8")
+    except UnicodeEncodeError as error:
+        raise ValueError("query must be UTF-8 encodable") from error
+    return query
 
 
 class SQLiteFtsRetrievalProvider:
@@ -176,10 +198,7 @@ class SQLiteFtsRetrievalProvider:
         limit: int = 10,
     ) -> tuple[RetrievedChunk, ...]:
         """Return only chunks selected by the SQL entitlement match."""
-        if not isinstance(query, str):
-            raise TypeError("query must be a string")
-        if not query or query != query.strip():
-            raise ValueError("query must be a non-empty, trimmed string")
+        validated_query = _validate_query(query)
         if not isinstance(access_scope, AccessScope):
             raise TypeError("access_scope must be an AccessScope")
         if type(limit) is not int or not 1 <= limit <= _MAX_LIMIT:
@@ -195,12 +214,12 @@ class SQLiteFtsRetrievalProvider:
                         access_scope.client_id,
                         access_scope.matter_id,
                         access_scope.workflow_id,
-                        query,
+                        validated_query,
                         limit,
                     ),
                 ).fetchall()
         except sqlite3.OperationalError as error:
-            if _is_fts5_query_error(error):
+            if _is_fts5_query_error(error, validated_query):
                 raise ValueError("query is not valid FTS5 syntax") from error
             raise
         return tuple(

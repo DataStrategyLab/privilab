@@ -217,7 +217,15 @@ def test_ordering_limit_and_input_validation_are_deterministic(
         ("source-a", "source-a.chunk-000"),
         ("source-b", "source-b.chunk-000"),
     ]
-    for invalid_query in ("", " notice ", None):
+    for invalid_query in (
+        "",
+        " notice ",
+        "notice\x00other",
+        "\ud800",
+        "bogus:hello",
+        "*hello",
+        None,
+    ):
         with pytest.raises((TypeError, ValueError)):
             provider.retrieve(invalid_query, scope_for())  # type: ignore[arg-type]
     for invalid_limit in (0, 101, True):
