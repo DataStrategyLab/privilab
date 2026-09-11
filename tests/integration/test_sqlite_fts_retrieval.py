@@ -225,6 +225,8 @@ def test_ordering_limit_and_input_validation_are_deterministic(
         "bogus:hello",
         "foo : bar",
         "foo :bar",
+        '"foo":bar',
+        "{foo}:bar",
         "*hello",
         None,
     ):
