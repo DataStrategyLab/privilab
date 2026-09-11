@@ -10,6 +10,7 @@ from privilab.domain.context import (
     WorkflowContext,
 )
 from privilab.domain.permissions import ConditionId, PermissionResult, PermissionState
+from privilab.domain.research import CitationReference, ResearchResult
 from privilab.domain.retrieval import (
     AccessScope,
     ChunkId,
@@ -21,6 +22,7 @@ from privilab.domain.retrieval import (
 )
 
 __all__ = [
+    "CitationReference",
     "ClientContext",
     "AccessScope",
     "ChunkId",
@@ -28,6 +30,7 @@ __all__ = [
     "MatterContext",
     "PermissionResult",
     "PermissionState",
+    "ResearchResult",
     "Role",
     "RetrievedChunk",
     "RetrievalChunk",

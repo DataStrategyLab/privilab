@@ -1,5 +1,11 @@
 """Application-controlled behavior for the PriviLAB reference demo."""
 
+from privilab.application.model_provider import (
+    MalformedModelOutputError,
+    ModelProvider,
+    ModelRequest,
+    ModelSourceChunk,
+)
 from privilab.application.permissions import (
     PermissionContextField,
     PermissionPolicy,
@@ -14,6 +20,10 @@ from privilab.application.permissions import (
 from privilab.application.retrieval import RetrievalProvider, access_scope_for
 
 __all__ = [
+    "MalformedModelOutputError",
+    "ModelProvider",
+    "ModelRequest",
+    "ModelSourceChunk",
     "PermissionContextField",
     "PermissionPolicy",
     "PermissionPolicyParseError",

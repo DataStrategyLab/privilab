@@ -1,0 +1,29 @@
+{
+  "schema_version": "1",
+  "fixtures": [
+    {
+      "id": "model-output.synthetic-happy-path.001",
+      "version": "1.0.0",
+      "path": "fixtures/model_outputs/synthetic_happy_path_v1.json",
+      "content_hash": "sha256:2ab22be190a2fdcf63d790c942cf7f3f91f7883b38e7f5a60a9fcc0100e80c2a",
+      "synthetic": true,
+      "license_ref": "fixture:synthetic-model-outputs"
+    },
+    {
+      "id": "model-output.synthetic-citation-failure.001",
+      "version": "1.0.0",
+      "path": "fixtures/model_outputs/synthetic_citation_failure_v1.json",
+      "content_hash": "sha256:bd9626aa62c34dc9ff9e9214da45e27e9ed729f1d27edb346d2c41996d00a9e5",
+      "synthetic": true,
+      "license_ref": "fixture:synthetic-model-outputs"
+    },
+    {
+      "id": "model-output.synthetic-malformed.001",
+      "version": "1.0.0",
+      "path": "fixtures/model_outputs/synthetic_malformed_output_v1.json",
+      "content_hash": "sha256:9c76518a2801a74c5be99949b0213f2acf385970cde073207f08a9bd78312816",
+      "synthetic": true,
+      "license_ref": "fixture:synthetic-model-outputs"
+    }
+  ]
+}
