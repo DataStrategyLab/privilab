@@ -223,6 +223,8 @@ def test_ordering_limit_and_input_validation_are_deterministic(
         "notice\x00other",
         "\ud800",
         "bogus:hello",
+        "foo : bar",
+        "foo :bar",
         "*hello",
         None,
     ):

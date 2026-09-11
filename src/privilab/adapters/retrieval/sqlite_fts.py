@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sqlite3
 from pathlib import Path
 from threading import RLock
@@ -108,7 +109,15 @@ def _is_fts5_query_error(error: sqlite3.OperationalError, query: str) -> bool:
     if not error_message.startswith("no such column:"):
         return False
     missing_column = error_message.partition(":")[2].strip()
-    return bool(missing_column) and f"{missing_column}:" in query.lower()
+    return (
+        bool(missing_column)
+        and re.search(
+            rf"(?<!\w){re.escape(missing_column)}\s*:",
+            query,
+            flags=re.IGNORECASE,
+        )
+        is not None
+    )
 
 
 def _validate_query(query: object) -> str:
