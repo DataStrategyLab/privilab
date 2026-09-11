@@ -108,6 +108,15 @@ def content_hash(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def is_utf8_encodable(value: str) -> bool:
+    """Return whether a JSON string can safely be stored in SQLite text."""
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError:
+        return False
+    return True
+
+
 def resolve_fixture_path(manifest_path: Path, raw_path: object) -> Path:
     if not isinstance(raw_path, str) or Path(raw_path).is_absolute():
         raise ValueError(f"{manifest_path}: fixture paths must be relative")
@@ -260,6 +269,7 @@ def validate_corpus(path: Path, registry: dict[str, dict[str, Any]]) -> None:
                 or not document_id
                 or document_id != document_id.strip()
                 or document_id in seen_document_ids
+                or not is_utf8_encodable(document_id)
             ):
                 raise ValueError(
                     "corpus payload document IDs must be unique non-empty, "
@@ -268,7 +278,12 @@ def validate_corpus(path: Path, registry: dict[str, dict[str, Any]]) -> None:
             seen_document_ids.add(document_id)
             for field_name in ("title", "text"):
                 field_value = payload[field_name]
-                if not isinstance(field_value, str) or not field_value.strip():
+                if (
+                    not isinstance(field_value, str)
+                    or not field_value.strip()
+                    or "\x00" in field_value
+                    or not is_utf8_encodable(field_value)
+                ):
                     raise ValueError(
                         f"corpus payload {field_name} must contain non-whitespace text"
                     )

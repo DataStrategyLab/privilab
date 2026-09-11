@@ -11,16 +11,32 @@ from privilab.domain.context import (
 )
 from privilab.domain.permissions import ConditionId, PermissionResult, PermissionState
 from privilab.domain.research import CitationReference, ResearchResult
+from privilab.domain.retrieval import (
+    AccessScope,
+    ChunkId,
+    RetrievalChunk,
+    RetrievalSource,
+    RetrievedChunk,
+    SourceEntitlement,
+    SourceId,
+)
 
 __all__ = [
     "CitationReference",
     "ClientContext",
+    "AccessScope",
+    "ChunkId",
     "ConditionId",
     "MatterContext",
     "PermissionResult",
     "PermissionState",
-    "Role",
     "ResearchResult",
+    "Role",
+    "RetrievedChunk",
+    "RetrievalChunk",
+    "RetrievalSource",
+    "SourceEntitlement",
+    "SourceId",
     "SyntheticRequestContext",
     "UserContext",
     "UserIdentity",

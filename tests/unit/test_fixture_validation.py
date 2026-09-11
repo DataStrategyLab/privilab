@@ -750,6 +750,44 @@ def test_corpus_payload_text_fields_reject_whitespace_only_values(
         VALIDATOR.validate_corpus(manifest, corpus_registry())
 
 
+@pytest.mark.parametrize("field_name", ["title", "text"])
+def test_corpus_payload_text_fields_reject_nul_characters(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, field_name: str
+) -> None:
+    manifest = write_corpus_manifest(tmp_path, monkeypatch)
+    fixture_path = manifest.parent / "synthetic_trade_notice_v1.json"
+    payload = json.loads(fixture_path.read_text(encoding="utf-8"))
+    payload[field_name] = f"synthetic\x00{field_name}"
+    fixture_path.write_text(json.dumps(payload), encoding="utf-8")
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["records"][0]["content_hash"] = VALIDATOR.content_hash(
+        fixture_path
+    )
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="invalid synthetic corpus payload"):
+        VALIDATOR.validate_corpus(manifest, corpus_registry())
+
+
+@pytest.mark.parametrize("field_name", ["document_id", "title", "text"])
+def test_corpus_payload_rejects_lone_surrogates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, field_name: str
+) -> None:
+    manifest = write_corpus_manifest(tmp_path, monkeypatch)
+    fixture_path = manifest.parent / "synthetic_trade_notice_v1.json"
+    payload = json.loads(fixture_path.read_text(encoding="utf-8"))
+    payload[field_name] = "synthetic\ud800value"
+    fixture_path.write_text(json.dumps(payload), encoding="utf-8")
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["records"][0]["content_hash"] = VALIDATOR.content_hash(
+        fixture_path
+    )
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="invalid synthetic corpus payload"):
+        VALIDATOR.validate_corpus(manifest, corpus_registry())
+
+
 @pytest.mark.parametrize(
     "second_document_id",
     [
