@@ -21,6 +21,7 @@ _FTS5_QUERY_ERROR_MARKERS = (
     "fts5: parser stack overflow",
     "unterminated string",
     "unknown special query:",
+    "expected integer, got",
 )
 
 _SCHEMA = """
@@ -72,8 +73,8 @@ WITH authorized_sources AS (
     SELECT authorized_chunks.source_id, authorized_chunks.chunk_id,
            authorized_chunks.ordinal,
            (
-               length(CAST(highlight(chunks_fts, 1, char(1), char(2)) AS BLOB))
-               - length(CAST(authorized_chunks.text AS BLOB))
+               length(highlight(chunks_fts, 1, char(1), char(2)))
+               - length(authorized_chunks.text)
            ) / 2.0 AS match_count
     FROM chunks_fts
     JOIN authorized_chunks ON authorized_chunks.chunk_id = chunks_fts.chunk_id
@@ -82,7 +83,7 @@ WITH authorized_sources AS (
     SELECT authorized_matches.source_id, authorized_matches.chunk_id,
            authorized_matches.ordinal,
            authorized_matches.match_count * 1.0
-           / length(CAST(authorized_chunks.text AS BLOB)) AS score
+           / length(authorized_chunks.text) AS score
     FROM authorized_matches
     JOIN authorized_chunks
       ON authorized_chunks.chunk_id = authorized_matches.chunk_id

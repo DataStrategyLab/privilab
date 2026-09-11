@@ -228,6 +228,7 @@ def test_ordering_limit_and_input_validation_are_deterministic(
         '"foo":bar',
         "{foo}:bar",
         "*hello",
+        "NEAR(hello, x)",
         None,
     ):
         with pytest.raises((TypeError, ValueError)):
@@ -290,6 +291,27 @@ def test_unicode_fts_matches_remain_retrievable_and_ranked(
 
     assert cafe_results[0].source_id == SourceId("source-cafe")
     assert cjk_results[0].source_id == SourceId("source-cjk")
+
+
+def test_unicode_match_density_uses_character_length(
+    provider: SQLiteFtsRetrievalProvider,
+) -> None:
+    provider.index_source(
+        source(
+            "source-a-one-match",
+            (("source-a-one-match.chunk-000", 0, "cafe xxx"),),
+        )
+    )
+    provider.index_source(
+        source(
+            "source-z-two-matches",
+            (("source-z-two-matches.chunk-000", 0, "café café xxxx"),),
+        )
+    )
+
+    results = provider.retrieve("cafe", scope_for(), limit=1)
+
+    assert results[0].source_id == SourceId("source-z-two-matches")
 
 
 def test_provider_supports_synchronous_worker_thread_calls(
