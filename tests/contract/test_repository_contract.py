@@ -343,9 +343,9 @@ def test_bootstrap_scripts_are_executable() -> None:
 
 def test_codex_configuration_matches_approved_local_controls() -> None:
     config = tomllib.loads((ROOT / ".codex/config.toml").read_text(encoding="utf-8"))
+    assert "model" not in config
+    assert "model_reasoning_effort" not in config
     assert config == {
-        "model": "gpt-5.6-terra",
-        "model_reasoning_effort": "medium",
         "review_model": "gpt-5.6-sol",
         "approval_policy": "on-request",
         "sandbox_mode": "workspace-write",
