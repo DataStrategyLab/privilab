@@ -114,6 +114,7 @@ def source(
             SourceEntitlement(stable_source_id, *entitlement)
             for entitlement in entitlements
         ),
+        source_version="1.0.0",
     )
 
 
@@ -152,6 +153,7 @@ def test_fts_returns_only_authorized_synthetic_corpus_chunk(
         ("synthetic-trade-notice-001", "synthetic-trade-notice-001.chunk-000")
     ]
     assert results[0].text == payload["text"]
+    assert results[0].source_version == "1.0.0"
 
 
 def test_missing_entitlement_and_no_authorized_match_return_no_text(

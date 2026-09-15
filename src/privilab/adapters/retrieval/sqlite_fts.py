@@ -29,6 +29,7 @@ PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS sources (
     source_id TEXT PRIMARY KEY,
+    source_version TEXT NOT NULL,
     title TEXT NOT NULL
 );
 
@@ -89,6 +90,7 @@ WITH authorized_sources AS (
       ON authorized_chunks.chunk_id = authorized_matches.chunk_id
 )
 SELECT scored_matches.source_id,
+       sources.source_version,
        scored_matches.chunk_id,
        scored_matches.ordinal,
        sources.title,
@@ -161,8 +163,11 @@ class SQLiteFtsRetrievalProvider:
             raise TypeError("source must be a RetrievalSource")
         with self._lock, self._connection:
             self._connection.execute(
-                "INSERT INTO sources (source_id, title) VALUES (?, ?)",
-                (source.source_id.value, source.title),
+                """
+                INSERT INTO sources (source_id, source_version, title)
+                VALUES (?, ?, ?)
+                """,
+                (source.source_id.value, source.source_version, source.title),
             )
             self._connection.executemany(
                 """
@@ -237,10 +242,11 @@ class SQLiteFtsRetrievalProvider:
         return tuple(
             RetrievedChunk(
                 source_id=SourceId(row[0]),
-                chunk_id=ChunkId(row[1]),
-                ordinal=row[2],
-                title=row[3],
-                text=row[4],
+                source_version=row[1],
+                chunk_id=ChunkId(row[2]),
+                ordinal=row[3],
+                title=row[4],
+                text=row[5],
             )
             for row in rows
         )

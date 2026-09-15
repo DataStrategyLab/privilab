@@ -1,0 +1,1325 @@
+"""Append-only SQLite persistence for application-authored run provenance."""
+
+from __future__ import annotations
+
+import json
+import sqlite3
+from datetime import datetime
+from pathlib import Path
+from threading import RLock
+from typing import cast
+
+from privilab.application.provenance import (
+    ChunkProvenance,
+    ContextProvenance,
+    FailureStage,
+    PermissionProvenance,
+    PermissionStopReason,
+    RunConfiguration,
+    RunId,
+    RunProvenance,
+    RunStatus,
+    SourceProvenance,
+)
+from privilab.domain import PermissionState
+
+_PYTHON_STRIP_CHARACTERS_SQL = (
+    "char(9, 10, 11, 12, 13, 28, 29, 30, 31, 32, 133, 160, 5760, "
+    "8192, 8193, 8194, 8195, 8196, 8197, 8198, 8199, 8200, 8201, "
+    "8202, 8232, 8233, 8239, 8287, 12288)"
+)
+
+_SCHEMA = f"""
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS runs (
+    run_id TEXT PRIMARY KEY,
+    started_at TEXT NOT NULL,
+    completed_at TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (
+        status IN ('PERMISSION_STOPPED', 'GENERATED', 'FAILED')
+    ),
+    stop_reason TEXT CHECK (
+        stop_reason IS NULL OR stop_reason IN (
+            'BLOCK', 'UNKNOWN', 'UNRESOLVED_CONDITIONS'
+        )
+    ),
+    failure_stage TEXT CHECK (
+        failure_stage IS NULL OR failure_stage IN (
+            'PERMISSION', 'AUTHORIZATION', 'RETRIEVAL', 'MODEL'
+        )
+    ),
+    synthetic_context INTEGER NOT NULL CHECK (synthetic_context = 1),
+    user_id TEXT,
+    role_id TEXT,
+    client_id TEXT,
+    matter_id TEXT,
+    workflow_id TEXT,
+    policy_id TEXT,
+    policy_version TEXT,
+    policy_schema_version INTEGER,
+    permission_state TEXT CHECK (
+        permission_state IS NULL OR permission_state IN (
+            'ALLOW', 'CONDITIONAL', 'BLOCK', 'UNKNOWN'
+        )
+    ),
+    configuration_hash TEXT NOT NULL,
+    retrieval_called INTEGER NOT NULL CHECK (retrieval_called IN (0, 1)),
+    model_called INTEGER NOT NULL CHECK (model_called IN (0, 1)),
+    is_finalized INTEGER NOT NULL CHECK (is_finalized IN (0, 1)),
+    CHECK (model_called = 0 OR retrieval_called = 1),
+    CHECK (retrieval_called = 0 OR permission_state IS 'ALLOW'),
+    CHECK (
+        (
+            permission_state IS NULL
+            AND policy_id IS NULL
+            AND policy_version IS NULL
+            AND policy_schema_version IS NULL
+        )
+        OR (
+            permission_state IS NOT NULL
+            AND policy_id IS NOT NULL
+            AND policy_version IS NOT NULL
+            AND policy_schema_version IS NOT NULL
+        )
+    ),
+    CHECK (
+        (
+            status IS 'PERMISSION_STOPPED'
+            AND permission_state IS NOT NULL
+            AND stop_reason IS NOT NULL
+            AND failure_stage IS NULL
+            AND retrieval_called = 0
+            AND model_called = 0
+            AND (
+                (
+                    permission_state IS 'BLOCK'
+                    AND stop_reason IS 'BLOCK'
+                )
+                OR (
+                    permission_state IS 'UNKNOWN'
+                    AND stop_reason IS 'UNKNOWN'
+                )
+                OR (
+                    permission_state IS 'CONDITIONAL'
+                    AND stop_reason IS 'UNRESOLVED_CONDITIONS'
+                )
+            )
+        )
+        OR (
+            status IS 'GENERATED'
+            AND permission_state IS 'ALLOW'
+            AND stop_reason IS NULL
+            AND failure_stage IS NULL
+            AND retrieval_called = 1
+            AND model_called = 1
+        )
+        OR (
+            status IS 'FAILED'
+            AND stop_reason IS NULL
+            AND failure_stage IS NOT NULL
+            AND (
+                (
+                    failure_stage IS 'PERMISSION'
+                    AND retrieval_called = 0
+                    AND model_called = 0
+                )
+                OR (
+                    failure_stage IS 'AUTHORIZATION'
+                    AND retrieval_called = 0
+                    AND model_called = 0
+                )
+                OR (
+                    failure_stage IS 'RETRIEVAL'
+                    AND retrieval_called = 1
+                    AND model_called = 0
+                )
+                OR (
+                    failure_stage IS 'MODEL'
+                    AND retrieval_called = 1
+                    AND model_called = 1
+                )
+            )
+        )
+    )
+);
+
+CREATE TABLE IF NOT EXISTS run_configurations (
+    run_id TEXT PRIMARY KEY REFERENCES runs(run_id),
+    configuration_id TEXT NOT NULL,
+    configuration_version TEXT NOT NULL,
+    provider_id TEXT NOT NULL,
+    provider_version TEXT NOT NULL,
+    model_id TEXT NOT NULL,
+    model_version TEXT NOT NULL,
+    model_content_hash TEXT,
+    retrieval_provider_id TEXT NOT NULL,
+    retrieval_provider_version TEXT NOT NULL,
+    retrieval_limit INTEGER NOT NULL CHECK (retrieval_limit BETWEEN 1 AND 100),
+    options_json TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS run_permission_conditions (
+    run_id TEXT NOT NULL REFERENCES runs(run_id),
+    condition_id TEXT NOT NULL,
+    PRIMARY KEY (run_id, condition_id)
+);
+
+CREATE TABLE IF NOT EXISTS run_sources (
+    run_id TEXT NOT NULL REFERENCES runs(run_id),
+    source_id TEXT NOT NULL,
+    source_version TEXT NOT NULL,
+    PRIMARY KEY (run_id, source_id)
+);
+
+CREATE TABLE IF NOT EXISTS run_chunks (
+    run_id TEXT NOT NULL,
+    source_id TEXT NOT NULL,
+    chunk_id TEXT NOT NULL,
+    ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+    retrieval_position INTEGER NOT NULL CHECK (retrieval_position >= 0),
+    PRIMARY KEY (run_id, chunk_id),
+    UNIQUE (run_id, retrieval_position),
+    FOREIGN KEY (run_id, source_id)
+        REFERENCES run_sources(run_id, source_id)
+);
+
+CREATE TABLE IF NOT EXISTS model_executions (
+    run_id TEXT PRIMARY KEY REFERENCES runs(run_id),
+    provider_id TEXT NOT NULL,
+    provider_version TEXT NOT NULL,
+    model_id TEXT NOT NULL,
+    model_version TEXT NOT NULL,
+    model_content_hash TEXT
+);
+
+CREATE TRIGGER IF NOT EXISTS prevent_run_id_update
+BEFORE UPDATE OF run_id ON runs
+BEGIN
+    SELECT RAISE(ABORT, 'run_id is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS runs_must_start_open
+BEFORE INSERT ON runs
+WHEN NEW.is_finalized != 0
+BEGIN
+    SELECT RAISE(ABORT, 'run must be inserted before finalization');
+END;
+
+CREATE TRIGGER IF NOT EXISTS finalized_run_requires_complete_provenance
+BEFORE UPDATE OF is_finalized ON runs
+WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
+    NOT EXISTS (
+        SELECT 1 FROM run_configurations
+        WHERE run_id = NEW.run_id
+    )
+    OR EXISTS (
+        WITH RECURSIVE
+        reconstruction_text(bytes) AS (
+            SELECT CAST(
+                CAST(run_id AS BLOB)
+                || x'00' || CAST(started_at AS BLOB)
+                || x'00' || CAST(completed_at AS BLOB)
+                || x'00' || CAST(status AS BLOB)
+                || x'00' || coalesce(CAST(stop_reason AS BLOB), x'')
+                || x'00' || coalesce(CAST(failure_stage AS BLOB), x'')
+                || x'00' || coalesce(CAST(user_id AS BLOB), x'')
+                || x'00' || coalesce(CAST(role_id AS BLOB), x'')
+                || x'00' || coalesce(CAST(client_id AS BLOB), x'')
+                || x'00' || coalesce(CAST(matter_id AS BLOB), x'')
+                || x'00' || coalesce(CAST(workflow_id AS BLOB), x'')
+                || x'00' || coalesce(CAST(policy_id AS BLOB), x'')
+                || x'00' || coalesce(CAST(policy_version AS BLOB), x'')
+                || x'00' || coalesce(CAST(permission_state AS BLOB), x'')
+                || x'00' || CAST(configuration_hash AS BLOB)
+                AS BLOB
+            )
+            FROM runs
+            WHERE run_id IS NEW.run_id
+            UNION ALL
+            SELECT CAST(
+                CAST(run_id AS BLOB)
+                || x'00' || CAST(configuration_id AS BLOB)
+                || x'00' || CAST(configuration_version AS BLOB)
+                || x'00' || CAST(provider_id AS BLOB)
+                || x'00' || CAST(provider_version AS BLOB)
+                || x'00' || CAST(model_id AS BLOB)
+                || x'00' || CAST(model_version AS BLOB)
+                || x'00' || coalesce(CAST(model_content_hash AS BLOB), x'')
+                || x'00' || CAST(retrieval_provider_id AS BLOB)
+                || x'00' || CAST(retrieval_provider_version AS BLOB)
+                || x'00' || CAST(options_json AS BLOB)
+                AS BLOB
+            )
+            FROM run_configurations
+            WHERE run_id IS NEW.run_id
+            UNION ALL
+            SELECT CAST(
+                CAST(run_id AS BLOB)
+                || x'00' || CAST(condition_id AS BLOB)
+                AS BLOB
+            )
+            FROM run_permission_conditions
+            WHERE run_id IS NEW.run_id
+            UNION ALL
+            SELECT CAST(
+                CAST(run_id AS BLOB)
+                || x'00' || CAST(source_id AS BLOB)
+                || x'00' || CAST(source_version AS BLOB)
+                AS BLOB
+            )
+            FROM run_sources
+            WHERE run_id IS NEW.run_id
+            UNION ALL
+            SELECT CAST(
+                CAST(run_id AS BLOB)
+                || x'00' || CAST(source_id AS BLOB)
+                || x'00' || CAST(chunk_id AS BLOB)
+                AS BLOB
+            )
+            FROM run_chunks
+            WHERE run_id IS NEW.run_id
+            UNION ALL
+            SELECT CAST(
+                CAST(run_id AS BLOB)
+                || x'00' || CAST(provider_id AS BLOB)
+                || x'00' || CAST(provider_version AS BLOB)
+                || x'00' || CAST(model_id AS BLOB)
+                || x'00' || CAST(model_version AS BLOB)
+                || x'00' || coalesce(CAST(model_content_hash AS BLOB), x'')
+                AS BLOB
+            )
+            FROM model_executions
+            WHERE run_id IS NEW.run_id
+        ),
+        valid_utf8(bytes, position) AS (
+            SELECT bytes, 1
+            FROM reconstruction_text
+            UNION ALL
+            SELECT bytes,
+                   CASE
+                       WHEN hex(substr(bytes, position, 1))
+                            BETWEEN '00' AND '7F'
+                           THEN position + 1
+                       WHEN hex(substr(bytes, position, 1))
+                            BETWEEN 'C2' AND 'DF'
+                            AND hex(substr(bytes, position + 1, 1))
+                                BETWEEN '80' AND 'BF'
+                           THEN position + 2
+                       WHEN hex(substr(bytes, position, 1)) = 'E0'
+                            AND hex(substr(bytes, position + 1, 1))
+                                BETWEEN 'A0' AND 'BF'
+                            AND hex(substr(bytes, position + 2, 1))
+                                BETWEEN '80' AND 'BF'
+                           THEN position + 3
+                       WHEN hex(substr(bytes, position, 1))
+                            BETWEEN 'E1' AND 'EC'
+                            AND hex(substr(bytes, position + 1, 1))
+                                BETWEEN '80' AND 'BF'
+                            AND hex(substr(bytes, position + 2, 1))
+                                BETWEEN '80' AND 'BF'
+                           THEN position + 3
+                       WHEN hex(substr(bytes, position, 1)) = 'ED'
+                            AND hex(substr(bytes, position + 1, 1))
+                                BETWEEN '80' AND '9F'
+                            AND hex(substr(bytes, position + 2, 1))
+                                BETWEEN '80' AND 'BF'
+                           THEN position + 3
+                       WHEN hex(substr(bytes, position, 1))
+                            BETWEEN 'EE' AND 'EF'
+                            AND hex(substr(bytes, position + 1, 1))
+                                BETWEEN '80' AND 'BF'
+                            AND hex(substr(bytes, position + 2, 1))
+                                BETWEEN '80' AND 'BF'
+                           THEN position + 3
+                       WHEN hex(substr(bytes, position, 1)) = 'F0'
+                            AND hex(substr(bytes, position + 1, 1))
+                                BETWEEN '90' AND 'BF'
+                            AND hex(substr(bytes, position + 2, 1))
+                                BETWEEN '80' AND 'BF'
+                            AND hex(substr(bytes, position + 3, 1))
+                                BETWEEN '80' AND 'BF'
+                           THEN position + 4
+                       WHEN hex(substr(bytes, position, 1))
+                            BETWEEN 'F1' AND 'F3'
+                            AND hex(substr(bytes, position + 1, 1))
+                                BETWEEN '80' AND 'BF'
+                            AND hex(substr(bytes, position + 2, 1))
+                                BETWEEN '80' AND 'BF'
+                            AND hex(substr(bytes, position + 3, 1))
+                                BETWEEN '80' AND 'BF'
+                           THEN position + 4
+                       WHEN hex(substr(bytes, position, 1)) = 'F4'
+                            AND hex(substr(bytes, position + 1, 1))
+                                BETWEEN '80' AND '8F'
+                            AND hex(substr(bytes, position + 2, 1))
+                                BETWEEN '80' AND 'BF'
+                            AND hex(substr(bytes, position + 3, 1))
+                                BETWEEN '80' AND 'BF'
+                           THEN position + 4
+                       ELSE 0
+                   END
+            FROM valid_utf8
+            WHERE position > 0 AND position <= length(bytes)
+        )
+        SELECT 1
+        FROM valid_utf8
+        WHERE position = 0
+    )
+    OR typeof(NEW.run_id) != 'text'
+    OR NEW.run_id = ''
+    OR NEW.run_id != trim(NEW.run_id, {_PYTHON_STRIP_CHARACTERS_SQL})
+    OR typeof(NEW.started_at) != 'text'
+    OR length(NEW.started_at) NOT IN (27, 32)
+    OR substr(NEW.started_at, 1, 26) NOT GLOB
+       '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9]'
+    OR substr(NEW.started_at, 1, 4) = '0000'
+    OR substr(NEW.started_at, 12, 2) NOT GLOB '[0-9][0-9]'
+    OR CAST(substr(NEW.started_at, 12, 2) AS INTEGER) > 23
+    OR (
+        NOT (
+            length(NEW.started_at) = 27
+            AND substr(NEW.started_at, 27, 1) = 'Z'
+        )
+        AND NOT (
+            length(NEW.started_at) = 32
+            AND substr(NEW.started_at, 27, 1) IN ('+', '-')
+            AND substr(NEW.started_at, 28, 2) GLOB '[0-9][0-9]'
+            AND CAST(substr(NEW.started_at, 28, 2) AS INTEGER) <= 23
+            AND substr(NEW.started_at, 30, 1) = ':'
+            AND substr(NEW.started_at, 31, 2) GLOB '[0-9][0-9]'
+            AND CAST(substr(NEW.started_at, 31, 2) AS INTEGER) <= 59
+        )
+    )
+    OR julianday(NEW.started_at) IS NULL
+    OR date(substr(NEW.started_at, 1, 26))
+       IS NOT substr(NEW.started_at, 1, 10)
+    OR typeof(NEW.completed_at) != 'text'
+    OR length(NEW.completed_at) NOT IN (27, 32)
+    OR substr(NEW.completed_at, 1, 26) NOT GLOB
+       '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9]'
+    OR substr(NEW.completed_at, 1, 4) = '0000'
+    OR substr(NEW.completed_at, 12, 2) NOT GLOB '[0-9][0-9]'
+    OR CAST(substr(NEW.completed_at, 12, 2) AS INTEGER) > 23
+    OR (
+        NOT (
+            length(NEW.completed_at) = 27
+            AND substr(NEW.completed_at, 27, 1) = 'Z'
+        )
+        AND NOT (
+            length(NEW.completed_at) = 32
+            AND substr(NEW.completed_at, 27, 1) IN ('+', '-')
+            AND substr(NEW.completed_at, 28, 2) GLOB '[0-9][0-9]'
+            AND CAST(substr(NEW.completed_at, 28, 2) AS INTEGER) <= 23
+            AND substr(NEW.completed_at, 30, 1) = ':'
+            AND substr(NEW.completed_at, 31, 2) GLOB '[0-9][0-9]'
+            AND CAST(substr(NEW.completed_at, 31, 2) AS INTEGER) <= 59
+        )
+    )
+    OR julianday(NEW.completed_at) IS NULL
+    OR date(substr(NEW.completed_at, 1, 26))
+       IS NOT substr(NEW.completed_at, 1, 10)
+    OR (
+        CAST(strftime('%s', NEW.completed_at) AS INTEGER) * 1000000
+        + CAST(substr(NEW.completed_at, 21, 6) AS INTEGER)
+    ) < (
+        CAST(strftime('%s', NEW.started_at) AS INTEGER) * 1000000
+        + CAST(substr(NEW.started_at, 21, 6) AS INTEGER)
+    )
+    OR typeof(NEW.configuration_hash) != 'text'
+    OR length(NEW.configuration_hash) != 71
+    OR substr(NEW.configuration_hash, 1, 7) != 'sha256:'
+    OR substr(NEW.configuration_hash, 8) GLOB '*[^0-9a-f]*'
+    OR (
+        NEW.user_id IS NOT NULL
+        AND (
+            typeof(NEW.user_id) != 'text'
+            OR NEW.user_id = ''
+            OR NEW.user_id != trim(
+                NEW.user_id, {_PYTHON_STRIP_CHARACTERS_SQL}
+            )
+        )
+    )
+    OR (
+        NEW.role_id IS NOT NULL
+        AND (
+            typeof(NEW.role_id) != 'text'
+            OR NEW.role_id = ''
+            OR NEW.role_id != trim(
+                NEW.role_id, {_PYTHON_STRIP_CHARACTERS_SQL}
+            )
+        )
+    )
+    OR (
+        NEW.client_id IS NOT NULL
+        AND (
+            typeof(NEW.client_id) != 'text'
+            OR NEW.client_id = ''
+            OR NEW.client_id != trim(
+                NEW.client_id, {_PYTHON_STRIP_CHARACTERS_SQL}
+            )
+        )
+    )
+    OR (
+        NEW.matter_id IS NOT NULL
+        AND (
+            typeof(NEW.matter_id) != 'text'
+            OR NEW.matter_id = ''
+            OR NEW.matter_id != trim(
+                NEW.matter_id, {_PYTHON_STRIP_CHARACTERS_SQL}
+            )
+        )
+    )
+    OR (
+        NEW.workflow_id IS NOT NULL
+        AND (
+            typeof(NEW.workflow_id) != 'text'
+            OR NEW.workflow_id = ''
+            OR NEW.workflow_id != trim(
+                NEW.workflow_id, {_PYTHON_STRIP_CHARACTERS_SQL}
+            )
+        )
+    )
+    OR (
+        NEW.policy_id IS NOT NULL
+        AND (
+            typeof(NEW.policy_id) != 'text'
+            OR NEW.policy_id = ''
+            OR NEW.policy_id != trim(
+                NEW.policy_id, {_PYTHON_STRIP_CHARACTERS_SQL}
+            )
+        )
+    )
+    OR (
+        NEW.policy_version IS NOT NULL
+        AND (
+            typeof(NEW.policy_version) != 'text'
+            OR NEW.policy_version = ''
+            OR NEW.policy_version != trim(
+                NEW.policy_version, {_PYTHON_STRIP_CHARACTERS_SQL}
+            )
+        )
+    )
+    OR (
+        NEW.policy_schema_version IS NOT NULL
+        AND typeof(NEW.policy_schema_version) != 'integer'
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM run_configurations AS configuration
+        WHERE configuration.run_id = NEW.run_id
+          AND (
+              typeof(configuration.configuration_id) != 'text'
+              OR configuration.configuration_id = ''
+              OR configuration.configuration_id != trim(
+                  configuration.configuration_id,
+                  {_PYTHON_STRIP_CHARACTERS_SQL}
+              )
+              OR typeof(configuration.configuration_version) != 'text'
+              OR configuration.configuration_version = ''
+              OR configuration.configuration_version != trim(
+                  configuration.configuration_version,
+                  {_PYTHON_STRIP_CHARACTERS_SQL}
+              )
+              OR typeof(configuration.provider_id) != 'text'
+              OR configuration.provider_id = ''
+              OR configuration.provider_id != trim(
+                  configuration.provider_id, {_PYTHON_STRIP_CHARACTERS_SQL}
+              )
+              OR typeof(configuration.provider_version) != 'text'
+              OR configuration.provider_version = ''
+              OR configuration.provider_version != trim(
+                  configuration.provider_version,
+                  {_PYTHON_STRIP_CHARACTERS_SQL}
+              )
+              OR typeof(configuration.model_id) != 'text'
+              OR configuration.model_id = ''
+              OR configuration.model_id != trim(
+                  configuration.model_id, {_PYTHON_STRIP_CHARACTERS_SQL}
+              )
+              OR typeof(configuration.model_version) != 'text'
+              OR configuration.model_version = ''
+              OR configuration.model_version != trim(
+                  configuration.model_version, {_PYTHON_STRIP_CHARACTERS_SQL}
+              )
+              OR typeof(configuration.retrieval_provider_id) != 'text'
+              OR configuration.retrieval_provider_id = ''
+              OR configuration.retrieval_provider_id != trim(
+                  configuration.retrieval_provider_id,
+                  {_PYTHON_STRIP_CHARACTERS_SQL}
+              )
+              OR typeof(configuration.retrieval_provider_version) != 'text'
+              OR configuration.retrieval_provider_version = ''
+              OR configuration.retrieval_provider_version != trim(
+                  configuration.retrieval_provider_version,
+                  {_PYTHON_STRIP_CHARACTERS_SQL}
+              )
+              OR typeof(configuration.retrieval_limit) != 'integer'
+              OR (
+                  configuration.model_content_hash IS NOT NULL
+                  AND (
+                      typeof(configuration.model_content_hash) != 'text'
+                      OR length(configuration.model_content_hash) != 71
+                      OR substr(configuration.model_content_hash, 1, 7)
+                         != 'sha256:'
+                      OR substr(configuration.model_content_hash, 8)
+                         GLOB '*[^0-9a-f]*'
+                  )
+              )
+              OR CASE
+                  WHEN json_valid(configuration.options_json) = 0 THEN 1
+                  WHEN json_type(configuration.options_json) IS NOT 'object'
+                      THEN 1
+                  ELSE 0
+                 END
+              OR EXISTS (
+                  SELECT 1
+                  FROM json_each(
+                      CASE
+                          WHEN json_valid(configuration.options_json)
+                              THEN configuration.options_json
+                          ELSE '{{}}'
+                      END
+                  ) AS option
+                  WHERE option.type != 'text'
+                     OR option.key = ''
+                     OR option.key != trim(
+                         option.key, {_PYTHON_STRIP_CHARACTERS_SQL}
+                     )
+                     OR option.value = ''
+                     OR option.value != trim(
+                         option.value, {_PYTHON_STRIP_CHARACTERS_SQL}
+                     )
+                     OR EXISTS (
+                         WITH RECURSIVE
+                         option_payload(bytes) AS (
+                             SELECT CAST(
+                                 CAST(option.key AS BLOB)
+                                 || x'00'
+                                 || CAST(option.value AS BLOB)
+                                 AS BLOB
+                             )
+                         ),
+                         byte_positions(position) AS (
+                             SELECT 1
+                             UNION ALL
+                             SELECT position + 1
+                             FROM byte_positions
+                             WHERE position < length(
+                                 (SELECT bytes FROM option_payload)
+                             )
+                         )
+                         SELECT 1
+                         FROM byte_positions
+                         WHERE hex(substr(
+                                   (SELECT bytes FROM option_payload),
+                                   position,
+                                   1
+                               )) = 'ED'
+                           AND substr(hex(substr(
+                                   (SELECT bytes FROM option_payload),
+                                   position + 1,
+                                   1
+                               )), 1, 1) IN ('A', 'B')
+                           AND substr(hex(substr(
+                                   (SELECT bytes FROM option_payload),
+                                   position + 2,
+                                   1
+                               )), 1, 1) IN ('8', '9', 'A', 'B')
+                     )
+              )
+          )
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM run_permission_conditions AS condition
+        WHERE condition.run_id = NEW.run_id
+          AND (
+              typeof(condition.condition_id) != 'text'
+              OR condition.condition_id = ''
+              OR condition.condition_id != trim(
+                  condition.condition_id, {_PYTHON_STRIP_CHARACTERS_SQL}
+              )
+          )
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM run_sources AS source
+        WHERE source.run_id = NEW.run_id
+          AND (
+              typeof(source.source_id) != 'text'
+              OR source.source_id = ''
+              OR source.source_id != trim(
+                  source.source_id, {_PYTHON_STRIP_CHARACTERS_SQL}
+              )
+              OR typeof(source.source_version) != 'text'
+              OR source.source_version = ''
+              OR source.source_version != trim(
+                  source.source_version, {_PYTHON_STRIP_CHARACTERS_SQL}
+              )
+          )
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM run_chunks AS chunk
+        WHERE chunk.run_id = NEW.run_id
+          AND (
+              typeof(chunk.chunk_id) != 'text'
+              OR chunk.chunk_id = ''
+              OR chunk.chunk_id != trim(
+                  chunk.chunk_id, {_PYTHON_STRIP_CHARACTERS_SQL}
+              )
+              OR typeof(chunk.ordinal) != 'integer'
+              OR typeof(chunk.retrieval_position) != 'integer'
+          )
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM run_chunks AS chunk
+        WHERE chunk.run_id = NEW.run_id
+          AND NOT EXISTS (
+              SELECT 1
+              FROM run_sources AS source
+              WHERE source.run_id = chunk.run_id
+                AND source.source_id = chunk.source_id
+          )
+    )
+    OR (
+        NEW.permission_state IS 'CONDITIONAL'
+        AND NOT EXISTS (
+            SELECT 1 FROM run_permission_conditions
+            WHERE run_id = NEW.run_id
+        )
+    )
+    OR (
+        NEW.permission_state IS NOT 'CONDITIONAL'
+        AND EXISTS (
+            SELECT 1 FROM run_permission_conditions
+            WHERE run_id = NEW.run_id
+        )
+    )
+    OR EXISTS (
+        SELECT 1 FROM run_sources
+        WHERE run_sources.run_id = NEW.run_id
+          AND NOT EXISTS (
+              SELECT 1 FROM run_chunks
+              WHERE run_chunks.run_id = run_sources.run_id
+                AND run_chunks.source_id = run_sources.source_id
+          )
+    )
+    OR (
+        NEW.retrieval_called = 0
+        AND EXISTS (
+            SELECT 1 FROM run_sources
+            WHERE run_id = NEW.run_id
+        )
+    )
+    OR (
+        EXISTS (SELECT 1 FROM run_chunks WHERE run_id = NEW.run_id)
+        AND (
+            (SELECT min(retrieval_position) FROM run_chunks
+             WHERE run_id = NEW.run_id) IS NOT 0
+            OR (SELECT max(retrieval_position) FROM run_chunks
+                WHERE run_id = NEW.run_id) IS NOT (
+                    SELECT count(*) - 1 FROM run_chunks
+                    WHERE run_id = NEW.run_id
+                )
+        )
+    )
+    OR (
+        NEW.model_called = 0
+        AND EXISTS (
+            SELECT 1 FROM model_executions
+            WHERE run_id = NEW.run_id
+        )
+    )
+    OR (
+        NEW.model_called = 1
+        AND NOT EXISTS (
+            SELECT 1
+            FROM model_executions
+            JOIN run_configurations USING (run_id)
+            WHERE model_executions.run_id = NEW.run_id
+              AND model_executions.provider_id
+                  IS run_configurations.provider_id
+              AND model_executions.provider_version
+                  IS run_configurations.provider_version
+              AND model_executions.model_id
+                  IS run_configurations.model_id
+              AND model_executions.model_version
+                  IS run_configurations.model_version
+              AND model_executions.model_content_hash
+                  IS run_configurations.model_content_hash
+        )
+    )
+)
+BEGIN
+    SELECT RAISE(ABORT, 'run provenance is incomplete');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_update
+BEFORE UPDATE ON runs
+WHEN OLD.is_finalized = 1
+ AND NEW.run_id IS OLD.run_id
+ AND (
+    NEW.started_at IS NOT OLD.started_at
+    OR NEW.completed_at IS NOT OLD.completed_at
+    OR NEW.status IS NOT OLD.status
+    OR NEW.stop_reason IS NOT OLD.stop_reason
+    OR NEW.failure_stage IS NOT OLD.failure_stage
+    OR NEW.synthetic_context IS NOT OLD.synthetic_context
+    OR NEW.user_id IS NOT OLD.user_id
+    OR NEW.role_id IS NOT OLD.role_id
+    OR NEW.client_id IS NOT OLD.client_id
+    OR NEW.matter_id IS NOT OLD.matter_id
+    OR NEW.workflow_id IS NOT OLD.workflow_id
+    OR NEW.policy_id IS NOT OLD.policy_id
+    OR NEW.policy_version IS NOT OLD.policy_version
+    OR NEW.policy_schema_version IS NOT OLD.policy_schema_version
+    OR NEW.permission_state IS NOT OLD.permission_state
+    OR NEW.configuration_hash IS NOT OLD.configuration_hash
+    OR NEW.retrieval_called IS NOT OLD.retrieval_called
+    OR NEW.model_called IS NOT OLD.model_called
+    OR NEW.is_finalized IS NOT OLD.is_finalized
+ )
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_delete
+BEFORE DELETE ON runs
+WHEN OLD.is_finalized = 1
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_replace
+BEFORE INSERT ON runs
+WHEN EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = NEW.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_run_configurations_run_id_update
+BEFORE UPDATE OF run_id ON run_configurations
+BEGIN
+    SELECT RAISE(ABORT, 'run_id is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_run_permission_conditions_run_id_update
+BEFORE UPDATE OF run_id ON run_permission_conditions
+BEGIN
+    SELECT RAISE(ABORT, 'run_id is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_run_sources_run_id_update
+BEFORE UPDATE OF run_id ON run_sources
+BEGIN
+    SELECT RAISE(ABORT, 'run_id is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_run_chunks_run_id_update
+BEFORE UPDATE OF run_id ON run_chunks
+BEGIN
+    SELECT RAISE(ABORT, 'run_id is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_model_executions_run_id_update
+BEFORE UPDATE OF run_id ON model_executions
+BEGIN
+    SELECT RAISE(ABORT, 'run_id is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_configurations_insert
+BEFORE INSERT ON run_configurations
+WHEN EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = NEW.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_configurations_update
+BEFORE UPDATE ON run_configurations
+WHEN NEW.run_id IS OLD.run_id AND EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = OLD.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_configurations_delete
+BEFORE DELETE ON run_configurations
+WHEN EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = OLD.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_permission_conditions_insert
+BEFORE INSERT ON run_permission_conditions
+WHEN EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = NEW.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_permission_conditions_update
+BEFORE UPDATE ON run_permission_conditions
+WHEN NEW.run_id IS OLD.run_id AND EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = OLD.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_permission_conditions_delete
+BEFORE DELETE ON run_permission_conditions
+WHEN EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = OLD.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_sources_insert
+BEFORE INSERT ON run_sources
+WHEN EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = NEW.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_sources_update
+BEFORE UPDATE ON run_sources
+WHEN NEW.run_id IS OLD.run_id AND EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = OLD.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_sources_delete
+BEFORE DELETE ON run_sources
+WHEN EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = OLD.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_chunks_insert
+BEFORE INSERT ON run_chunks
+WHEN EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = NEW.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_chunks_update
+BEFORE UPDATE ON run_chunks
+WHEN NEW.run_id IS OLD.run_id AND EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = OLD.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_run_chunks_delete
+BEFORE DELETE ON run_chunks
+WHEN EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = OLD.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_model_executions_insert
+BEFORE INSERT ON model_executions
+WHEN EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = NEW.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_model_executions_update
+BEFORE UPDATE ON model_executions
+WHEN NEW.run_id IS OLD.run_id AND EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = OLD.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS prevent_finalized_model_executions_delete
+BEFORE DELETE ON model_executions
+WHEN EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = OLD.run_id AND is_finalized = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'finalized run provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS run_sources_require_retrieval
+BEFORE INSERT ON run_sources
+WHEN NOT EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = NEW.run_id AND retrieval_called = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'source provenance requires completed retrieval');
+END;
+
+CREATE TRIGGER IF NOT EXISTS model_provenance_requires_execution
+BEFORE INSERT ON model_executions
+WHEN NOT EXISTS (
+    SELECT 1 FROM runs
+    WHERE run_id = NEW.run_id AND model_called = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'model provenance requires model execution');
+END;
+"""
+
+
+def _options_json(configuration: RunConfiguration) -> str:
+    return json.dumps(
+        dict(sorted(configuration.options)),
+        ensure_ascii=False,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _read_options(payload: str) -> tuple[tuple[str, str], ...]:
+    decoded: object = json.loads(payload)
+    if not isinstance(decoded, dict) or any(
+        not isinstance(name, str) or not isinstance(value, str)
+        for name, value in decoded.items()
+    ):
+        raise ValueError("stored configuration options are invalid")
+    values = cast(dict[str, str], decoded)
+    return tuple(sorted(values.items()))
+
+
+class SQLiteProvenanceStore:
+    """Persist each application-authored run once using relational constraints."""
+
+    def __init__(self, database_path: str | Path) -> None:
+        if not isinstance(database_path, (str, Path)):
+            raise TypeError("database_path must be a string or Path")
+        self._lock = RLock()
+        self._connection = sqlite3.connect(str(database_path), check_same_thread=False)
+        self._connection.row_factory = sqlite3.Row
+        with self._lock:
+            self._connection.execute("PRAGMA foreign_keys = ON")
+            self._connection.execute("PRAGMA recursive_triggers = ON")
+            self._connection.executescript(_SCHEMA)
+
+    def close(self) -> None:
+        """Close the local database connection."""
+        with self._lock:
+            self._connection.close()
+
+    def append(self, provenance: RunProvenance) -> None:
+        """Atomically append a terminal run; duplicate IDs fail, never update."""
+        if not isinstance(provenance, RunProvenance):
+            raise TypeError("provenance must be RunProvenance")
+        permission = provenance.permission
+        with self._lock, self._connection:
+            self._connection.execute(
+                """
+                INSERT INTO runs (
+                    run_id, started_at, completed_at, status, stop_reason,
+                    failure_stage, synthetic_context, user_id, role_id,
+                    client_id, matter_id, workflow_id, policy_id,
+                    policy_version, policy_schema_version, permission_state,
+                    configuration_hash, retrieval_called, model_called,
+                    is_finalized
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    provenance.run_id.value,
+                    provenance.started_at.isoformat(timespec="microseconds"),
+                    provenance.completed_at.isoformat(timespec="microseconds"),
+                    provenance.status.value,
+                    None
+                    if provenance.stop_reason is None
+                    else provenance.stop_reason.value,
+                    None
+                    if provenance.failure_stage is None
+                    else provenance.failure_stage.value,
+                    int(provenance.context.synthetic),
+                    provenance.context.user_id,
+                    provenance.context.role_id,
+                    provenance.context.client_id,
+                    provenance.context.matter_id,
+                    provenance.context.workflow_id,
+                    None if permission is None else permission.policy_id,
+                    None if permission is None else permission.policy_version,
+                    None if permission is None else permission.policy_schema_version,
+                    None if permission is None else permission.state.value,
+                    provenance.configuration_hash,
+                    int(provenance.retrieval_called),
+                    int(provenance.model_called),
+                    0,
+                ),
+            )
+            configuration = provenance.configuration
+            self._connection.execute(
+                """
+                INSERT INTO run_configurations (
+                    run_id, configuration_id, configuration_version,
+                    provider_id, provider_version, model_id, model_version,
+                    model_content_hash,
+                    retrieval_provider_id,
+                    retrieval_provider_version, retrieval_limit, options_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    provenance.run_id.value,
+                    configuration.configuration_id,
+                    configuration.configuration_version,
+                    configuration.provider_id,
+                    configuration.provider_version,
+                    configuration.model_id,
+                    configuration.model_version,
+                    configuration.model_content_hash,
+                    configuration.retrieval_provider_id,
+                    configuration.retrieval_provider_version,
+                    configuration.retrieval_limit,
+                    _options_json(configuration),
+                ),
+            )
+            if permission is not None:
+                self._connection.executemany(
+                    """
+                    INSERT INTO run_permission_conditions (run_id, condition_id)
+                    VALUES (?, ?)
+                    """,
+                    [
+                        (provenance.run_id.value, condition_id)
+                        for condition_id in permission.unresolved_condition_ids
+                    ],
+                )
+            for source in provenance.sources:
+                self._connection.execute(
+                    """
+                    INSERT INTO run_sources (run_id, source_id, source_version)
+                    VALUES (?, ?, ?)
+                    """,
+                    (
+                        provenance.run_id.value,
+                        source.source_id,
+                        source.source_version,
+                    ),
+                )
+                self._connection.executemany(
+                    """
+                    INSERT INTO run_chunks (
+                        run_id, source_id, chunk_id, ordinal, retrieval_position
+                    ) VALUES (?, ?, ?, ?, ?)
+                    """,
+                    [
+                        (
+                            provenance.run_id.value,
+                            source.source_id,
+                            chunk.chunk_id,
+                            chunk.ordinal,
+                            chunk.retrieval_position,
+                        )
+                        for chunk in source.chunks
+                    ],
+                )
+            if provenance.model_called:
+                self._connection.execute(
+                    """
+                    INSERT INTO model_executions (
+                        run_id, provider_id, provider_version, model_id, model_version,
+                        model_content_hash
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        provenance.run_id.value,
+                        configuration.provider_id,
+                        configuration.provider_version,
+                        configuration.model_id,
+                        configuration.model_version,
+                        configuration.model_content_hash,
+                    ),
+                )
+            finalized = self._connection.execute(
+                """
+                UPDATE runs SET is_finalized = 1
+                WHERE run_id = ? AND is_finalized = 0
+                """,
+                (provenance.run_id.value,),
+            )
+            if finalized.rowcount != 1:
+                raise sqlite3.IntegrityError("run finalization failed")
+
+    def get(self, run_id: RunId) -> RunProvenance | None:
+        """Reconstruct one metadata-only run record."""
+        if not isinstance(run_id, RunId):
+            raise TypeError("run_id must be a RunId")
+        with self._lock:
+            run = self._connection.execute(
+                "SELECT * FROM runs WHERE run_id = ? AND is_finalized = 1",
+                (run_id.value,),
+            ).fetchone()
+            if run is None:
+                return None
+            configuration_row = self._connection.execute(
+                "SELECT * FROM run_configurations WHERE run_id = ?",
+                (run_id.value,),
+            ).fetchone()
+            if configuration_row is None:
+                raise ValueError("stored run is missing configuration provenance")
+            condition_rows = self._connection.execute(
+                """
+                SELECT condition_id FROM run_permission_conditions
+                WHERE run_id = ? ORDER BY condition_id
+                """,
+                (run_id.value,),
+            ).fetchall()
+            source_rows = self._connection.execute(
+                """
+                SELECT run_sources.source_id, run_sources.source_version
+                FROM run_sources
+                JOIN run_chunks
+                  ON run_chunks.run_id = run_sources.run_id
+                 AND run_chunks.source_id = run_sources.source_id
+                WHERE run_sources.run_id = ?
+                GROUP BY run_sources.source_id, run_sources.source_version
+                ORDER BY min(run_chunks.retrieval_position)
+                """,
+                (run_id.value,),
+            ).fetchall()
+            model_execution = self._connection.execute(
+                "SELECT * FROM model_executions WHERE run_id = ?",
+                (run_id.value,),
+            ).fetchone()
+            sources = tuple(
+                SourceProvenance(
+                    source_id=source["source_id"],
+                    source_version=source["source_version"],
+                    chunks=tuple(
+                        ChunkProvenance(
+                            chunk_id=chunk["chunk_id"],
+                            ordinal=chunk["ordinal"],
+                            retrieval_position=chunk["retrieval_position"],
+                        )
+                        for chunk in self._connection.execute(
+                            """
+                            SELECT chunk_id, ordinal, retrieval_position
+                            FROM run_chunks
+                            WHERE run_id = ? AND source_id = ?
+                            ORDER BY retrieval_position
+                            """,
+                            (run_id.value, source["source_id"]),
+                        ).fetchall()
+                    ),
+                )
+                for source in source_rows
+            )
+
+        configuration = RunConfiguration(
+            configuration_id=configuration_row["configuration_id"],
+            configuration_version=configuration_row["configuration_version"],
+            provider_id=configuration_row["provider_id"],
+            provider_version=configuration_row["provider_version"],
+            model_id=configuration_row["model_id"],
+            model_version=configuration_row["model_version"],
+            model_content_hash=configuration_row["model_content_hash"],
+            retrieval_provider_id=configuration_row["retrieval_provider_id"],
+            retrieval_provider_version=(
+                configuration_row["retrieval_provider_version"]
+            ),
+            retrieval_limit=configuration_row["retrieval_limit"],
+            options=_read_options(configuration_row["options_json"]),
+        )
+        if bool(run["model_called"]) != (model_execution is not None):
+            raise ValueError("stored model execution provenance is inconsistent")
+        if model_execution is not None and (
+            model_execution["provider_id"],
+            model_execution["provider_version"],
+            model_execution["model_id"],
+            model_execution["model_version"],
+            model_execution["model_content_hash"],
+        ) != (
+            configuration.provider_id,
+            configuration.provider_version,
+            configuration.model_id,
+            configuration.model_version,
+            configuration.model_content_hash,
+        ):
+            raise ValueError("stored model identity does not match run configuration")
+
+        permission = None
+        if run["permission_state"] is not None:
+            permission = PermissionProvenance(
+                policy_id=run["policy_id"],
+                policy_version=run["policy_version"],
+                policy_schema_version=run["policy_schema_version"],
+                state=PermissionState(run["permission_state"]),
+                unresolved_condition_ids=tuple(
+                    condition["condition_id"] for condition in condition_rows
+                ),
+            )
+        return RunProvenance(
+            run_id=run_id,
+            started_at=datetime.fromisoformat(run["started_at"]),
+            completed_at=datetime.fromisoformat(run["completed_at"]),
+            status=RunStatus(run["status"]),
+            context=ContextProvenance(
+                user_id=run["user_id"],
+                role_id=run["role_id"],
+                client_id=run["client_id"],
+                matter_id=run["matter_id"],
+                workflow_id=run["workflow_id"],
+                synthetic=bool(run["synthetic_context"]),
+            ),
+            configuration=configuration,
+            configuration_hash=run["configuration_hash"],
+            permission=permission,
+            retrieval_called=bool(run["retrieval_called"]),
+            model_called=bool(run["model_called"]),
+            sources=sources,
+            stop_reason=(
+                None
+                if run["stop_reason"] is None
+                else PermissionStopReason(run["stop_reason"])
+            ),
+            failure_stage=(
+                None
+                if run["failure_stage"] is None
+                else FailureStage(run["failure_stage"])
+            ),
+        )
+
+
+__all__ = ["SQLiteProvenanceStore"]
