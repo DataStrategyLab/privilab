@@ -419,12 +419,82 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
     OR julianday(NEW.completed_at) IS NULL
     OR date(substr(NEW.completed_at, 1, 26))
        IS NOT substr(NEW.completed_at, 1, 10)
-    OR (
-        CAST(strftime('%s', NEW.completed_at) AS INTEGER) * 1000000
-        + CAST(substr(NEW.completed_at, 21, 6) AS INTEGER)
-    ) < (
-        CAST(strftime('%s', NEW.started_at) AS INTEGER) * 1000000
-        + CAST(substr(NEW.started_at, 21, 6) AS INTEGER)
+    OR EXISTS (
+        WITH
+        timestamp_values(kind, value) AS (
+            SELECT 'started', NEW.started_at
+            UNION ALL
+            SELECT 'completed', NEW.completed_at
+        ),
+        timestamp_components AS (
+            SELECT
+                kind,
+                CAST(substr(value, 1, 4) AS INTEGER) AS year,
+                CAST(substr(value, 6, 2) AS INTEGER) AS month,
+                CAST(substr(value, 9, 2) AS INTEGER) AS day,
+                CAST(substr(value, 12, 2) AS INTEGER) AS hour,
+                CAST(substr(value, 15, 2) AS INTEGER) AS minute,
+                CAST(substr(value, 18, 2) AS INTEGER) AS second,
+                CAST(substr(value, 21, 6) AS INTEGER) AS microsecond,
+                CASE
+                    WHEN length(value) = 27 THEN 0
+                    ELSE (
+                        CASE substr(value, 27, 1)
+                            WHEN '+' THEN 1
+                            ELSE -1
+                        END
+                        * (
+                            CAST(substr(value, 28, 2) AS INTEGER) * 60
+                            + CAST(substr(value, 31, 2) AS INTEGER)
+                        )
+                    )
+                END AS offset_minutes
+            FROM timestamp_values
+        ),
+        exact_instants AS (
+            SELECT
+                kind,
+                (
+                    365 * (year - 1)
+                    + (year - 1) / 4
+                    - (year - 1) / 100
+                    + (year - 1) / 400
+                    + CASE month
+                        WHEN 1 THEN 0
+                        WHEN 2 THEN 31
+                        WHEN 3 THEN 59
+                        WHEN 4 THEN 90
+                        WHEN 5 THEN 120
+                        WHEN 6 THEN 151
+                        WHEN 7 THEN 181
+                        WHEN 8 THEN 212
+                        WHEN 9 THEN 243
+                        WHEN 10 THEN 273
+                        WHEN 11 THEN 304
+                        WHEN 12 THEN 334
+                      END
+                    + day - 1
+                    + CASE
+                        WHEN month > 2
+                             AND year % 4 = 0
+                             AND (year % 100 != 0 OR year % 400 = 0)
+                            THEN 1
+                        ELSE 0
+                      END
+                ) * 86400000000
+                + hour * 3600000000
+                + minute * 60000000
+                + second * 1000000
+                + microsecond
+                - offset_minutes * 60000000 AS instant
+            FROM timestamp_components
+        )
+        SELECT 1
+        FROM exact_instants AS completed
+        JOIN exact_instants AS started
+          ON completed.kind = 'completed'
+         AND started.kind = 'started'
+        WHERE completed.instant < started.instant
     )
     OR typeof(NEW.configuration_hash) != 'text'
     OR length(NEW.configuration_hash) != 71

@@ -865,6 +865,10 @@ def test_every_valid_terminal_call_state_finalizes_and_reconstructs(
         ("started_at", "not-a-timestamp"),
         ("started_at", "2026-09-14T12:00:00.000000"),
         ("started_at", "2026-02-30T12:00:00.000000+00:00"),
+        ("started_at", "2026-09-14T12:00:00.000000+24:00"),
+        ("started_at", "2026-09-14T12:00:00.000000+0A:00"),
+        ("completed_at", "2026-09-14T12:00:00.000000+00:60"),
+        ("completed_at", "2026-09-13T23:59:59.999999+00:00"),
         ("completed_at", "2026-09-14T11:59:59.999999+00:00"),
         ("policy_schema_version", 1.5),
         ("user_id", ""),
@@ -937,6 +941,71 @@ def test_finalization_compares_timestamp_order_at_microsecond_precision(
     store = SQLiteProvenanceStore(database_path)
     try:
         assert store.get(RunId(run_id)) is None
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize(
+    "run_overrides",
+    [
+        {
+            "started_at": "2026-09-14T12:00:00.000000+00:00",
+            "completed_at": "2026-09-14T12:00:00.000000+00:00",
+        },
+        {
+            "started_at": "2026-09-14T12:00:00.000000+00:00",
+            "completed_at": "2026-09-14T12:00:00.000001+00:00",
+        },
+        {
+            "started_at": "2026-09-14T23:59:59.999999Z",
+            "completed_at": "2026-09-15T00:00:00.000000Z",
+        },
+        {
+            "started_at": "2024-02-29T23:59:59.999999Z",
+            "completed_at": "2024-03-01T00:00:00.000000Z",
+        },
+        {
+            "started_at": "2026-09-14T12:00:00.000000Z",
+            "completed_at": "2026-09-14T13:00:00.000000+01:00",
+        },
+        {
+            "started_at": "2026-09-14T07:00:00.000000-05:00",
+            "completed_at": "2026-09-14T12:00:00.000000Z",
+        },
+    ],
+    ids=(
+        "equal",
+        "one-microsecond-after",
+        "date-boundary-one-microsecond-after",
+        "leap-day-boundary-one-microsecond-after",
+        "equivalent-z-and-positive-offset",
+        "equivalent-negative-offset-and-z",
+    ),
+)
+def test_exact_timestamp_order_accepts_valid_boundaries(
+    tmp_path: Path,
+    run_overrides: dict[str, str],
+) -> None:
+    database_path = tmp_path / "valid-timestamp-order.sqlite3"
+    SQLiteProvenanceStore(database_path).close()
+    run_id = "valid-timestamp-order"
+    with sqlite3.connect(database_path) as connection:
+        insert_complete_raw_run(
+            connection,
+            run_id,
+            run_overrides=run_overrides,
+        )
+        finalized = connection.execute(
+            "UPDATE runs SET is_finalized = 1 WHERE run_id = ?",
+            (run_id,),
+        )
+        assert finalized.rowcount == 1
+
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        record = store.get(RunId(run_id))
+        assert record is not None
+        assert record.completed_at >= record.started_at
     finally:
         store.close()
 
