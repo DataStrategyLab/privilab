@@ -4,7 +4,7 @@ import json
 import sqlite3
 from contextlib import closing
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from hashlib import sha256
 from inspect import signature
 from pathlib import Path
@@ -427,8 +427,9 @@ def test_hardening_all_provenance_tables_have_no_rowid_alias(
 
 
 @pytest.mark.parametrize("table", _PROVENANCE_TABLES)
+@pytest.mark.parametrize("foreign_keys", [0, 1])
 def test_hardening_natural_key_replace_is_immutable_without_recursive_triggers(
-    tmp_path: Path, table: str
+    tmp_path: Path, table: str, foreign_keys: int
 ) -> None:
     database_path = tmp_path / "natural-key.sqlite3"
     record = (
@@ -438,8 +439,12 @@ def test_hardening_natural_key_replace_is_immutable_without_recursive_triggers(
     try:
         store.append(record)
         with sqlite3.connect(database_path) as connection:
-            connection.execute("PRAGMA foreign_keys = ON")
+            connection.execute(f"PRAGMA foreign_keys = {foreign_keys}")
             connection.execute("PRAGMA recursive_triggers = OFF")
+            assert connection.execute("PRAGMA foreign_keys").fetchone() == (
+                foreign_keys,
+            )
+            assert connection.execute("PRAGMA recursive_triggers").fetchone() == (0,)
             before = provenance_database_snapshot(connection)
             columns = [
                 row[1] for row in connection.execute(f"PRAGMA table_info({table})")
@@ -793,6 +798,304 @@ def assert_incompatible_provenance_is_untouched(
     )
     assert complete_provenance_file_snapshot(database_path) == before
     assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize(
+    "index_sql",
+    [
+        "CREATE UNIQUE INDEX extra_config_id ON run_configurations(configuration_id)",
+        "CREATE UNIQUE INDEX extra_hash ON runs(configuration_hash)",
+    ],
+    ids=["child", "parent"],
+)
+def test_review04_rejects_replacement_conflict_before_constructor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, index_sql: str
+) -> None:
+    database_path = tmp_path / "extra-conflict.sqlite3"
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.executescript(_SCHEMA)
+        connection.execute(index_sql)
+        insert_complete_raw_run(connection, "preserved-run")
+        connection.execute("UPDATE runs SET is_finalized = 1")
+    assert_incompatible_provenance_is_untouched(database_path, monkeypatch)
+
+
+@pytest.mark.parametrize("table", _PROVENANCE_TABLES)
+@pytest.mark.parametrize(
+    "variant",
+    [
+        "single",
+        "compound",
+        "reversed",
+        "expression",
+        "partial",
+        "nocase",
+        "desc",
+        "duplicate",
+    ],
+)
+def test_review04_rejects_extra_unique_identities(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, table: str, variant: str
+) -> None:
+    other = {
+        "runs": "configuration_hash",
+        "run_configurations": "configuration_id",
+        "run_permission_conditions": "condition_id",
+        "run_sources": "source_id",
+        "run_chunks": "chunk_id",
+        "model_executions": "model_id",
+    }[table]
+    columns = {
+        "single": other,
+        "compound": f"run_id, {other}",
+        "reversed": f"{other}, run_id",
+        "expression": f"lower({other})",
+        "partial": other,
+        "nocase": f"{other} COLLATE NOCASE",
+        "desc": f"{other} DESC",
+        "duplicate": "run_id",
+    }[variant]
+    database_path = tmp_path / "unique-variants.sqlite3"
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.executescript(_SCHEMA)
+        insert_complete_raw_run(connection, "preserved-run")
+        suffix = " WHERE run_id != 'excluded'" if variant == "partial" else ""
+        connection.execute(f"CREATE UNIQUE INDEX extra ON {table} ({columns}){suffix}")
+        if variant == "duplicate":
+            connection.execute(f"CREATE UNIQUE INDEX duplicate ON {table} ({columns})")
+    assert_incompatible_provenance_is_untouched(database_path, monkeypatch)
+
+
+@pytest.mark.parametrize(
+    ("original", "replacement"),
+    [
+        ("UNIQUE (run_id, retrieval_position),", ""),
+        ("UNIQUE (run_id, retrieval_position)", "UNIQUE (retrieval_position, run_id)"),
+        ("UNIQUE (run_id, retrieval_position)", "UNIQUE (run_id, ordinal)"),
+        ("PRIMARY KEY (run_id, chunk_id)", "PRIMARY KEY (chunk_id)"),
+        ("PRIMARY KEY (run_id, chunk_id)", "PRIMARY KEY (chunk_id, run_id)"),
+        (
+            "PRIMARY KEY (run_id, chunk_id)",
+            "PRIMARY KEY (run_id COLLATE NOCASE, chunk_id)",
+        ),
+        ("PRIMARY KEY (run_id, chunk_id)", "PRIMARY KEY (run_id DESC, chunk_id)"),
+    ],
+)
+def test_review04_rejects_altered_declared_conflict_semantics(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, original: str, replacement: str
+) -> None:
+    database_path = tmp_path / "altered-conflicts.sqlite3"
+    assert original in _SCHEMA
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.executescript(_SCHEMA.replace(original, replacement))
+        insert_complete_raw_run(connection, "preserved-run")
+    assert_incompatible_provenance_is_untouched(database_path, monkeypatch)
+
+
+def test_review04_nonunique_indexes_preserve_compatible_reopen(tmp_path: Path) -> None:
+    database_path = tmp_path / "nonunique.sqlite3"
+    record = persisted_run("preserved")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(record)
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        for table in _PROVENANCE_TABLES:
+            # Quoting in an index name must not affect structured metadata reads.
+            connection.execute(f'CREATE INDEX "ordinary\'{table}" ON {table}(run_id)')
+    before = complete_provenance_file_snapshot(database_path)
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        assert store.get(record.run_id) == record
+    assert complete_provenance_file_snapshot(database_path) == before
+
+
+@pytest.mark.parametrize("status", list(RunStatus))
+def test_review04_governed_service_accepts_seconds_offset_clock(
+    tmp_path: Path, status: RunStatus
+) -> None:
+    database_path = tmp_path / "seconds-clock.sqlite3"
+    instant = datetime(2026, 9, 16, 12, tzinfo=timezone(timedelta(seconds=30)))
+    run_id = RunId("seconds-clock")
+    with (
+        closing(SQLiteProvenanceStore(database_path)) as store,
+        closing(
+            SQLiteFtsRetrievalProvider(tmp_path / "retrieval.sqlite3")
+        ) as retrieval,
+    ):
+        service = RunService.from_governed_fixture(
+            policy=policy(
+                "BLOCK" if status is RunStatus.PERMISSION_STOPPED else "ALLOW"
+            ),
+            retrieval_provider=retrieval,
+            fixture_id="model-output.synthetic-happy-path.001",
+            provenance_store=store,
+            configuration_id="synthetic-clock",
+            configuration_version="1",
+            retrieval_provider_id="sqlite-fts5",
+            retrieval_provider_version="1",
+            run_id_factory=lambda: run_id,
+            clock=lambda: instant,
+        )
+        if status is RunStatus.FAILED:
+            retrieval.close()  # A real retrieval failure, not a provider redesign.
+        try:
+            outcome = service.run(
+                context=synthetic_context(), task_text="Synthetic clock", query="clock"
+            )
+        except sqlite3.IntegrityError:
+            assert store.get(run_id) is None
+            with closing(sqlite3.connect(database_path)) as connection:
+                assert all(
+                    not rows
+                    for rows in provenance_database_snapshot(connection).values()
+                )
+            raise
+        assert outcome.status is status
+        record = store.get(run_id)
+        assert record is not None
+        assert record.started_at == datetime(2026, 9, 16, 11, 59, 30, tzinfo=UTC)
+        assert record.started_at.tzinfo is record.completed_at.tzinfo is UTC
+        with closing(sqlite3.connect(database_path)) as connection:
+            assert connection.execute(
+                "SELECT started_at, completed_at FROM runs"
+            ).fetchone() == (
+                "2026-09-16T11:59:30.000000+00:00",
+                "2026-09-16T11:59:30.000000+00:00",
+            )
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        reopened = store.get(run_id)
+        assert reopened == record
+        assert reopened is not None
+        assert reopened.started_at.tzinfo is reopened.completed_at.tzinfo is UTC
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        datetime.min.replace(tzinfo=UTC),
+        datetime.max.replace(tzinfo=UTC),
+        datetime(2026, 9, 16, 12, 0, 0, 123456, timezone(timedelta(seconds=30))),
+        datetime(2026, 9, 16, 12, 0, 0, 123456, timezone(timedelta(seconds=-30))),
+        datetime(
+            2026, 9, 16, 12, 0, 0, 123456, timezone(timedelta(microseconds=654321))
+        ),
+        datetime(
+            2026, 9, 16, 12, 0, 0, 123456, timezone(timedelta(microseconds=-654321))
+        ),
+        datetime(2026, 9, 16, 12, tzinfo=timezone(timedelta(hours=5, minutes=30))),
+        datetime(2026, 9, 16, 12, tzinfo=timezone(timedelta(hours=-4))),
+    ],
+)
+def test_review04_application_timestamps_persist_canonical_utc(
+    tmp_path: Path, value: datetime
+) -> None:
+    database_path = tmp_path / "canonical-timestamps.sqlite3"
+    record = replace(persisted_run("canonical"), started_at=value, completed_at=value)
+    expected = value.astimezone(UTC)
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(record)
+    with closing(sqlite3.connect(database_path)) as connection:
+        assert connection.execute(
+            "SELECT started_at, completed_at FROM runs"
+        ).fetchone() == (
+            expected.isoformat(timespec="microseconds"),
+            expected.isoformat(timespec="microseconds"),
+        )
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        reopened = store.get(record.run_id)
+        assert reopened == record
+        assert reopened is not None
+        assert reopened.started_at.tzinfo is reopened.completed_at.tzinfo is UTC
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "0001-01-01T00:00:59.999999+00:01",  # One microsecond below UTC minimum.
+        "9999-12-31T23:59:00.000000-00:01",  # One microsecond above UTC maximum.
+        "0001-01-01T00:00:00.000000+23:59",
+        "9999-12-31T23:59:59.999999-23:59",
+    ],
+)
+@pytest.mark.parametrize("both", [False, True])
+def test_review04_raw_out_of_range_instants_cannot_finalize(
+    tmp_path: Path, raw: str, both: bool
+) -> None:
+    database_path = tmp_path / "out-of-range.sqlite3"
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        with closing(sqlite3.connect(database_path)) as connection, connection:
+            # Either equal invalid instants, or an invalid start before / an
+            # invalid completion after a valid instant: ordering always holds.
+            overrides = {"started_at": raw, "completed_at": raw}
+            if not both:
+                valid_field = "completed_at" if raw.startswith("0001") else "started_at"
+                overrides[valid_field] = "2026-09-16T12:00:00.000000Z"
+            insert_complete_raw_run(
+                connection,
+                "out-of-range",
+                run_overrides=overrides,
+            )
+            before = provenance_database_snapshot(connection)
+            with pytest.raises(
+                sqlite3.IntegrityError, match="run provenance is incomplete"
+            ):
+                connection.execute("UPDATE runs SET is_finalized = 1")
+            assert provenance_database_snapshot(connection) == before
+        assert store.get(RunId("out-of-range")) is None
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        assert store.get(RunId("out-of-range")) is None
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("0001-01-01T00:00:00.000000Z", datetime.min.replace(tzinfo=UTC)),
+        ("9999-12-31T23:59:59.999999Z", datetime.max.replace(tzinfo=UTC)),
+        ("0001-01-01T00:01:00.000000+00:01", datetime.min.replace(tzinfo=UTC)),
+        ("9999-12-31T23:58:59.999999-00:01", datetime.max.replace(tzinfo=UTC)),
+        (
+            "2026-09-16T12:30:00.123456+00:30",
+            datetime(2026, 9, 16, 12, 0, 0, 123456, UTC),
+        ),
+        (
+            "2026-09-16T11:30:00.123456-00:30",
+            datetime(2026, 9, 16, 12, 0, 0, 123456, UTC),
+        ),
+    ],
+)
+def test_review04_raw_representable_instants_reconstruct_canonically(
+    tmp_path: Path, raw: str, expected: datetime
+) -> None:
+    database_path = tmp_path / "representable.sqlite3"
+    SQLiteProvenanceStore(database_path).close()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        insert_complete_raw_run(
+            connection,
+            "representable",
+            run_overrides={
+                "started_at": raw,
+                "completed_at": raw,
+            },
+        )
+        connection.execute("UPDATE runs SET is_finalized = 1")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        record = store.get(RunId("representable"))
+        assert record is not None
+        assert record.started_at == record.completed_at == expected
+        assert record.started_at.tzinfo is record.completed_at.tzinfo is UTC
+
+
+def test_review04_pre_remediation_finalizer_is_rejected_without_upgrade(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bounds = (
+        "           OR started.instant NOT BETWEEN 0 AND 315537897599999999\n"
+        "           OR completed.instant NOT BETWEEN 0 AND 315537897599999999\n"
+    )
+    assert bounds in _SCHEMA
+    database_path = tmp_path / "old-finalizer.sqlite3"
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.executescript(_SCHEMA.replace(bounds, ""))
+        insert_complete_raw_run(connection, "preserved")
+    assert_incompatible_provenance_is_untouched(database_path, monkeypatch)
 
 
 def test_review03_rejects_governed_trigger_name_on_unrelated_table(

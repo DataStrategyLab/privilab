@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import FrozenInstanceError, replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
+from typing import Any
 
 import pytest
 
 from privilab.application import (
+    ContextProvenance,
     FailureStage,
     ModelRequest,
     PermissionPolicy,
@@ -194,6 +196,121 @@ def id_factory(*values: str) -> Callable[[], RunId]:
 
 def clock() -> datetime:
     return datetime(2026, 9, 13, 12, 0, tzinfo=UTC)
+
+
+def timestamp_provenance(started_at: Any, completed_at: Any) -> RunProvenance:
+    return RunProvenance(
+        run_id=RunId("synthetic-timestamp"),
+        started_at=started_at,
+        completed_at=completed_at,
+        status=RunStatus.FAILED,
+        context=ContextProvenance.from_context(context()),
+        configuration=configuration(),
+        configuration_hash=f"sha256:{'0' * 64}",
+        permission=None,
+        retrieval_called=False,
+        model_called=False,
+        failure_stage=FailureStage.PERMISSION,
+    )
+
+
+@pytest.mark.parametrize(
+    ("offset", "expected"),
+    [
+        (timedelta(), datetime(2026, 9, 16, 12, 0, 0, 123456, UTC)),
+        (timedelta(seconds=30), datetime(2026, 9, 16, 11, 59, 30, 123456, UTC)),
+        (timedelta(seconds=-30), datetime(2026, 9, 16, 12, 0, 30, 123456, UTC)),
+        (
+            timedelta(seconds=30, microseconds=123456),
+            datetime(2026, 9, 16, 11, 59, 30, 0, UTC),
+        ),
+        (
+            timedelta(seconds=-30, microseconds=-654321),
+            datetime(2026, 9, 16, 12, 0, 30, 777777, UTC),
+        ),
+        (timedelta(hours=5, minutes=30), datetime(2026, 9, 16, 6, 30, 0, 123456, UTC)),
+        (
+            timedelta(hours=-4, minutes=-15),
+            datetime(2026, 9, 16, 16, 15, 0, 123456, UTC),
+        ),
+    ],
+)
+def test_review04_provenance_normalizes_offsets_exactly(
+    offset: timedelta, expected: datetime
+) -> None:
+    value = datetime(2026, 9, 16, 12, 0, 0, 123456, timezone(offset))
+    record = timestamp_provenance(value, value)
+    assert record.started_at == record.completed_at == expected
+    assert record.started_at.tzinfo is record.completed_at.tzinfo is UTC
+
+
+@pytest.mark.parametrize("microseconds", [-1, 0, 1])
+def test_review04_provenance_orders_normalized_instants(microseconds: int) -> None:
+    instant = datetime(2026, 9, 16, 12, 0, 0, 123456, UTC)
+    started = instant.astimezone(timezone(timedelta(seconds=30, microseconds=654321)))
+    completed = (instant + timedelta(microseconds=microseconds)).astimezone(
+        timezone(timedelta(seconds=-30, microseconds=-123456))
+    )
+    if microseconds < 0:
+        with pytest.raises(
+            ValueError, match="^completed_at must not precede started_at$"
+        ):
+            timestamp_provenance(started, completed)
+    else:
+        record = timestamp_provenance(started, completed)
+        assert record.started_at == instant
+        assert record.completed_at == instant + timedelta(microseconds=microseconds)
+        assert record.started_at.tzinfo is record.completed_at.tzinfo is UTC
+
+
+@pytest.mark.parametrize("field", ["started_at", "completed_at"])
+@pytest.mark.parametrize("invalid", [None, "2026-09-16", 0, datetime(2026, 9, 16)])
+def test_review04_timestamps_require_aware_datetimes(field: str, invalid: Any) -> None:
+    values = {"started_at": clock(), "completed_at": clock()}
+    values[field] = invalid
+    with pytest.raises(
+        ValueError, match=f"^{field} must be a timezone-aware datetime$"
+    ):
+        timestamp_provenance(**values)
+
+
+@pytest.mark.parametrize("field", ["started_at", "completed_at"])
+@pytest.mark.parametrize(
+    "invalid",
+    [
+        datetime.min.replace(tzinfo=timezone(timedelta(microseconds=1))),
+        datetime.max.replace(tzinfo=timezone(timedelta(microseconds=-1))),
+        datetime.min.replace(tzinfo=timezone(timedelta(hours=23, minutes=59))),
+        datetime.max.replace(tzinfo=timezone(timedelta(hours=-23, minutes=-59))),
+    ],
+)
+def test_review04_utc_conversion_overflow_is_field_specific(
+    field: str, invalid: datetime
+) -> None:
+    values = {"started_at": clock(), "completed_at": clock()}
+    values[field] = invalid
+    with pytest.raises(
+        ValueError, match=f"^{field} must be representable in UTC$"
+    ) as caught:
+        timestamp_provenance(**values)
+    assert isinstance(caught.value.__cause__, OverflowError)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        datetime.min.replace(tzinfo=UTC),
+        datetime.max.replace(tzinfo=UTC),
+        datetime(1, 1, 1, 0, 0, 0, 1, timezone(timedelta(microseconds=1))),
+        datetime(
+            9999, 12, 31, 23, 59, 59, 999998, timezone(timedelta(microseconds=-1))
+        ),
+    ],
+)
+def test_review04_utc_representability_is_inclusive(value: datetime) -> None:
+    record = timestamp_provenance(value, value)
+    assert record.started_at == record.completed_at == value.astimezone(UTC)
+    assert record.started_at.tzinfo is record.completed_at.tzinfo is UTC
 
 
 @pytest.mark.parametrize(

@@ -6,7 +6,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Protocol
 
@@ -351,14 +351,26 @@ class RunProvenance:
     def __post_init__(self) -> None:
         if not isinstance(self.run_id, RunId):
             raise TypeError("run_id must be a RunId")
-        for value, field_name in (
+        timestamps = (
             (self.started_at, "started_at"),
             (self.completed_at, "completed_at"),
-        ):
+        )
+        for value, field_name in timestamps:
             if not isinstance(value, datetime) or value.utcoffset() is None:
                 raise ValueError(f"{field_name} must be a timezone-aware datetime")
-        if self.completed_at < self.started_at:
+        normalized = []
+        for value, field_name in timestamps:
+            try:
+                normalized.append(value.astimezone(UTC))
+            except OverflowError as error:
+                raise ValueError(
+                    f"{field_name} must be representable in UTC"
+                ) from error
+        started_at, completed_at = normalized
+        if completed_at < started_at:
             raise ValueError("completed_at must not precede started_at")
+        object.__setattr__(self, "started_at", started_at)
+        object.__setattr__(self, "completed_at", completed_at)
         if not isinstance(self.status, RunStatus):
             raise TypeError("status must be a RunStatus")
         if not isinstance(self.context, ContextProvenance):

@@ -9,7 +9,7 @@ from datetime import datetime
 from functools import cache
 from pathlib import Path
 from threading import RLock
-from typing import cast
+from typing import NamedTuple, cast
 
 from privilab.application.provenance import (
     ChunkProvenance,
@@ -537,6 +537,8 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
           ON completed.kind = 'completed'
          AND started.kind = 'started'
         WHERE completed.instant < started.instant
+           OR started.instant NOT BETWEEN 0 AND 315537897599999999
+           OR completed.instant NOT BETWEEN 0 AND 315537897599999999
     )
     OR typeof(NEW.configuration_hash) != 'text'
     OR length(CAST(NEW.configuration_hash AS BLOB)) != 71
@@ -1152,26 +1154,91 @@ _INCOMPATIBLE_SCHEMA_MESSAGE = (
 
 
 _SchemaObject = tuple[str, str, str, str]
+_IndexColumn = tuple[int, int, str, int, str, int]
+_IndexSignature = tuple[str, int, str, int, tuple[_IndexColumn, ...]]
+
+
+class _SchemaCatalog(NamedTuple):
+    objects: tuple[_SchemaObject, ...]
+    unique_indexes: tuple[_IndexSignature, ...]
+
+
+def _unique_indexes(
+    connection: sqlite3.Connection, tables: tuple[str, ...]
+) -> tuple[_IndexSignature, ...]:
+    """Read conflict identities, keeping duplicates but not enumeration or names.
+
+    Extra non-unique indexes cannot cause REPLACE to delete a conflicting row.
+    Unique expression/partial indexes are never part of our trusted schema:
+    reject them without interpreting any target-supplied SQL.
+    """
+    indexes: list[_IndexSignature] = []
+    for table in tables:
+        for unique, origin, partial, name in connection.execute(
+            'SELECT "unique", origin, partial, name FROM pragma_index_list(?)',
+            (table,),
+        ):
+            if (
+                type(unique) is not int
+                or unique not in (0, 1)
+                or origin not in ("c", "u", "pk")
+                or type(partial) is not int
+                or partial not in (0, 1)
+                or not isinstance(name, str)
+                or not name
+                or (unique == 0 and origin != "c")
+            ):
+                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+            if not unique:
+                continue
+            if partial:
+                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+            columns: list[_IndexColumn] = []
+            for seq, cid, column, descending, collation, key in connection.execute(
+                'SELECT seqno, cid, name, "desc", coll, "key" '
+                "FROM pragma_index_xinfo(?) ORDER BY seqno",
+                (name,),
+            ):
+                if (
+                    type(seq) is not int
+                    or seq != len(columns)
+                    or type(cid) is not int
+                    or cid < 0
+                    or not isinstance(column, str)
+                    or not isinstance(collation, str)
+                    or type(descending) is not int
+                    or descending not in (0, 1)
+                    or type(key) is not int
+                    or key not in (0, 1)
+                ):
+                    raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+                columns.append((seq, cid, column, descending, collation, key))
+            if not any(column[5] for column in columns):
+                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+            indexes.append((table, unique, origin, partial, tuple(columns)))
+    return tuple(sorted(indexes))
 
 
 @cache
-def _expected_schema() -> tuple[_SchemaObject, ...]:
+def _expected_schema() -> _SchemaCatalog:
     """Cache SQLite's exact stored representation of only our trusted schema."""
     with closing(sqlite3.connect(":memory:")) as reference:
         reference.executescript(_SCHEMA)
-        return tuple(
+        objects = tuple(
             (row[0], row[1], row[2], row[3])
             for row in reference.execute(
                 "SELECT type, name, tbl_name, sql FROM sqlite_schema "
                 "WHERE type IN ('table', 'trigger') ORDER BY type, name"
             )
         )
+        tables = tuple(row[1] for row in objects if row[0] == "table")
+        return _SchemaCatalog(objects, _unique_indexes(reference, tables))
 
 
 def _validate_existing_schema(
     connection: sqlite3.Connection, *, allow_empty: bool = False
 ) -> None:
-    """Validate the complete table/trigger contract without repairing anything.
+    """Validate tables, triggers and conflict identities without repairing anything.
 
     ASCII case-insensitive discovery catches identifier collisions, while exact
     row/definition comparison deliberately rejects differently authored schemas.
@@ -1179,8 +1246,8 @@ def _validate_existing_schema(
     different namespaces. Unknown triggers on governed tables also fail closed.
     """
     expected = _expected_schema()
-    names = tuple(row[1] for row in expected)
-    tables = tuple(row[1] for row in expected if row[0] == "table")
+    names = tuple(row[1] for row in expected.objects)
+    tables = tuple(row[1] for row in expected.objects if row[0] == "table")
     name_parameters = ", ".join("?" for _ in names)
     table_parameters = ", ".join("?" for _ in tables)
     try:
@@ -1196,7 +1263,9 @@ def _validate_existing_schema(
         )
         if allow_empty and not objects:
             return
-        if objects != expected:
+        if objects != expected.objects:
+            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+        if _unique_indexes(connection, tables) != expected.unique_indexes:
             raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
     except sqlite3.DatabaseError as error:
         raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
