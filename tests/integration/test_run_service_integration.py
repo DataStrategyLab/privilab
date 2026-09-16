@@ -16,7 +16,7 @@ from privilab.adapters.models import FixtureModelProvider, load_governed_fixture
 from privilab.adapters.models import governed_fixture as governed_fixture_loader
 from privilab.adapters.retrieval import SQLiteFtsRetrievalProvider
 from privilab.adapters.storage import SQLiteProvenanceStore
-from privilab.adapters.storage.sqlite_provenance import _TABLE_SCHEMA
+from privilab.adapters.storage.sqlite_provenance import _SCHEMA, _TABLE_SCHEMA
 from privilab.application import (
     ChunkProvenance,
     ContextProvenance,
@@ -757,6 +757,477 @@ def insert_complete_raw_run(
         )
 
 
+def assert_incompatible_provenance_is_untouched(
+    database_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    before = complete_provenance_file_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    statements: list[str] = []
+    target_connections: list[sqlite3.Connection] = []
+    original_connect = sqlite3.connect
+
+    def traced_connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        connection: sqlite3.Connection = original_connect(*args, **kwargs)
+        if str(args[0]) == str(database_path):
+            connection.set_trace_callback(statements.append)
+            target_connections.append(connection)
+        return connection
+
+    with monkeypatch.context() as patch:
+        patch.setattr(sqlite3, "connect", traced_connect)
+        with pytest.raises(
+            RuntimeError,
+            match=(
+                "^local provenance schema is incompatible; "
+                "a fresh database is required$"
+            ),
+        ):
+            SQLiteProvenanceStore(database_path)
+    assert target_connections
+    for connection in target_connections:
+        with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+            connection.execute("SELECT 1")
+    assert not any(
+        statement.lstrip().upper().startswith(("CREATE", "ALTER", "DROP"))
+        for statement in statements
+    )
+    assert complete_provenance_file_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+def test_review03_rejects_governed_trigger_name_on_unrelated_table(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database_path = tmp_path / "trigger-collision.sqlite3"
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.executescript(
+            "CREATE TABLE unrelated (value TEXT);"
+            "INSERT INTO unrelated VALUES ('preserved');"
+            "CREATE TRIGGER prevent_run_id_update BEFORE UPDATE ON unrelated "
+            "BEGIN SELECT 1; END;"
+        )
+    assert_incompatible_provenance_is_untouched(database_path, monkeypatch)
+
+
+def trusted_provenance_triggers() -> tuple[str, ...]:
+    with closing(sqlite3.connect(":memory:")) as connection:
+        connection.executescript(_SCHEMA)
+        return tuple(
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_schema WHERE type = 'trigger' ORDER BY name"
+            )
+        )
+
+
+@pytest.mark.parametrize("trigger", trusted_provenance_triggers())
+def test_review03_every_required_trigger_must_be_present(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, trigger: str
+) -> None:
+    database_path = tmp_path / "missing-trigger.sqlite3"
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        store.append(persisted_run("preserved"))
+    finally:
+        store.close()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.execute(f"DROP TRIGGER {trigger}")
+    assert_incompatible_provenance_is_untouched(database_path, monkeypatch)
+
+
+@pytest.mark.parametrize(
+    "variant",
+    [
+        "wrong-target",
+        "wrong-timing",
+        "wrong-event",
+        "predicate",
+        "body",
+        "literal-case",
+        "literal-whitespace",
+        "definition-whitespace",
+        "name-case",
+        "wrong-type-table",
+        "wrong-type-view",
+        "wrong-type-index",
+        "table-trigger-collision",
+        "index-trigger-collision",
+        "governed-table-name-collision",
+        "extra-parent-trigger",
+        "extra-child-trigger",
+        "partial-trigger-set",
+        "tables-only",
+        "old-finalization-definition",
+    ],
+)
+def test_review03_rejects_altered_or_colliding_trigger_catalog(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, variant: str
+) -> None:
+    database_path = tmp_path / "altered-trigger.sqlite3"
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        store.append(
+            persisted_run(
+                "preserved", sources=(provenance_source("source-a", ("chunk-a", 0, 0)),)
+            )
+        )
+    finally:
+        store.close()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.execute("CREATE TABLE unrelated (value TEXT)")
+        connection.execute("INSERT INTO unrelated VALUES ('preserved')")
+        guard = connection.execute(
+            "SELECT sql FROM sqlite_schema WHERE name = 'prevent_run_id_update'"
+        ).fetchone()[0]
+        replacements = {
+            "wrong-target": guard.replace("ON runs", "ON unrelated"),
+            "wrong-timing": guard.replace("BEFORE UPDATE", "AFTER UPDATE"),
+            "wrong-event": guard.replace("BEFORE UPDATE OF run_id", "BEFORE DELETE"),
+            "predicate": guard.replace("\nBEGIN", "\nWHEN 0\nBEGIN"),
+            "body": guard.replace(
+                "SELECT RAISE(ABORT, 'run_id is immutable')", "SELECT 1"
+            ),
+            "literal-case": guard.replace(
+                "'run_id is immutable'", "'RUN_ID IS IMMUTABLE'"
+            ),
+            "literal-whitespace": guard.replace(
+                "'run_id is immutable'", "'run_id  is immutable'"
+            ),
+            "definition-whitespace": guard.replace("BEFORE UPDATE", "BEFORE  UPDATE"),
+            "name-case": guard.replace(
+                "prevent_run_id_update", "Prevent_Run_Id_Update"
+            ),
+        }
+        if variant in replacements:
+            connection.execute("DROP TRIGGER prevent_run_id_update")
+            connection.execute(replacements[variant])
+        elif variant.startswith("wrong-type"):
+            connection.execute("DROP TRIGGER prevent_run_id_update")
+            kind = variant.removeprefix("wrong-type-")
+            sql = {
+                "table": "CREATE TABLE prevent_run_id_update (value TEXT)",
+                "view": (
+                    "CREATE VIEW prevent_run_id_update AS SELECT value FROM unrelated"
+                ),
+                "index": "CREATE INDEX prevent_run_id_update ON unrelated(value)",
+            }[kind]
+            connection.execute(sql)
+        elif variant == "table-trigger-collision":
+            connection.execute("CREATE TABLE prevent_run_id_update (value TEXT)")
+        elif variant == "index-trigger-collision":
+            connection.execute("CREATE INDEX prevent_run_id_update ON unrelated(value)")
+        elif variant == "governed-table-name-collision":
+            connection.execute(
+                "CREATE TRIGGER Runs AFTER INSERT ON unrelated BEGIN SELECT 1; END"
+            )
+        elif variant.startswith("extra-"):
+            target = "runs" if variant == "extra-parent-trigger" else "run_chunks"
+            connection.execute(
+                f"CREATE TRIGGER unexpected AFTER INSERT ON {target} "
+                "BEGIN SELECT 1; END"
+            )
+        elif variant in ("partial-trigger-set", "tables-only"):
+            for name in trusted_provenance_triggers():
+                if variant == "tables-only" or name != "prevent_run_id_update":
+                    connection.execute(f"DROP TRIGGER {name}")
+        else:
+            finalizer = connection.execute(
+                "SELECT sql FROM sqlite_schema "
+                "WHERE name = 'finalized_run_requires_complete_provenance'"
+            ).fetchone()[0]
+            connection.execute(
+                "DROP TRIGGER finalized_run_requires_complete_provenance"
+            )
+            old_finalizer = finalizer.replace(
+                "length(CAST(NEW.configuration_hash AS BLOB))",
+                "length(NEW.configuration_hash)",
+            )
+            assert old_finalizer != finalizer
+            connection.execute(old_finalizer)
+    assert_incompatible_provenance_is_untouched(database_path, monkeypatch)
+
+
+def test_review03_fresh_and_reopen_allow_only_unrelated_objects(tmp_path: Path) -> None:
+    database_path = tmp_path / "unrelated-objects.sqlite3"
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.executescript(
+            "CREATE TABLE unrelated (value TEXT);"
+            "CREATE TRIGGER unrelated_guard AFTER INSERT ON unrelated "
+            "BEGIN SELECT 1; END;"
+            "INSERT INTO unrelated VALUES ('preserved');"
+        )
+    record = persisted_run("current")
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        store.append(record)
+    finally:
+        store.close()
+    before = complete_provenance_file_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        assert store.get(record.run_id) == record
+    finally:
+        store.close()
+    assert complete_provenance_file_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize("table", _PROVENANCE_TABLES)
+def test_review03_finalized_run_ids_immutable_with_connection_guards_disabled(
+    tmp_path: Path, table: str
+) -> None:
+    database_path = tmp_path / "disabled-pragmas.sqlite3"
+    record = (
+        persisted_run("parent") if table == "runs" else child_run_id_move_case(table)[0]
+    )
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        store.append(record)
+        with closing(sqlite3.connect(database_path)) as connection, connection:
+            connection.execute("PRAGMA foreign_keys = OFF")
+            connection.execute("PRAGMA recursive_triggers = OFF")
+            assert connection.execute("PRAGMA foreign_keys").fetchone() == (0,)
+            assert connection.execute("PRAGMA recursive_triggers").fetchone() == (0,)
+            before = provenance_database_snapshot(connection)
+            with pytest.raises(sqlite3.IntegrityError, match="run_id is immutable"):
+                connection.execute(f"UPDATE {table} SET run_id = 'new-id'")
+            assert provenance_database_snapshot(connection) == before
+        assert store.get(record.run_id) == record
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize("field", ["configuration_hash", "matching_model_hashes"])
+def test_review03_rejects_nul_suffixed_hashes(tmp_path: Path, field: str) -> None:
+    database_path = tmp_path / "nul-hashes.sqlite3"
+    store = SQLiteProvenanceStore(database_path)
+    invalid_hash = "sha256:" + "a" * 64 + "\x00suffix"
+    try:
+        with closing(sqlite3.connect(database_path)) as connection, connection:
+            insert_complete_raw_run(connection, "hash-run")
+            if field == "matching_model_hashes":
+                for table in ("run_configurations", "model_executions"):
+                    connection.execute(
+                        f"UPDATE {table} SET model_content_hash = ?", (invalid_hash,)
+                    )
+            before = provenance_database_snapshot(connection)
+            with pytest.raises(sqlite3.IntegrityError):
+                if field == "configuration_hash":
+                    connection.execute(
+                        "UPDATE runs SET configuration_hash = ?, is_finalized = 1",
+                        (invalid_hash,),
+                    )
+                else:
+                    connection.execute("UPDATE runs SET is_finalized = 1")
+            assert provenance_database_snapshot(connection) == before
+        assert store.get(RunId("hash-run")) is None
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        '{"x":"one","x":"two"}',
+        r'{"x":"one","\u0078":"two"}',
+        '{"x":"one","x":"one"}',
+        r'{"x\u0000a":"one","x\u0000\u0061":"two"}',
+        r'{"é":"one","\u00e9":"two"}',
+    ],
+)
+def test_review03_finalization_rejects_duplicate_decoded_options(
+    tmp_path: Path, payload: str
+) -> None:
+    database_path = tmp_path / "duplicate-options.sqlite3"
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        with closing(sqlite3.connect(database_path)) as connection, connection:
+            insert_complete_raw_run(
+                connection,
+                "options-run",
+                configuration_overrides={"options_json": payload},
+            )
+            before = provenance_database_snapshot(connection)
+            with pytest.raises(sqlite3.IntegrityError):
+                connection.execute("UPDATE runs SET is_finalized = 1")
+            assert provenance_database_snapshot(connection) == before
+        assert store.get(RunId("options-run")) is None
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "configuration_hash",
+        "configuration_model_hash",
+        "execution_model_hash",
+        "matching_model_hashes",
+    ],
+)
+@pytest.mark.parametrize(
+    ("invalid_hash", "cast_text"),
+    [
+        pytest.param("sha256:" + "a" * 64 + "\x00", False, id="trailing-nul"),
+        pytest.param("sha256:" + "a" * 64 + "\x00junk", False, id="nul-suffix"),
+        pytest.param(
+            "sha256:" + "a" * 31 + "\x00" + "b" * 32, False, id="internal-nul"
+        ),
+        pytest.param("sha256:" + "a" * 63, False, id="short"),
+        pytest.param("sha256:" + "a" * 65, False, id="long"),
+        pytest.param("sha256:sha256:" + "a" * 64, False, id="extra-prefix"),
+        pytest.param("sha256:" + "a" * 64 + "suffix", False, id="extra-suffix"),
+        pytest.param("SHA256:" + "a" * 64, False, id="uppercase-prefix"),
+        pytest.param("sha256:" + "A" * 64, False, id="uppercase-digest"),
+        pytest.param("sha256:" + "g" * 64, False, id="invalid-hex"),
+        pytest.param("sha256:" + "a" * 63 + "é", False, id="non-ascii"),
+        pytest.param(b"sha256:" + b"a" * 63 + b"\x80", True, id="malformed-utf8"),
+        pytest.param(b"sha256:" + b"a" * 64, False, id="blob-storage"),
+    ],
+)
+def test_review03_rejects_entire_malformed_hash_values(
+    tmp_path: Path, field: str, invalid_hash: str | bytes, cast_text: bool
+) -> None:
+    database_path = tmp_path / "invalid-complete-hash.sqlite3"
+    store = SQLiteProvenanceStore(database_path)
+    expression = "CAST(? AS TEXT)" if cast_text else "?"
+    try:
+        with closing(sqlite3.connect(database_path)) as connection, connection:
+            # Preserve malformed text bytes in test snapshots without changing
+            # SQLite's native validation or the store's normal UTF-8 decoding.
+            connection.text_factory = lambda value: value.decode(
+                "utf-8", "surrogateescape"
+            )
+            insert_complete_raw_run(connection, "hash-run")
+            if field != "configuration_hash":
+                tables = {
+                    "configuration_model_hash": ("run_configurations",),
+                    "execution_model_hash": ("model_executions",),
+                    "matching_model_hashes": ("run_configurations", "model_executions"),
+                }[field]
+                for table in tables:
+                    connection.execute(
+                        f"UPDATE {table} SET model_content_hash = {expression}",
+                        (invalid_hash,),
+                    )
+            before = provenance_database_snapshot(connection)
+            with pytest.raises(sqlite3.IntegrityError):
+                if field == "configuration_hash":
+                    connection.execute(
+                        f"UPDATE runs SET configuration_hash = {expression}, "
+                        "is_finalized = 1",
+                        (invalid_hash,),
+                    )
+                else:
+                    connection.execute("UPDATE runs SET is_finalized = 1")
+            assert provenance_database_snapshot(connection) == before
+            assert connection.execute("SELECT is_finalized FROM runs").fetchone() == (
+                0,
+            )
+        assert store.get(RunId("hash-run")) is None
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize("model_hash", [None, "sha256:" + "0123456789abcdef" * 4])
+def test_review03_valid_hashes_reconstruct_after_reopen(
+    tmp_path: Path, model_hash: str | None
+) -> None:
+    database_path = tmp_path / "valid-complete-hash.sqlite3"
+    configuration_hash = "sha256:" + "fedcba9876543210" * 4
+    SQLiteProvenanceStore(database_path).close()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        insert_complete_raw_run(
+            connection,
+            "hash-run",
+            configuration_overrides={"model_content_hash": model_hash},
+        )
+        connection.execute(
+            "UPDATE runs SET configuration_hash = ?, is_finalized = 1",
+            (configuration_hash,),
+        )
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        record = store.get(RunId("hash-run"))
+        assert record is not None
+        assert record.configuration_hash == configuration_hash
+        assert record.configuration.model_content_hash == model_hash
+    finally:
+        store.close()
+    with closing(sqlite3.connect(database_path)) as connection:
+        assert connection.execute(
+            "SELECT model_content_hash FROM model_executions"
+        ).fetchone() == (model_hash,)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        "{}",
+        '{"x":"one","X":"two"}',
+        r'{"\u00e9":"caf\u00e9"}',
+        r'{"x\u0000a":"one","x\u0000b":"two","x":"three"}',
+        r'{"é":"composed","e\u0301":"decomposed"}',
+    ],
+)
+def test_review03_distinct_decoded_options_finalize_and_reopen(
+    tmp_path: Path, payload: str
+) -> None:
+    database_path = tmp_path / "distinct-options.sqlite3"
+    SQLiteProvenanceStore(database_path).close()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        insert_complete_raw_run(
+            connection, "options-run", configuration_overrides={"options_json": payload}
+        )
+        connection.execute("UPDATE runs SET is_finalized = 1")
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        record = store.get(RunId("options-run"))
+        assert record is not None
+        assert record.configuration.options == tuple(
+            sorted(json.loads(payload).items())
+        )
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize(
+    "payload", ['{"x":"one","x":"two"}', r'{"x":"one","\u0078":"two"}']
+)
+def test_review03_get_rejects_duplicate_keys_in_corrupted_storage(
+    tmp_path: Path, payload: str
+) -> None:
+    database_path = tmp_path / "corrupted-options.sqlite3"
+    record = persisted_run("corrupted")
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        store.append(record)
+    finally:
+        store.close()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        guard = connection.execute(
+            "SELECT sql FROM sqlite_schema "
+            "WHERE name = 'prevent_finalized_run_configurations_update'"
+        ).fetchone()[0]
+        connection.execute("DROP TRIGGER prevent_finalized_run_configurations_update")
+        try:
+            connection.execute(
+                "UPDATE run_configurations SET options_json = ?", (payload,)
+            )
+        finally:
+            # Restore the exact valid schema; only stored data is corrupted.
+            connection.execute(guard)
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        with pytest.raises(
+            ValueError, match="^stored configuration options are invalid$"
+        ):
+            store.get(record.run_id)
+    finally:
+        store.close()
+
+
 @pytest.mark.parametrize("table", tuple(_CHILD_RUN_ID_TRIGGERS))
 def test_child_run_id_cannot_move_between_existing_runs(
     tmp_path: Path,
@@ -1095,7 +1566,6 @@ def test_failed_append_rolls_back_open_parent_and_all_child_provenance(
         sources=(provenance_source("source-a", ("chunk-a", 0, 0)),),
     )
     store = SQLiteProvenanceStore(database_path)
-    store.close()
     with sqlite3.connect(database_path) as connection:
         connection.execute(
             """
@@ -1107,12 +1577,13 @@ def test_failed_append_rolls_back_open_parent_and_all_child_provenance(
             """
         )
 
-    store = SQLiteProvenanceStore(database_path)
     try:
         with pytest.raises(sqlite3.IntegrityError, match="synthetic child failure"):
             store.append(record)
         assert store.get(record.run_id) is None
     finally:
+        with closing(sqlite3.connect(database_path)) as connection, connection:
+            connection.execute("DROP TRIGGER fail_test_chunk_insert")
         store.close()
     with sqlite3.connect(database_path) as connection:
         for table in _PROVENANCE_TABLES:

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from contextlib import closing
 from datetime import datetime
+from functools import cache
 from pathlib import Path
 from threading import RLock
 from typing import cast
@@ -537,8 +539,9 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
         WHERE completed.instant < started.instant
     )
     OR typeof(NEW.configuration_hash) != 'text'
-    OR length(NEW.configuration_hash) != 71
-    OR substr(NEW.configuration_hash, 1, 7) != 'sha256:'
+    OR length(CAST(NEW.configuration_hash AS BLOB)) != 71
+    OR instr(CAST(NEW.configuration_hash AS BLOB), x'00') != 0
+    OR substr(CAST(NEW.configuration_hash AS BLOB), 1, 7) != x'7368613235363a'
     OR substr(NEW.configuration_hash, 8) GLOB '*[^0-9a-f]*'
     OR (
         NEW.user_id IS NOT NULL
@@ -669,9 +672,11 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
                   configuration.model_content_hash IS NOT NULL
                   AND (
                       typeof(configuration.model_content_hash) != 'text'
-                      OR length(configuration.model_content_hash) != 71
-                      OR substr(configuration.model_content_hash, 1, 7)
-                         != 'sha256:'
+                      OR length(CAST(configuration.model_content_hash AS BLOB)) != 71
+                      OR instr(CAST(configuration.model_content_hash AS BLOB), x'00')
+                         != 0
+                      OR substr(CAST(configuration.model_content_hash AS BLOB), 1, 7)
+                         != x'7368613235363a'
                       OR substr(configuration.model_content_hash, 8)
                          GLOB '*[^0-9a-f]*'
                   )
@@ -682,6 +687,18 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
                       THEN 1
                   ELSE 0
                  END
+              OR EXISTS (
+                  SELECT 1
+                  FROM json_each(
+                      CASE
+                          WHEN json_valid(configuration.options_json)
+                              THEN configuration.options_json
+                          ELSE '{{}}'
+                      END
+                  ) AS option
+                  GROUP BY CAST(option.key AS BLOB)
+                  HAVING count(*) > 1
+              )
               OR EXISTS (
                   SELECT 1
                   FROM json_each(
@@ -835,6 +852,19 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
                     WHERE run_id = NEW.run_id
                 )
         )
+    )
+    OR EXISTS (
+        SELECT 1 FROM model_executions AS execution
+        WHERE execution.run_id = NEW.run_id
+          AND execution.model_content_hash IS NOT NULL
+          AND (
+              typeof(execution.model_content_hash) != 'text'
+              OR length(CAST(execution.model_content_hash AS BLOB)) != 71
+              OR instr(CAST(execution.model_content_hash AS BLOB), x'00') != 0
+              OR substr(CAST(execution.model_content_hash AS BLOB), 1, 7)
+                 != x'7368613235363a'
+              OR substr(execution.model_content_hash, 8) GLOB '*[^0-9a-f]*'
+          )
     )
     OR (
         NEW.model_called = 0
@@ -1116,47 +1146,58 @@ END;
 )
 
 
-_REQUIRED_TABLE_BODIES = {
-    statement.partition("(")[0].split()[-1]: " ".join(
-        statement.partition("(")[2].split()
-    )
-    for statement in _TABLE_SCHEMA.split(";")
-    if statement.strip().startswith("CREATE TABLE")
-}
 _INCOMPATIBLE_SCHEMA_MESSAGE = (
     "local provenance schema is incompatible; a fresh database is required"
 )
 
 
-def _validate_existing_schema(connection: sqlite3.Connection) -> None:
-    """Reject old/partial layouts before DDL; this store performs no migration.
+_SchemaObject = tuple[str, str, str, str]
 
-    Only the six governed WITHOUT ROWID table definitions are supported. Use
-    SQLite's ASCII identifier comparison for discovery, never for stored IDs.
-    Compare authoritative bodies, including PK/FK/UNIQUE/CHECK constraints,
-    without treating different string literals as interchangeable.
+
+@cache
+def _expected_schema() -> tuple[_SchemaObject, ...]:
+    """Cache SQLite's exact stored representation of only our trusted schema."""
+    with closing(sqlite3.connect(":memory:")) as reference:
+        reference.executescript(_SCHEMA)
+        return tuple(
+            (row[0], row[1], row[2], row[3])
+            for row in reference.execute(
+                "SELECT type, name, tbl_name, sql FROM sqlite_schema "
+                "WHERE type IN ('table', 'trigger') ORDER BY type, name"
+            )
+        )
+
+
+def _validate_existing_schema(
+    connection: sqlite3.Connection, *, allow_empty: bool = False
+) -> None:
+    """Validate the complete table/trigger contract without repairing anything.
+
+    ASCII case-insensitive discovery catches identifier collisions, while exact
+    row/definition comparison deliberately rejects differently authored schemas.
+    Keep every matching row: tables and triggers can occupy the same name in
+    different namespaces. Unknown triggers on governed tables also fail closed.
     """
-    placeholders = ", ".join("?" for _ in _REQUIRED_TABLE_BODIES)
+    expected = _expected_schema()
+    names = tuple(row[1] for row in expected)
+    tables = tuple(row[1] for row in expected if row[0] == "table")
+    name_parameters = ", ".join("?" for _ in names)
+    table_parameters = ", ".join("?" for _ in tables)
     try:
-        objects = connection.execute(
-            f"SELECT lower(name), type, sql FROM sqlite_schema "
-            f"WHERE name COLLATE NOCASE IN ({placeholders})",
-            tuple(_REQUIRED_TABLE_BODIES),
-        ).fetchall()
-        if not objects:
+        objects = tuple(
+            (row[0], row[1], row[2], row[3])
+            for row in connection.execute(
+                f"SELECT type, name, tbl_name, sql FROM sqlite_schema "
+                f"WHERE name COLLATE NOCASE IN ({name_parameters}) "
+                f"OR (type = 'trigger' AND tbl_name COLLATE NOCASE "
+                f"IN ({table_parameters})) ORDER BY type, name",
+                names + tables,
+            )
+        )
+        if allow_empty and not objects:
             return
-        if len(objects) != len(_REQUIRED_TABLE_BODIES):
+        if objects != expected:
             raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
-        for name, kind, definition in objects:
-            if kind != "table" or not isinstance(definition, str):
-                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
-            header, separator, body = definition.partition("(")
-            if (
-                header.lower().split() != ["create", "table", name]
-                or not separator
-                or " ".join(body.split()) != _REQUIRED_TABLE_BODIES[name]
-            ):
-                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
     except sqlite3.DatabaseError as error:
         raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
 
@@ -1172,7 +1213,15 @@ def _options_json(configuration: RunConfiguration) -> str:
 
 
 def _read_options(payload: str) -> tuple[tuple[str, str], ...]:
-    decoded: object = json.loads(payload)
+    def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        values: dict[str, object] = {}
+        for name, value in pairs:
+            if name in values:
+                raise ValueError("stored configuration options are invalid")
+            values[name] = value
+        return values
+
+    decoded: object = json.loads(payload, object_pairs_hook=unique_object)
     if not isinstance(decoded, dict) or any(
         not isinstance(name, str) or not isinstance(value, str)
         for name, value in decoded.items()
@@ -1195,8 +1244,9 @@ class SQLiteProvenanceStore:
             with self._lock:
                 self._connection.execute("PRAGMA foreign_keys = ON")
                 self._connection.execute("PRAGMA recursive_triggers = ON")
-                _validate_existing_schema(self._connection)
+                _validate_existing_schema(self._connection, allow_empty=True)
                 self._connection.executescript(_SCHEMA)
+                _validate_existing_schema(self._connection)
         except Exception:
             self._connection.close()
             raise
