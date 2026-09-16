@@ -29,7 +29,7 @@ _PYTHON_STRIP_CHARACTERS_SQL = (
     "8202, 8232, 8233, 8239, 8287, 12288)"
 )
 
-_SCHEMA = f"""
+_TABLE_SCHEMA = """
 PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS runs (
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS runs (
             )
         )
     )
-);
+) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS run_configurations (
     run_id TEXT PRIMARY KEY REFERENCES runs(run_id),
@@ -157,20 +157,20 @@ CREATE TABLE IF NOT EXISTS run_configurations (
     retrieval_provider_version TEXT NOT NULL,
     retrieval_limit INTEGER NOT NULL CHECK (retrieval_limit BETWEEN 1 AND 100),
     options_json TEXT NOT NULL
-);
+) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS run_permission_conditions (
     run_id TEXT NOT NULL REFERENCES runs(run_id),
     condition_id TEXT NOT NULL,
     PRIMARY KEY (run_id, condition_id)
-);
+) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS run_sources (
     run_id TEXT NOT NULL REFERENCES runs(run_id),
     source_id TEXT NOT NULL,
     source_version TEXT NOT NULL,
     PRIMARY KEY (run_id, source_id)
-);
+) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS run_chunks (
     run_id TEXT NOT NULL,
@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS run_chunks (
     UNIQUE (run_id, retrieval_position),
     FOREIGN KEY (run_id, source_id)
         REFERENCES run_sources(run_id, source_id)
-);
+) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS model_executions (
     run_id TEXT PRIMARY KEY REFERENCES runs(run_id),
@@ -191,8 +191,12 @@ CREATE TABLE IF NOT EXISTS model_executions (
     model_id TEXT NOT NULL,
     model_version TEXT NOT NULL,
     model_content_hash TEXT
-);
+) WITHOUT ROWID;
+"""
 
+_SCHEMA = (
+    _TABLE_SCHEMA
+    + f"""
 CREATE TRIGGER IF NOT EXISTS prevent_run_id_update
 BEFORE UPDATE OF run_id ON runs
 BEGIN
@@ -217,25 +221,23 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
         WITH RECURSIVE
         reconstruction_text(bytes) AS (
             SELECT CAST(
-                CAST(run_id AS BLOB)
-                || x'00' || CAST(started_at AS BLOB)
-                || x'00' || CAST(completed_at AS BLOB)
-                || x'00' || CAST(status AS BLOB)
-                || x'00' || coalesce(CAST(stop_reason AS BLOB), x'')
-                || x'00' || coalesce(CAST(failure_stage AS BLOB), x'')
-                || x'00' || coalesce(CAST(user_id AS BLOB), x'')
-                || x'00' || coalesce(CAST(role_id AS BLOB), x'')
-                || x'00' || coalesce(CAST(client_id AS BLOB), x'')
-                || x'00' || coalesce(CAST(matter_id AS BLOB), x'')
-                || x'00' || coalesce(CAST(workflow_id AS BLOB), x'')
-                || x'00' || coalesce(CAST(policy_id AS BLOB), x'')
-                || x'00' || coalesce(CAST(policy_version AS BLOB), x'')
-                || x'00' || coalesce(CAST(permission_state AS BLOB), x'')
-                || x'00' || CAST(configuration_hash AS BLOB)
+                CAST(NEW.run_id AS BLOB)
+                || x'00' || CAST(NEW.started_at AS BLOB)
+                || x'00' || CAST(NEW.completed_at AS BLOB)
+                || x'00' || CAST(NEW.status AS BLOB)
+                || x'00' || coalesce(CAST(NEW.stop_reason AS BLOB), x'')
+                || x'00' || coalesce(CAST(NEW.failure_stage AS BLOB), x'')
+                || x'00' || coalesce(CAST(NEW.user_id AS BLOB), x'')
+                || x'00' || coalesce(CAST(NEW.role_id AS BLOB), x'')
+                || x'00' || coalesce(CAST(NEW.client_id AS BLOB), x'')
+                || x'00' || coalesce(CAST(NEW.matter_id AS BLOB), x'')
+                || x'00' || coalesce(CAST(NEW.workflow_id AS BLOB), x'')
+                || x'00' || coalesce(CAST(NEW.policy_id AS BLOB), x'')
+                || x'00' || coalesce(CAST(NEW.policy_version AS BLOB), x'')
+                || x'00' || coalesce(CAST(NEW.permission_state AS BLOB), x'')
+                || x'00' || CAST(NEW.configuration_hash AS BLOB)
                 AS BLOB
             )
-            FROM runs
-            WHERE run_id IS NEW.run_id
             UNION ALL
             SELECT CAST(
                 CAST(run_id AS BLOB)
@@ -370,6 +372,8 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
     OR NEW.run_id = ''
     OR NEW.run_id != trim(NEW.run_id, {_PYTHON_STRIP_CHARACTERS_SQL})
     OR typeof(NEW.started_at) != 'text'
+    OR instr(CAST(NEW.started_at AS BLOB), x'00') != 0
+    OR length(CAST(NEW.started_at AS BLOB)) NOT IN (27, 32)
     OR length(NEW.started_at) NOT IN (27, 32)
     OR substr(NEW.started_at, 1, 26) NOT GLOB
        '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9]'
@@ -412,6 +416,8 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
         )
     )
     OR typeof(NEW.completed_at) != 'text'
+    OR instr(CAST(NEW.completed_at AS BLOB), x'00') != 0
+    OR length(CAST(NEW.completed_at AS BLOB)) NOT IN (27, 32)
     OR length(NEW.completed_at) NOT IN (27, 32)
     OR substr(NEW.completed_at, 1, 26) NOT GLOB
        '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9]'
@@ -1107,6 +1113,52 @@ BEGIN
     SELECT RAISE(ABORT, 'model provenance requires model execution');
 END;
 """
+)
+
+
+_REQUIRED_TABLE_BODIES = {
+    statement.partition("(")[0].split()[-1]: " ".join(
+        statement.partition("(")[2].split()
+    )
+    for statement in _TABLE_SCHEMA.split(";")
+    if statement.strip().startswith("CREATE TABLE")
+}
+_INCOMPATIBLE_SCHEMA_MESSAGE = (
+    "local provenance schema is incompatible; a fresh database is required"
+)
+
+
+def _validate_existing_schema(connection: sqlite3.Connection) -> None:
+    """Reject old/partial layouts before DDL; this store performs no migration.
+
+    Only the six governed WITHOUT ROWID table definitions are supported. Use
+    SQLite's ASCII identifier comparison for discovery, never for stored IDs.
+    Compare authoritative bodies, including PK/FK/UNIQUE/CHECK constraints,
+    without treating different string literals as interchangeable.
+    """
+    placeholders = ", ".join("?" for _ in _REQUIRED_TABLE_BODIES)
+    try:
+        objects = connection.execute(
+            f"SELECT lower(name), type, sql FROM sqlite_schema "
+            f"WHERE name COLLATE NOCASE IN ({placeholders})",
+            tuple(_REQUIRED_TABLE_BODIES),
+        ).fetchall()
+        if not objects:
+            return
+        if len(objects) != len(_REQUIRED_TABLE_BODIES):
+            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+        for name, kind, definition in objects:
+            if kind != "table" or not isinstance(definition, str):
+                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+            header, separator, body = definition.partition("(")
+            if (
+                header.lower().split() != ["create", "table", name]
+                or not separator
+                or " ".join(body.split()) != _REQUIRED_TABLE_BODIES[name]
+            ):
+                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+    except sqlite3.DatabaseError as error:
+        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
 
 
 def _options_json(configuration: RunConfiguration) -> str:
@@ -1139,10 +1191,15 @@ class SQLiteProvenanceStore:
         self._lock = RLock()
         self._connection = sqlite3.connect(str(database_path), check_same_thread=False)
         self._connection.row_factory = sqlite3.Row
-        with self._lock:
-            self._connection.execute("PRAGMA foreign_keys = ON")
-            self._connection.execute("PRAGMA recursive_triggers = ON")
-            self._connection.executescript(_SCHEMA)
+        try:
+            with self._lock:
+                self._connection.execute("PRAGMA foreign_keys = ON")
+                self._connection.execute("PRAGMA recursive_triggers = ON")
+                _validate_existing_schema(self._connection)
+                self._connection.executescript(_SCHEMA)
+        except Exception:
+            self._connection.close()
+            raise
 
     def close(self) -> None:
         """Close the local database connection."""

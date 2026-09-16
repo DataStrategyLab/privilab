@@ -111,6 +111,27 @@ _REQUIRED_UNIQUE_COLUMNS: dict[str, tuple[tuple[str, ...], ...]] = {
 _REQUIRED_FTS_DEFINITION = (
     "createvirtualtablechunks_ftsusingfts5(chunk_idunindexed,text)"
 )
+_BINARY_IDENTITY_DECLARATIONS = {
+    "sources": {"source_id": "source_id TEXT PRIMARY KEY"},
+    "source_entitlements": {
+        "source_id": "source_id TEXT NOT NULL REFERENCES sources(source_id)",
+        **{
+            name: f"{name} TEXT NOT NULL"
+            for name in ("user_id", "role_id", "client_id", "matter_id", "workflow_id")
+        },
+    },
+    "chunks": {
+        "chunk_id": "chunk_id TEXT PRIMARY KEY",
+        "source_id": "source_id TEXT NOT NULL REFERENCES sources(source_id)",
+    },
+}
+_GOVERNED_SCHEMA_NAMES = (
+    *_REQUIRED_SCHEMA_SIGNATURES,
+    *(
+        f"chunks_fts_{suffix}"
+        for suffix in ("data", "idx", "content", "docsize", "config")
+    ),
+)
 _INCOMPATIBLE_SCHEMA_MESSAGE = (
     "local retrieval index schema is incompatible and must be recreated or rebuilt"
 )
@@ -253,7 +274,7 @@ def _unique_constraint_columns(
 
 def _schema_definition(connection: sqlite3.Connection, name: str) -> str | None:
     row = connection.execute(
-        "SELECT type, sql FROM sqlite_schema WHERE name = ?",
+        "SELECT type, sql FROM sqlite_schema WHERE name = ? COLLATE NOCASE",
         (name,),
     ).fetchone()
     if row is None or row[0] != "table" or not isinstance(row[1], str):
@@ -263,6 +284,67 @@ def _schema_definition(connection: sqlite3.Connection, name: str) -> str | None:
 
 def _normalize_schema_definition(definition: str) -> str:
     return re.sub(r"\s+", "", definition).casefold()
+
+
+def _has_binary_identity_columns(connection: sqlite3.Connection) -> bool:
+    """Recognize only unambiguous governed column declarations, not arbitrary SQL.
+
+    UNIQUE index collations do not establish the columns' comparison semantics.
+    Read the authoritative declarations, allowing one explicit BINARY clause
+    or SQLite's default BINARY. Quoting, comments and other syntax fail closed.
+    """
+    for table, required in _BINARY_IDENTITY_DECLARATIONS.items():
+        definition = _schema_definition(connection, table)
+        if (
+            definition is None
+            or re.fullmatch(r"[\w\s(),>=]+", definition, re.ASCII) is None
+        ):
+            return False
+        match = re.fullmatch(
+            rf"CREATE\s+TABLE\s+{table}\s*\((.*)\)",
+            definition,
+            re.IGNORECASE | re.ASCII | re.DOTALL,
+        )
+        if match is None:
+            return False
+        # Split only top-level declarations; REFERENCES/UNIQUE/CHECK use commas
+        # and parentheses too. No quoted strings or comments can hide delimiters.
+        declarations = []
+        depth = start = 0
+        body = match[1]
+        for index, character in enumerate(body):
+            if character == "(":
+                depth += 1
+            elif character == ")":
+                depth -= 1
+            elif character == "," and depth == 0:
+                declarations.append(body[start:index].strip())
+                start = index + 1
+            if depth < 0 or depth > 2:
+                return False
+        if depth != 0:
+            return False
+        declarations.append(body[start:].strip())
+        for column, expected in required.items():
+            candidates = [
+                clause
+                for clause in declarations
+                if re.match(rf"{column}\s", clause, re.IGNORECASE | re.ASCII)
+            ]
+            if len(candidates) != 1:
+                return False
+            clause = re.sub(
+                r"\bCOLLATE\s+BINARY\b",
+                "",
+                candidates[0],
+                count=1,
+                flags=re.IGNORECASE | re.ASCII,
+            )
+            if _normalize_schema_definition(clause) != _normalize_schema_definition(
+                expected
+            ):
+                return False
+    return True
 
 
 def _has_required_ordinal_check(connection: sqlite3.Connection) -> bool:
@@ -288,7 +370,10 @@ def _has_required_fts_definition(connection: sqlite3.Connection) -> bool:
 def _validate_schema_compatibility(connection: sqlite3.Connection) -> None:
     try:
         for table, expected_signature in _REQUIRED_SCHEMA_SIGNATURES.items():
-            if _schema_signature(connection, table) != expected_signature:
+            if (
+                _schema_definition(connection, table) is None
+                or _schema_signature(connection, table) != expected_signature
+            ):
                 raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
         for table, expected_foreign_keys in _REQUIRED_FOREIGN_KEYS.items():
             if _foreign_key_signature(connection, table) != expected_foreign_keys:
@@ -299,6 +384,8 @@ def _validate_schema_compatibility(connection: sqlite3.Connection) -> None:
         if not _has_required_ordinal_check(connection):
             raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
         if not _has_required_fts_definition(connection):
+            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+        if not _has_binary_identity_columns(connection):
             raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
         connection.execute(
             """
@@ -314,16 +401,16 @@ def _validate_schema_compatibility(connection: sqlite3.Connection) -> None:
 
 
 def _has_existing_retrieval_schema(connection: sqlite3.Connection) -> bool:
-    placeholders = ", ".join("?" for _ in _REQUIRED_SCHEMA_SIGNATURES)
+    placeholders = ", ".join("?" for _ in _GOVERNED_SCHEMA_NAMES)
     try:
         row = connection.execute(
             f"""
             SELECT 1
             FROM sqlite_schema
-            WHERE name IN ({placeholders})
+            WHERE name COLLATE NOCASE IN ({placeholders})
             LIMIT 1
             """,
-            tuple(_REQUIRED_SCHEMA_SIGNATURES),
+            _GOVERNED_SCHEMA_NAMES,
         ).fetchone()
     except sqlite3.DatabaseError as error:
         raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error

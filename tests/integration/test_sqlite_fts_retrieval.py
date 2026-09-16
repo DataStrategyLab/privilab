@@ -4,11 +4,13 @@ import json
 import sqlite3
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing
 from pathlib import Path
 
 import pytest
 
 from privilab.adapters.retrieval import SQLiteFtsRetrievalProvider
+from privilab.adapters.retrieval.sqlite_fts import _SCHEMA
 from privilab.application import access_scope_for, parse_permission_policy
 from privilab.domain import (
     AccessScope,
@@ -30,6 +32,16 @@ ROOT = Path(__file__).parents[2]
 _INCOMPATIBLE_INDEX_ERROR = (
     "^local retrieval index schema is incompatible and must be recreated or rebuilt$"
 )
+_IDENTITY_DECLARATIONS = {
+    "source_id": "source_id TEXT PRIMARY KEY",
+    "entitlement_source": "source_id TEXT NOT NULL REFERENCES sources(source_id)",
+    **{
+        name: f"{name} TEXT NOT NULL"
+        for name in ("user_id", "role_id", "client_id", "matter_id", "workflow_id")
+    },
+    "chunk_id": "chunk_id TEXT PRIMARY KEY",
+    "chunk_source": "source_id TEXT NOT NULL REFERENCES sources(source_id)",
+}
 
 
 def create_constraint_variant_database(
@@ -37,36 +49,38 @@ def create_constraint_variant_database(
     **overrides: str,
 ) -> None:
     definitions = {
-        "entitlement_source": ("source_id TEXT NOT NULL REFERENCES sources(source_id)"),
+        **_IDENTITY_DECLARATIONS,
         "entitlement_unique": (
             ", UNIQUE (source_id, user_id, role_id, client_id, matter_id, workflow_id)"
         ),
-        "chunk_source": "source_id TEXT NOT NULL REFERENCES sources(source_id)",
         "ordinal": "ordinal INTEGER NOT NULL CHECK (ordinal >= 0)",
         "chunk_unique": ", UNIQUE (source_id, ordinal)",
         "fts": (
             "CREATE VIRTUAL TABLE chunks_fts USING fts5(chunk_id UNINDEXED, text);"
         ),
     } | overrides
-    with sqlite3.connect(database_path) as connection:
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.create_collation(
+            "SYNTHETIC", lambda left, right: (left > right) - (left < right)
+        )
         connection.executescript(
             f"""
             CREATE TABLE sources (
-                source_id TEXT PRIMARY KEY,
+                {definitions["source_id"]},
                 source_version TEXT NOT NULL,
                 title TEXT NOT NULL
             );
             CREATE TABLE source_entitlements (
                 {definitions["entitlement_source"]},
-                user_id TEXT NOT NULL,
-                role_id TEXT NOT NULL,
-                client_id TEXT NOT NULL,
-                matter_id TEXT NOT NULL,
-                workflow_id TEXT NOT NULL
+                {definitions["user_id"]},
+                {definitions["role_id"]},
+                {definitions["client_id"]},
+                {definitions["matter_id"]},
+                {definitions["workflow_id"]}
                 {definitions["entitlement_unique"]}
             );
             CREATE TABLE chunks (
-                chunk_id TEXT PRIMARY KEY,
+                {definitions["chunk_id"]},
                 {definitions["chunk_source"]},
                 {definitions["ordinal"]},
                 text TEXT NOT NULL
@@ -85,7 +99,7 @@ def create_constraint_variant_database(
 
 
 def retrieval_database_snapshot(database_path: Path) -> tuple[object, ...]:
-    with sqlite3.connect(database_path) as connection:
+    with closing(sqlite3.connect(database_path)) as connection:
         return (
             connection.execute(
                 """
@@ -94,14 +108,245 @@ def retrieval_database_snapshot(database_path: Path) -> tuple[object, ...]:
                 ORDER BY type, name
                 """
             ).fetchall(),
-            connection.execute(
-                """
-                SELECT source_id, source_version, title
-                FROM sources
-                ORDER BY source_id
-                """
-            ).fetchall(),
+            {
+                name: sorted(
+                    connection.execute(
+                        'SELECT * FROM "' + name.replace('"', '""') + '"'
+                    ).fetchall(),
+                    key=repr,
+                )
+                for (name,) in connection.execute(
+                    "SELECT name FROM sqlite_schema WHERE type = 'table'"
+                ).fetchall()
+            },
         )
+
+
+def test_hardening_rejects_nocase_column_with_binary_unique(tmp_path: Path) -> None:
+    database_path = tmp_path / "nocase.sqlite3"
+    create_constraint_variant_database(
+        database_path,
+        user_id="user_id TEXT NOT NULL COLLATE NOCASE",
+        entitlement_unique=(
+            ", UNIQUE (source_id, user_id COLLATE BINARY, role_id, "
+            "client_id, matter_id, workflow_id)"
+        ),
+    )
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.execute(
+            "INSERT INTO source_entitlements VALUES "
+            "('existing-source', 'Alice', 'role-a', 'client-a', "
+            "'matter-a', 'workflow-a')"
+        )
+        connection.execute(
+            "INSERT INTO chunks VALUES ('chunk-a', 'existing-source', 0, 'notice')"
+        )
+        connection.execute("INSERT INTO chunks_fts VALUES ('chunk-a', 'notice')")
+        # Demonstrate the dangerous comparison even though its UNIQUE is BINARY.
+        assert connection.execute(
+            "SELECT source_id FROM source_entitlements WHERE user_id = 'alice'"
+        ).fetchall() == [("existing-source",)]
+    before = retrieval_database_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR):
+        SQLiteFtsRetrievalProvider(database_path)
+    assert retrieval_database_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+def test_hardening_partial_mixed_case_schema_is_untouched(tmp_path: Path) -> None:
+    database_path = tmp_path / "partial.sqlite3"
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.execute("CREATE TABLE Chunks (chunk_id TEXT PRIMARY KEY)")
+        connection.execute("INSERT INTO Chunks VALUES ('preserved-chunk')")
+    before = retrieval_database_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR):
+        SQLiteFtsRetrievalProvider(database_path)
+    assert retrieval_database_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize("column", _IDENTITY_DECLARATIONS)
+@pytest.mark.parametrize(
+    "collation",
+    ["NOCASE", "RTRIM", "SYNTHETIC", "BINARY COLLATE BINARY", '"BINARY"'],
+)
+def test_hardening_rejects_nonbinary_or_ambiguous_identity_columns(
+    tmp_path: Path, column: str, collation: str
+) -> None:
+    database_path = tmp_path / "identity-collation.sqlite3"
+    create_constraint_variant_database(
+        database_path,
+        **{
+            column: _IDENTITY_DECLARATIONS[column] + f" COLLATE {collation}",
+            "entitlement_unique": (
+                ", UNIQUE (source_id COLLATE BINARY, user_id COLLATE BINARY, "
+                "role_id COLLATE BINARY, client_id COLLATE BINARY, "
+                "matter_id COLLATE BINARY, workflow_id COLLATE BINARY)"
+            ),
+            "chunk_unique": ", UNIQUE (source_id COLLATE BINARY, ordinal)",
+        },
+    )
+    before = retrieval_database_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR):
+        SQLiteFtsRetrievalProvider(database_path)
+    assert retrieval_database_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize(
+    "placement", ["default", "before-constraints", "after-constraints"]
+)
+def test_hardening_binary_columns_preserve_case_sensitive_isolation(
+    tmp_path: Path, placement: str
+) -> None:
+    overrides = {}
+    if placement != "default":
+        overrides = {
+            name: (
+                clause.replace("TEXT", "TEXT COLLATE BINARY")
+                if placement == "before-constraints"
+                else clause + " COLLATE BINARY"
+            )
+            for name, clause in _IDENTITY_DECLARATIONS.items()
+        }
+    database_path = tmp_path / "binary.sqlite3"
+    create_constraint_variant_database(database_path, **overrides)
+    allow = parse_permission_policy(
+        {
+            "schema_version": 1,
+            "policy_id": "synthetic-case-policy",
+            "policy_version": "1",
+            "synthetic": True,
+            "required_context": [
+                "user_id",
+                "role_id",
+                "client_id",
+                "matter_id",
+                "workflow_id",
+            ],
+            "rules": [
+                {
+                    "rule_id": "allow",
+                    "effect": "ALLOW",
+                    "match": {},
+                    "condition_ids": [],
+                }
+            ],
+        }
+    )
+    alice_context = dict(
+        user_id="Alice",
+        role_id="Role",
+        client_id="Client",
+        matter_id="Matter",
+        workflow_id="Workflow",
+    )
+    instance = SQLiteFtsRetrievalProvider(database_path)
+    try:
+        for source_id, chunk_id, entitled in [
+            ("Source", "Chunk", ("Alice", "Role", "Client", "Matter", "Workflow")),
+            ("source", "chunk", ("Bob", "Role", "Client", "Matter", "Workflow")),
+        ]:
+            instance.index_source(
+                source(source_id, ((chunk_id, 0, "notice"),), entitlements=(entitled,))
+            )
+    finally:
+        instance.close()
+    instance = SQLiteFtsRetrievalProvider(database_path)
+    try:
+        alice_scope = access_scope_for(context(**alice_context), allow)
+        assert alice_scope is not None
+        assert [
+            chunk.chunk_id.value for chunk in instance.retrieve("notice", alice_scope)
+        ] == ["Chunk"]
+        for column in alice_context:
+            variant = alice_context | {column: alice_context[column].lower()}
+            variant_scope = access_scope_for(context(**variant), allow)
+            assert variant_scope is not None
+            assert instance.retrieve("notice", variant_scope) == ()
+    finally:
+        instance.close()
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "sources",
+        "source_entitlements",
+        "chunks",
+        "chunks_fts",
+        "chunks_fts_data",
+        "chunks_fts_idx",
+        "chunks_fts_content",
+        "chunks_fts_docsize",
+        "chunks_fts_config",
+    ],
+)
+@pytest.mark.parametrize("mixed_case", [False, True])
+@pytest.mark.parametrize("kind", ["table", "view", "index", "trigger"])
+def test_hardening_partial_governed_objects_rejected_before_ddl(
+    tmp_path: Path, name: str, mixed_case: bool, kind: str
+) -> None:
+    name = name.title() if mixed_case else name
+    database_path = tmp_path / "partial-object.sqlite3"
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.execute("CREATE TABLE unrelated (value TEXT)")
+        connection.execute("INSERT INTO unrelated VALUES ('preserve synthetic data')")
+        if kind == "table":
+            connection.execute(f"CREATE TABLE {name} (value TEXT PRIMARY KEY)")
+            connection.execute(f"INSERT INTO {name} VALUES ('preserved')")
+        elif kind == "view":
+            connection.execute(f"CREATE VIEW {name} AS SELECT value FROM unrelated")
+        elif kind == "index":
+            connection.execute(f"CREATE INDEX {name} ON unrelated(value)")
+        else:
+            connection.execute(
+                f"CREATE TRIGGER {name} AFTER INSERT ON unrelated BEGIN SELECT 1; END"
+            )
+    before = retrieval_database_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR):
+        SQLiteFtsRetrievalProvider(database_path)
+    assert retrieval_database_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize(
+    "missing", ["sources", "source_entitlements", "chunks", "chunks_fts"]
+)
+def test_hardening_incomplete_retrieval_combinations_are_untouched(
+    tmp_path: Path, missing: str
+) -> None:
+    database_path = tmp_path / "incomplete.sqlite3"
+    create_constraint_variant_database(database_path)
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.execute(f"DROP TABLE {missing}")
+    before = retrieval_database_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR):
+        SQLiteFtsRetrievalProvider(database_path)
+    assert retrieval_database_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+def test_hardening_complete_mixed_case_retrieval_schema_reopens(tmp_path: Path) -> None:
+    database_path = tmp_path / "mixed-case.sqlite3"
+    # Create the same governed definitions with ASCII case variants; quoted
+    # ALTER TABLE rewrites are intentionally outside the bounded grammar.
+    schema = _SCHEMA
+    for name in ("sources", "source_entitlements", "chunks", "chunks_fts"):
+        schema = schema.replace(f"EXISTS {name} ", f"EXISTS {name.title()} ")
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.executescript(schema)
+    instance = SQLiteFtsRetrievalProvider(database_path)
+    try:
+        instance.index_source(source("source-a", (("chunk-a", 0, "notice"),)))
+        assert len(instance.retrieve("notice", scope_for())) == 1
+    finally:
+        instance.close()
 
 
 def context(

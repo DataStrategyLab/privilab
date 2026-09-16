@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from contextlib import closing
 from dataclasses import replace
 from datetime import UTC, datetime
 from hashlib import sha256
@@ -15,6 +16,7 @@ from privilab.adapters.models import FixtureModelProvider, load_governed_fixture
 from privilab.adapters.models import governed_fixture as governed_fixture_loader
 from privilab.adapters.retrieval import SQLiteFtsRetrievalProvider
 from privilab.adapters.storage import SQLiteProvenanceStore
+from privilab.adapters.storage.sqlite_provenance import _TABLE_SCHEMA
 from privilab.application import (
     ChunkProvenance,
     ContextProvenance,
@@ -339,10 +341,333 @@ def child_run_id_move_case(
 def provenance_database_snapshot(
     connection: sqlite3.Connection,
 ) -> dict[str, list[tuple[object, ...]]]:
-    return {
-        table: connection.execute(f"SELECT * FROM {table} ORDER BY rowid").fetchall()
-        for table in _PROVENANCE_TABLES
+    snapshot = {}
+    for table in _PROVENANCE_TABLES:
+        primary_key = [
+            row[1]
+            for row in sorted(
+                connection.execute(f"PRAGMA table_info({table})"),
+                key=lambda row: row[5],
+            )
+            if row[5]
+        ]
+        snapshot[table] = connection.execute(
+            f"SELECT * FROM {table} ORDER BY {', '.join(primary_key)}"
+        ).fetchall()
+    return snapshot
+
+
+def test_hardening_rowid_cannot_replace_finalized_last_chunk(tmp_path: Path) -> None:
+    database_path = tmp_path / "rowid-attack.sqlite3"
+    store = SQLiteProvenanceStore(database_path)
+    record = persisted_run(
+        "victim",
+        sources=(provenance_source("source-a", ("first", 0, 0), ("last", 1, 1)),),
+    )
+    try:
+        store.append(record)
+        with sqlite3.connect(database_path) as connection:
+            connection.execute("PRAGMA foreign_keys = ON")
+            connection.execute("PRAGMA recursive_triggers = OFF")
+            insert_complete_raw_run(connection, "open-run")
+            connection.execute(
+                "INSERT INTO run_sources VALUES ('open-run', 'source-a', '1')"
+            )
+            before = provenance_database_snapshot(connection)
+            # On the vulnerable layout, this takes the victim's hidden identity
+            # but inserts under an open parent, bypassing the natural-key guard.
+            with pytest.raises(sqlite3.OperationalError, match="rowid"):
+                connection.execute(
+                    "INSERT OR REPLACE INTO run_chunks "
+                    "(rowid, run_id, source_id, chunk_id, ordinal, retrieval_position) "
+                    "SELECT rowid, 'open-run', 'source-a', 'replacement', 0, 0 "
+                    "FROM run_chunks WHERE run_id = 'victim' AND chunk_id = 'last'"
+                )
+            assert provenance_database_snapshot(connection) == before
+        assert store.get(record.run_id) == record
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize("table", _PROVENANCE_TABLES)
+@pytest.mark.parametrize("alias", ["rowid", "_rowid_", "oid"])
+def test_hardening_all_provenance_tables_have_no_rowid_alias(
+    tmp_path: Path, table: str, alias: str
+) -> None:
+    database_path = tmp_path / "without-rowid.sqlite3"
+    store = SQLiteProvenanceStore(database_path)
+    record = (
+        persisted_run("victim") if table == "runs" else child_run_id_move_case(table)[0]
+    )
+    try:
+        store.append(record)
+        with sqlite3.connect(database_path) as connection:
+            connection.execute("PRAGMA foreign_keys = ON")
+            connection.execute("PRAGMA recursive_triggers = OFF")
+            assert connection.execute("PRAGMA foreign_keys").fetchone() == (1,)
+            assert connection.execute("PRAGMA recursive_triggers").fetchone() == (0,)
+            layouts = {
+                row[1]: row[4]
+                for row in connection.execute("PRAGMA table_list")
+                if row[1] in _PROVENANCE_TABLES
+            }
+            assert layouts == dict.fromkeys(_PROVENANCE_TABLES, 1)
+            before = provenance_database_snapshot(connection)
+            for sql in (
+                f"SELECT {alias} FROM {table}",
+                f"UPDATE {table} SET {alias} = 999",
+                f"INSERT OR REPLACE INTO {table} ({alias}) VALUES (1)",
+            ):
+                with pytest.raises(sqlite3.OperationalError, match=alias):
+                    connection.execute(sql)
+                assert provenance_database_snapshot(connection) == before
+                assert store.get(record.run_id) == record
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize("table", _PROVENANCE_TABLES)
+def test_hardening_natural_key_replace_is_immutable_without_recursive_triggers(
+    tmp_path: Path, table: str
+) -> None:
+    database_path = tmp_path / "natural-key.sqlite3"
+    record = (
+        persisted_run("victim") if table == "runs" else child_run_id_move_case(table)[0]
+    )
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        store.append(record)
+        with sqlite3.connect(database_path) as connection:
+            connection.execute("PRAGMA foreign_keys = ON")
+            connection.execute("PRAGMA recursive_triggers = OFF")
+            before = provenance_database_snapshot(connection)
+            columns = [
+                row[1] for row in connection.execute(f"PRAGMA table_info({table})")
+            ]
+            projection = ", ".join(
+                "0" if name == "is_finalized" else name for name in columns
+            )
+            with pytest.raises(sqlite3.IntegrityError):
+                connection.execute(
+                    f"INSERT OR REPLACE INTO {table} ({', '.join(columns)}) "
+                    f"SELECT {projection} FROM {table} WHERE run_id = ?",
+                    (record.run_id.value,),
+                )
+            assert provenance_database_snapshot(connection) == before
+            assert store.get(record.run_id) == record
+            if table == "run_chunks":
+                with pytest.raises(sqlite3.IntegrityError):
+                    connection.execute(
+                        "INSERT OR REPLACE INTO run_chunks "
+                        "SELECT run_id, source_id, 'new-natural-key', "
+                        "ordinal, retrieval_position "
+                        "FROM run_chunks WHERE run_id = ? AND retrieval_position = 1",
+                        (record.run_id.value,),
+                    )
+                assert provenance_database_snapshot(connection) == before
+                assert store.get(record.run_id) == record
+    finally:
+        store.close()
+
+
+def complete_provenance_file_snapshot(database_path: Path) -> tuple[object, ...]:
+    with closing(sqlite3.connect(database_path)) as connection:
+        return (
+            connection.execute(
+                "SELECT type, name, tbl_name, sql FROM sqlite_schema "
+                "ORDER BY type, name"
+            ).fetchall(),
+            {
+                name: sorted(
+                    connection.execute(
+                        'SELECT * FROM "' + name.replace('"', '""') + '"'
+                    ).fetchall(),
+                    key=repr,
+                )
+                for (name,) in connection.execute(
+                    "SELECT name FROM sqlite_schema WHERE type = 'table'"
+                ).fetchall()
+            },
+        )
+
+
+@pytest.mark.parametrize("table", _PROVENANCE_TABLES)
+@pytest.mark.parametrize(
+    "layout", ["partial-rowid", "partial-without-rowid", "mixed", "view"]
+)
+@pytest.mark.parametrize("mixed_case", [False, True])
+def test_hardening_rejects_partial_or_mixed_provenance_before_ddl(
+    tmp_path: Path, table: str, layout: str, mixed_case: bool
+) -> None:
+    statements = {
+        statement.partition("(")[0].split()[-1]: statement
+        for statement in _TABLE_SCHEMA.split(";")
+        if statement.strip().startswith("CREATE TABLE")
     }
+    actual_name = table.title() if mixed_case else table
+    selected = statements[table].replace(f"EXISTS {table} (", f"EXISTS {actual_name} (")
+    if layout in ("partial-rowid", "mixed"):
+        selected = selected.replace(" WITHOUT ROWID", "")
+    if layout == "view":
+        selected = f"CREATE VIEW {actual_name} AS SELECT 'synthetic' AS run_id"
+    schema = selected + ";"
+    if layout == "mixed":
+        schema = (
+            ";".join(
+                selected if name == table else sql for name, sql in statements.items()
+            )
+            + ";"
+        )
+    database_path = tmp_path / "incompatible-provenance.sqlite3"
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.executescript(schema)
+        connection.execute("CREATE TABLE unrelated (value TEXT)")
+        connection.execute("INSERT INTO unrelated VALUES ('preserve synthetic data')")
+        if layout == "mixed":
+            insert_complete_raw_run(connection, "preserved-open-run")
+    before = complete_provenance_file_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with pytest.raises(RuntimeError, match="^local provenance schema is incompatible;"):
+        SQLiteProvenanceStore(database_path)
+    assert complete_provenance_file_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize(
+    "variant", ["legacy-rowid", "missing-unique", "missing-primary-key-column"]
+)
+def test_hardening_rejects_incompatible_complete_provenance_without_mutation(
+    tmp_path: Path, variant: str
+) -> None:
+    schema = _TABLE_SCHEMA
+    if variant == "legacy-rowid":
+        schema = schema.replace(" WITHOUT ROWID", "")
+    elif variant == "missing-unique":
+        schema = schema.replace("    UNIQUE (run_id, retrieval_position),", "")
+    else:
+        schema = schema.replace(
+            "PRIMARY KEY (run_id, chunk_id)", "PRIMARY KEY (chunk_id)"
+        )
+    database_path = tmp_path / "legacy-provenance.sqlite3"
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.executescript(schema)
+        insert_complete_raw_run(connection, "preserved-open-run")
+    before = complete_provenance_file_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with pytest.raises(RuntimeError, match="^local provenance schema is incompatible;"):
+        SQLiteProvenanceStore(database_path)
+    assert complete_provenance_file_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+def test_hardening_without_rowid_append_duplicate_and_reopen(tmp_path: Path) -> None:
+    database_path = tmp_path / "current-provenance.sqlite3"
+    records = [
+        persisted_run("generated"),
+        persisted_run("conditional", unresolved_condition_id="needs-approval"),
+        *(
+            persisted_run(failure.value, failure_stage=failure)
+            for failure in FailureStage
+        ),
+    ]
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        for record in records:
+            store.append(record)
+            assert store.get(record.run_id) == record
+            with pytest.raises(sqlite3.IntegrityError):
+                store.append(record)
+            assert store.get(record.run_id) == record
+    finally:
+        store.close()
+    before = complete_provenance_file_snapshot(database_path)
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        assert [store.get(record.run_id) for record in records] == records
+    finally:
+        store.close()
+    assert complete_provenance_file_snapshot(database_path) == before
+
+
+def test_hardening_valid_new_parent_text_reconstructs_after_finalization(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "new-valid-text.sqlite3"
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        with sqlite3.connect(database_path) as connection:
+            insert_complete_raw_run(connection, "open-run")
+            connection.execute(
+                "UPDATE runs SET user_id = 'synthetic-new-user', "
+                "role_id = 'synthetic-rôle', "
+                "policy_id = 'new-policy', policy_version = '2', is_finalized = 1"
+            )
+        record = store.get(RunId("open-run"))
+        assert record is not None
+        assert record.context.user_id == "synthetic-new-user"
+        assert record.context.role_id == "synthetic-rôle"
+        assert record.permission is not None
+        assert record.permission.policy_id == "new-policy"
+        assert record.permission.policy_version == "2"
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize(
+    "column", ["user_id", "role_id", "policy_id", "policy_version"]
+)
+def test_hardening_finalization_validates_new_parent_text(
+    tmp_path: Path, column: str
+) -> None:
+    database_path = tmp_path / "new-text.sqlite3"
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        with sqlite3.connect(database_path) as connection:
+            insert_complete_raw_run(connection, "open-run")
+            before = provenance_database_snapshot(connection)
+            with pytest.raises(sqlite3.IntegrityError):
+                connection.execute(
+                    f"UPDATE runs SET {column} = CAST(x'80' AS TEXT), is_finalized = 1 "
+                    "WHERE run_id = 'open-run'"
+                )
+            assert provenance_database_snapshot(connection) == before
+        assert store.get(RunId("open-run")) is None
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize("column", ["started_at", "completed_at"])
+@pytest.mark.parametrize("suffix", ["Z", "+00:00"])
+@pytest.mark.parametrize("nul", ["trailing", "junk", "internal"])
+@pytest.mark.parametrize("combined", [False, True])
+def test_hardening_finalization_rejects_entire_nul_timestamp(
+    tmp_path: Path, column: str, suffix: str, nul: str, combined: bool
+) -> None:
+    timestamp = "2026-09-14T12:00:00.000000" + suffix
+    timestamp = (
+        timestamp[:10] + "\x00" + timestamp[11:]
+        if nul == "internal"
+        else timestamp + ("\x00junk" if nul == "junk" else "\x00")
+    )
+    database_path = tmp_path / "nul-timestamp.sqlite3"
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        with sqlite3.connect(database_path) as connection:
+            insert_complete_raw_run(connection, "open-run")
+            if not combined:
+                connection.execute(f"UPDATE runs SET {column} = ?", (timestamp,))
+            before = provenance_database_snapshot(connection)
+            with pytest.raises(sqlite3.IntegrityError):
+                if combined:
+                    connection.execute(
+                        f"UPDATE runs SET {column} = ?, is_finalized = 1", (timestamp,)
+                    )
+                else:
+                    connection.execute("UPDATE runs SET is_finalized = 1")
+            assert provenance_database_snapshot(connection) == before
+        assert store.get(RunId("open-run")) is None
+    finally:
+        store.close()
 
 
 def insert_raw_run(
