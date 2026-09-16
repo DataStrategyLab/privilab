@@ -57,6 +57,35 @@ CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
 );
 """
 
+_REQUIRED_SCHEMA_SIGNATURES = {
+    "sources": (
+        ("source_id", "TEXT", 0, 1),
+        ("source_version", "TEXT", 1, 0),
+        ("title", "TEXT", 1, 0),
+    ),
+    "source_entitlements": (
+        ("source_id", "TEXT", 1, 0),
+        ("user_id", "TEXT", 1, 0),
+        ("role_id", "TEXT", 1, 0),
+        ("client_id", "TEXT", 1, 0),
+        ("matter_id", "TEXT", 1, 0),
+        ("workflow_id", "TEXT", 1, 0),
+    ),
+    "chunks": (
+        ("chunk_id", "TEXT", 0, 1),
+        ("source_id", "TEXT", 1, 0),
+        ("ordinal", "INTEGER", 1, 0),
+        ("text", "TEXT", 1, 0),
+    ),
+    "chunks_fts": (
+        ("chunk_id", "", 0, 0),
+        ("text", "", 0, 0),
+    ),
+}
+_INCOMPATIBLE_SCHEMA_MESSAGE = (
+    "local retrieval index schema is incompatible and must be recreated or rebuilt"
+)
+
 _RETRIEVE_SQL = """
 WITH authorized_sources AS (
     SELECT source_id
@@ -140,6 +169,49 @@ def _validate_query(query: object) -> str:
     return query
 
 
+def _schema_signature(
+    connection: sqlite3.Connection,
+    table: str,
+) -> tuple[tuple[str, str, int, int], ...]:
+    rows = connection.execute(f'PRAGMA table_info("{table}")').fetchall()
+    return tuple((row[1], row[2].upper(), row[3], row[5]) for row in rows)
+
+
+def _validate_schema_compatibility(connection: sqlite3.Connection) -> None:
+    try:
+        for table, expected_signature in _REQUIRED_SCHEMA_SIGNATURES.items():
+            if _schema_signature(connection, table) != expected_signature:
+                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+        connection.execute(
+            """
+            SELECT rowid
+            FROM chunks_fts
+            WHERE chunks_fts MATCH ?
+            LIMIT 0
+            """,
+            ("schema-compatibility-check",),
+        ).fetchall()
+    except sqlite3.DatabaseError as error:
+        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
+
+
+def _has_existing_retrieval_schema(connection: sqlite3.Connection) -> bool:
+    placeholders = ", ".join("?" for _ in _REQUIRED_SCHEMA_SIGNATURES)
+    try:
+        row = connection.execute(
+            f"""
+            SELECT 1
+            FROM sqlite_schema
+            WHERE name IN ({placeholders})
+            LIMIT 1
+            """,
+            tuple(_REQUIRED_SCHEMA_SIGNATURES),
+        ).fetchone()
+    except sqlite3.DatabaseError as error:
+        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
+    return row is not None
+
+
 class SQLiteFtsRetrievalProvider:
     """Trusted local index administration plus authorization-scoped retrieval."""
 
@@ -148,9 +220,16 @@ class SQLiteFtsRetrievalProvider:
             raise TypeError("database_path must be a string or Path")
         self._lock = RLock()
         self._connection = sqlite3.connect(str(database_path), check_same_thread=False)
-        with self._lock:
-            self._connection.execute("PRAGMA foreign_keys = ON")
-            self._connection.executescript(_SCHEMA)
+        try:
+            with self._lock:
+                self._connection.execute("PRAGMA foreign_keys = ON")
+                if _has_existing_retrieval_schema(self._connection):
+                    _validate_schema_compatibility(self._connection)
+                self._connection.executescript(_SCHEMA)
+                _validate_schema_compatibility(self._connection)
+        except Exception:
+            self._connection.close()
+            raise
 
     def close(self) -> None:
         """Close the provider's local database connection."""

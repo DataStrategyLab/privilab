@@ -53,6 +53,7 @@ from privilab.domain import (
 )
 
 ROOT = Path(__file__).parents[2]
+GOVERNED_FIXTURES = ROOT / "src/privilab/adapters/models/resources/governed_fixtures"
 
 _PROVENANCE_TABLES = (
     "runs",
@@ -1614,23 +1615,22 @@ def write_governed_fixture_tree(
     tmp_path: Path,
     *,
     content_hash: str | None = None,
-    fixture_path: str = "fixtures/model_outputs/output.json",
+    fixture_path: str = "output.json",
     fixture_id: str = "model-output.synthetic-bound.001",
     fixture_version: str = "1.0.0",
     answer_text: str = "Bound synthetic output.",
 ) -> tuple[Path, str, str]:
-    repository_root = tmp_path / "repository"
-    fixture_directory = repository_root / "fixtures/model_outputs"
-    fixture_directory.mkdir(parents=True)
+    resource_root = tmp_path / "governed-fixtures"
+    resource_root.mkdir(parents=True)
     output_json = json.dumps(
         {"answer_text": answer_text, "citations": []},
         sort_keys=True,
     )
-    output_path = repository_root / fixture_path
+    output_path = resource_root / fixture_path
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(output_json, encoding="utf-8")
     actual_hash = f"sha256:{sha256(output_path.read_bytes()).hexdigest()}"
-    manifest_path = fixture_directory / "manifest.json"
+    manifest_path = resource_root / "manifest.json"
     manifest_path.write_text(
         json.dumps(
             {
@@ -1649,7 +1649,7 @@ def write_governed_fixture_tree(
         ),
         encoding="utf-8",
     )
-    return repository_root, output_json, actual_hash
+    return resource_root, output_json, actual_hash
 
 
 def test_governed_fixture_loader_rejects_hash_mismatch_before_persistence(
@@ -1666,7 +1666,6 @@ def test_governed_fixture_loader_rejects_hash_mismatch_before_persistence(
     with pytest.raises(ValueError, match="content hash does not match"):
         governed_fixture_loader._load_governed_fixture_for_testing(
             repository_root,
-            "fixtures/model_outputs/manifest.json",
             "model-output.synthetic-bound.001",
         )
 
@@ -1687,12 +1686,52 @@ def test_governed_fixture_loader_rejects_unknown_identity_and_unsafe_path(
     unsafe_root, _output_json, _unsafe_hash = write_governed_fixture_tree(
         tmp_path / "unsafe",
         content_hash=actual_hash,
-        fixture_path="fixtures/model_outputs/../outside.json",
+        fixture_path="../outside.json",
     )
     with pytest.raises(ValueError, match="must not contain traversal"):
         governed_fixture_loader._load_governed_fixture_for_testing(
             unsafe_root,
-            "fixtures/model_outputs/manifest.json",
+            "model-output.synthetic-bound.001",
+        )
+
+
+def test_governed_fixture_loader_rejects_duplicate_manifest_identity(
+    tmp_path: Path,
+) -> None:
+    resource_root, _output_json, _actual_hash = write_governed_fixture_tree(tmp_path)
+    manifest_path = resource_root / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["fixtures"].append(dict(manifest["fixtures"][0]))
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="identity is missing or duplicated"):
+        governed_fixture_loader._load_governed_fixture_for_testing(
+            resource_root,
+            "model-output.synthetic-bound.001",
+        )
+
+
+@pytest.mark.parametrize(
+    ("manifest_text", "message"),
+    (
+        ("{", "cannot load governed fixture manifest"),
+        (
+            '{"schema_version":"1","schema_version":"1","fixtures":[]}',
+            "duplicate JSON field: schema_version",
+        ),
+    ),
+)
+def test_governed_fixture_loader_rejects_malformed_manifest(
+    tmp_path: Path,
+    manifest_text: str,
+    message: str,
+) -> None:
+    resource_root, _output_json, _actual_hash = write_governed_fixture_tree(tmp_path)
+    (resource_root / "manifest.json").write_text(manifest_text, encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        governed_fixture_loader._load_governed_fixture_for_testing(
+            resource_root,
             "model-output.synthetic-bound.001",
         )
 
@@ -1702,31 +1741,30 @@ def test_governed_fixture_loader_rejects_resolved_symlink_escape(
 ) -> None:
     repository_root, _output_json, _actual_hash = write_governed_fixture_tree(
         tmp_path,
-        fixture_path="fixtures/model_outputs/linked-output.json",
+        fixture_path="linked-output.json",
     )
-    linked_output = repository_root / "fixtures/model_outputs/linked-output.json"
-    outside_output = repository_root / "outside-output.json"
+    linked_output = repository_root / "linked-output.json"
+    outside_output = tmp_path / "outside-output.json"
     linked_output.replace(outside_output)
     linked_output.symlink_to(outside_output)
 
     with pytest.raises(ValueError, match="escapes its approved boundary"):
         governed_fixture_loader._load_governed_fixture_for_testing(
             repository_root,
-            "fixtures/model_outputs/manifest.json",
             "model-output.synthetic-bound.001",
         )
 
 
-def test_production_fixture_api_has_one_canonical_repository_trust_anchor(
+def test_production_fixture_api_has_one_canonical_package_trust_anchor(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     canonical_manifest = json.loads(
-        (ROOT / "fixtures/model_outputs/manifest.json").read_text(encoding="utf-8")
+        (GOVERNED_FIXTURES / "manifest.json").read_text(encoding="utf-8")
     )
     canonical_record = canonical_manifest["fixtures"][0]
     fixture_id = canonical_record["id"]
-    canonical_bytes = (ROOT / canonical_record["path"]).read_bytes()
+    canonical_bytes = (GOVERNED_FIXTURES / canonical_record["path"]).read_bytes()
     canonical = load_governed_fixture(fixture_id)
 
     fake_root, fake_json, fake_hash = write_governed_fixture_tree(
@@ -1737,7 +1775,6 @@ def test_production_fixture_api_has_one_canonical_repository_trust_anchor(
     )
     test_only_fake = governed_fixture_loader._load_governed_fixture_for_testing(
         fake_root,
-        "fixtures/model_outputs/manifest.json",
         fixture_id,
     )
 
@@ -1765,13 +1802,13 @@ def test_production_fixture_api_has_one_canonical_repository_trust_anchor(
     with pytest.raises(TypeError):
         production_loader(
             fake_root,
-            "fixtures/model_outputs/manifest.json",
+            "alternate/manifest.json",
             fixture_id,
         )
     with pytest.raises(TypeError):
         production_loader(
             fixture_id,
-            manifest_path="fixtures/model_outputs/alternate-manifest.json",
+            manifest_path="alternate/manifest.json",
         )
 
     composition_parameters = set(signature(RunService.from_governed_fixture).parameters)
@@ -1792,10 +1829,10 @@ def test_stale_canonical_fixture_hash_fails_before_trusted_history(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     manifest = json.loads(
-        (ROOT / "fixtures/model_outputs/manifest.json").read_text(encoding="utf-8")
+        (GOVERNED_FIXTURES / "manifest.json").read_text(encoding="utf-8")
     )
     canonical_record = manifest["fixtures"][0]
-    canonical_payload = (ROOT / canonical_record["path"]).resolve()
+    canonical_payload = (GOVERNED_FIXTURES / canonical_record["path"]).resolve()
     original_read_bytes = Path.read_bytes
 
     def stale_canonical_bytes(path: Path) -> bytes:
@@ -1891,7 +1928,7 @@ def test_end_to_end_allowed_run_persists_reconstructable_metadata_only(
         )
     )
     model_manifest = json.loads(
-        (ROOT / "fixtures/model_outputs/manifest.json").read_text(encoding="utf-8")
+        (GOVERNED_FIXTURES / "manifest.json").read_text(encoding="utf-8")
     )
     governed_source = next(
         record
@@ -1936,7 +1973,7 @@ def test_end_to_end_allowed_run_persists_reconstructable_metadata_only(
                 source_version=governed_source["version"],
             )
         )
-        fixture_bytes = (ROOT / governed_model["path"]).read_bytes()
+        fixture_bytes = (GOVERNED_FIXTURES / governed_model["path"]).read_bytes()
         assert (
             f"sha256:{sha256(fixture_bytes).hexdigest()}"
             == (governed_model["content_hash"])

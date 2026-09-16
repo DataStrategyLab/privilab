@@ -5,7 +5,9 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from pathlib import Path
+from importlib.resources import files
+from importlib.resources.abc import Traversable
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from privilab.adapters.models.fixture import FixtureModelProvider
@@ -27,8 +29,9 @@ _RECORD_FIELDS = {
 _PROVIDER_ID = "fixture-model-provider"
 _PROVIDER_VERSION = "1"
 _LICENSE_REF = "fixture:synthetic-model-outputs"
-_CANONICAL_MANIFEST = Path("fixtures/model_outputs/manifest.json")
-_MODULE_PATH = Path("src/privilab/adapters/models/governed_fixture.py")
+_RESOURCE_PACKAGE = "privilab.adapters.models"
+_RESOURCE_DIRECTORY = ("resources", "governed_fixtures")
+_MANIFEST_NAME = "manifest.json"
 _FIXTURE_LOAD_AUTHORITY = object()
 
 
@@ -41,14 +44,14 @@ def _reject_duplicate_fields(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return value
 
 
-def _load_manifest(path: Path) -> dict[str, Any]:
+def _load_manifest(resource: Traversable) -> dict[str, Any]:
     try:
         decoded: object = json.loads(
-            path.read_text(encoding="utf-8"),
+            resource.read_text(encoding="utf-8"),
             object_pairs_hook=_reject_duplicate_fields,
         )
     except (OSError, UnicodeError, json.JSONDecodeError) as error:
-        raise ValueError(f"cannot load governed fixture manifest: {path}") from error
+        raise ValueError("cannot load governed fixture manifest") from error
     if not isinstance(decoded, dict) or set(decoded) != _MANIFEST_FIELDS:
         raise ValueError("governed fixture manifest fields are invalid")
     if decoded["schema_version"] != "1":
@@ -56,45 +59,77 @@ def _load_manifest(path: Path) -> dict[str, Any]:
     fixtures = decoded["fixtures"]
     if not isinstance(fixtures, list) or not fixtures:
         raise ValueError("governed fixture manifest must contain fixtures")
+    seen_ids: set[str] = set()
+    for record in fixtures:
+        if not isinstance(record, dict) or set(record) != _RECORD_FIELDS:
+            raise ValueError("governed fixture record fields are invalid")
+        fixture_id = record["id"]
+        if (
+            not isinstance(fixture_id, str)
+            or not fixture_id
+            or fixture_id != fixture_id.strip()
+            or fixture_id in seen_ids
+        ):
+            raise ValueError("governed fixture identity is missing or duplicated")
+        seen_ids.add(fixture_id)
     return decoded
 
 
-def _resolve_inside(base: Path, relative_path: str, *, boundary: Path) -> Path:
-    candidate = Path(relative_path) if isinstance(relative_path, str) else None
-    if candidate is None or candidate.is_absolute():
+def _join_resource(resource: Traversable, *parts: str) -> Traversable:
+    for part in parts:
+        resource = resource.joinpath(part)
+    return resource
+
+
+def _resolve_inside(base: Traversable, relative_path: object) -> Traversable:
+    if not isinstance(relative_path, str):
+        raise ValueError("governed fixture path is invalid")
+    candidate = PurePosixPath(relative_path)
+    if not relative_path or candidate.is_absolute():
         raise ValueError("governed fixture paths must be relative")
-    if ".." in candidate.parts:
+    if "\\" in relative_path or ".." in candidate.parts:
         raise ValueError("governed fixture paths must not contain traversal")
+    resource = _join_resource(base, *candidate.parts)
+    if isinstance(base, Path) and isinstance(resource, Path):
+        try:
+            boundary = base.resolve(strict=True)
+            resolved = resource.resolve(strict=True)
+            resolved.relative_to(boundary)
+        except (OSError, ValueError) as error:
+            raise ValueError(
+                "governed fixture path escapes its approved boundary"
+            ) from error
+        resource = resolved
     try:
-        resolved = (base / candidate).resolve(strict=True)
-        resolved.relative_to(boundary)
-    except (OSError, ValueError) as error:
-        raise ValueError(
-            "governed fixture path escapes its approved boundary"
-        ) from error
-    if not resolved.is_file():
+        is_file = resource.is_file()
+    except OSError as error:
+        raise ValueError("governed fixture path must identify a file") from error
+    if not is_file:
         raise ValueError("governed fixture path must identify a file")
-    return resolved
+    return resource
 
 
-def _canonical_repository_root() -> Path:
-    """Resolve the repository-owned fixture authority from this module only."""
+def _canonical_resource_root() -> Traversable:
+    """Resolve the package-owned fixture authority without filesystem discovery."""
     try:
-        module = Path(__file__).resolve(strict=True)
-        root = module.parents[4]
-        expected_module = (root / _MODULE_PATH).resolve(strict=True)
-    except (IndexError, OSError) as error:
+        package_root = files(_RESOURCE_PACKAGE)
+        resource_root = _join_resource(package_root, *_RESOURCE_DIRECTORY)
+        if isinstance(package_root, Path) and isinstance(resource_root, Path):
+            boundary = package_root.resolve(strict=True)
+            resolved = resource_root.resolve(strict=True)
+            resolved.relative_to(boundary)
+            resource_root = resolved
+        if not resource_root.is_dir():
+            raise ValueError
+    except (ModuleNotFoundError, OSError, TypeError, ValueError) as error:
         raise ValueError(
-            "cannot resolve the trusted PriviLAB repository layout"
+            "canonical governed fixture resources are unavailable"
         ) from error
-    if expected_module != module or not (root / "pyproject.toml").is_file():
-        raise ValueError("cannot resolve the trusted PriviLAB repository layout")
-    return root
+    return resource_root
 
 
 def _load_governed_fixture(
-    repository_root: str | Path,
-    manifest_path: str | Path,
+    resource_root: Traversable,
     fixture_id: str,
     *,
     _authorized: object | None = None,
@@ -102,43 +137,20 @@ def _load_governed_fixture(
     """Load one exact manifest record, verify its bytes, and bind its provider."""
     if _authorized is not _FIXTURE_LOAD_AUTHORITY:
         raise TypeError("alternate governed fixture roots are not a public API")
-    if not isinstance(repository_root, (str, Path)):
-        raise TypeError("repository_root must be a string or Path")
-    if not isinstance(manifest_path, (str, Path)):
-        raise TypeError("manifest_path must be a string or Path")
     if (
         not isinstance(fixture_id, str)
         or not fixture_id
         or (fixture_id != fixture_id.strip())
     ):
         raise ValueError("fixture_id must be a non-empty, trimmed string")
-    try:
-        root = Path(repository_root).resolve(strict=True)
-    except OSError as error:
-        raise ValueError("repository_root must exist") from error
-    if not root.is_dir():
-        raise ValueError("repository_root must be a directory")
-    manifest_relative = Path(manifest_path)
-    if manifest_relative.is_absolute():
-        raise ValueError("manifest_path must be repository-relative")
-    manifest = _resolve_inside(
-        root,
-        manifest_relative.as_posix(),
-        boundary=root,
-    )
+    manifest = _resolve_inside(resource_root, _MANIFEST_NAME)
     payload = _load_manifest(manifest)
     fixtures = payload["fixtures"]
     assert isinstance(fixtures, list)
-    matches = [
-        record
-        for record in fixtures
-        if isinstance(record, dict) and record.get("id") == fixture_id
-    ]
+    matches = [record for record in fixtures if record["id"] == fixture_id]
     if len(matches) != 1:
         raise ValueError("governed fixture identity is missing or duplicated")
     record = matches[0]
-    if set(record) != _RECORD_FIELDS:
-        raise ValueError("governed fixture record fields are invalid")
     model_id = record["id"]
     model_version = record["version"]
     content_hash = record["content_hash"]
@@ -155,11 +167,9 @@ def _load_governed_fixture(
         raise ValueError("governed fixture content hash is invalid")
     if record["synthetic"] is not True or record["license_ref"] != _LICENSE_REF:
         raise ValueError("governed fixture trust metadata is invalid")
-    if not isinstance(raw_path, str):
-        raise ValueError("governed fixture path is invalid")
-    fixture_path = _resolve_inside(root, raw_path, boundary=manifest.parent.resolve())
+    fixture_resource = _resolve_inside(resource_root, raw_path)
     try:
-        fixture_bytes = fixture_path.read_bytes()
+        fixture_bytes = fixture_resource.read_bytes()
         output_json = fixture_bytes.decode("utf-8")
     except (OSError, UnicodeError) as error:
         raise ValueError("governed fixture payload must be readable UTF-8") from error
@@ -178,34 +188,29 @@ def _load_governed_fixture(
 
 
 def _load_governed_fixture_for_testing(
-    repository_root: str | Path,
-    manifest_path: str | Path,
+    resource_root: str | Path,
     fixture_id: str,
 ) -> GovernedFixtureBinding:
-    """Exercise fixture validation against an isolated test-only repository."""
+    """Exercise resource validation against an isolated test-only directory."""
+    if not isinstance(resource_root, (str, Path)):
+        raise TypeError("resource_root must be a string or Path")
+    try:
+        resolved_root = Path(resource_root).resolve(strict=True)
+    except OSError as error:
+        raise ValueError("resource_root must exist") from error
+    if not resolved_root.is_dir():
+        raise ValueError("resource_root must be a directory")
     return _load_governed_fixture(
-        repository_root,
-        manifest_path,
+        resolved_root,
         fixture_id,
         _authorized=_FIXTURE_LOAD_AUTHORITY,
     )
 
 
 def load_governed_fixture(fixture_id: str) -> GovernedFixtureBinding:
-    """Load one fixture from the repository-owned canonical manifest."""
-    root = _canonical_repository_root()
-    canonical_manifest = root / _CANONICAL_MANIFEST
-    try:
-        resolved_manifest = canonical_manifest.resolve(strict=True)
-    except OSError as error:
-        raise ValueError(
-            "canonical governed fixture manifest is unavailable"
-        ) from error
-    if resolved_manifest != canonical_manifest or not canonical_manifest.is_file():
-        raise ValueError("canonical governed fixture manifest is unavailable")
+    """Load one fixture from the package-owned canonical manifest."""
     return _load_governed_fixture(
-        root,
-        _CANONICAL_MANIFEST,
+        _canonical_resource_root(),
         fixture_id,
         _authorized=_FIXTURE_LOAD_AUTHORITY,
     )

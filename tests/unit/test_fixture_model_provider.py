@@ -15,7 +15,7 @@ from privilab.application.model_provider import (
 from privilab.domain.research import CitationReference
 
 ROOT = Path(__file__).parents[2]
-MODEL_OUTPUTS = ROOT / "fixtures/model_outputs"
+MODEL_OUTPUTS = ROOT / "src/privilab/adapters/models/resources/governed_fixtures"
 
 
 def fixture_output(name: str) -> str:

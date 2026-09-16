@@ -125,6 +125,128 @@ def provider(tmp_path: Path) -> Generator[SQLiteFtsRetrievalProvider]:
     instance.close()
 
 
+def test_fresh_and_current_schema_support_source_version_after_reopen(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "current-retrieval.sqlite3"
+    initial = SQLiteFtsRetrievalProvider(database_path)
+    initial.index_source(
+        source(
+            "source-current",
+            (("source-current.chunk-000", 0, "notice current schema"),),
+        )
+    )
+    assert initial.retrieve("notice", scope_for())[0].source_version == "1.0.0"
+    initial.close()
+
+    reopened = SQLiteFtsRetrievalProvider(database_path)
+    try:
+        results = reopened.retrieve("notice", scope_for())
+        assert len(results) == 1
+        assert results[0].source_id == SourceId("source-current")
+        assert results[0].source_version == "1.0.0"
+    finally:
+        reopened.close()
+
+
+def test_legacy_schema_is_rejected_during_initialization_without_mutation(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "legacy-retrieval.sqlite3"
+    with sqlite3.connect(database_path) as connection:
+        connection.execute(
+            """
+            CREATE TABLE sources (
+                source_id TEXT PRIMARY KEY,
+                title TEXT NOT NULL
+            )
+            """
+        )
+        connection.execute(
+            "INSERT INTO sources (source_id, title) VALUES (?, ?)",
+            ("legacy-source", "Legacy synthetic source"),
+        )
+        before_schema = connection.execute(
+            """
+            SELECT type, name, tbl_name, sql
+            FROM sqlite_schema
+            ORDER BY type, name
+            """
+        ).fetchall()
+        before_rows = connection.execute(
+            "SELECT source_id, title FROM sources ORDER BY source_id"
+        ).fetchall()
+
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "^local retrieval index schema is incompatible and must be "
+            "recreated or rebuilt$"
+        ),
+    ):
+        SQLiteFtsRetrievalProvider(database_path)
+
+    with sqlite3.connect(database_path) as connection:
+        assert (
+            connection.execute(
+                """
+            SELECT type, name, tbl_name, sql
+            FROM sqlite_schema
+            ORDER BY type, name
+            """
+            ).fetchall()
+            == before_schema
+        )
+        assert (
+            connection.execute(
+                "SELECT source_id, title FROM sources ORDER BY source_id"
+            ).fetchall()
+            == before_rows
+        )
+
+
+def test_malformed_required_schema_is_rejected_deterministically(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "malformed-retrieval.sqlite3"
+    with sqlite3.connect(database_path) as connection:
+        connection.executescript(
+            """
+            CREATE TABLE sources (
+                source_id TEXT PRIMARY KEY,
+                source_version TEXT NOT NULL,
+                title TEXT NOT NULL
+            );
+            CREATE TABLE source_entitlements (
+                source_id TEXT NOT NULL,
+                user_id TEXT NOT NULL,
+                role_id TEXT NOT NULL,
+                client_id TEXT NOT NULL,
+                matter_id TEXT NOT NULL,
+                workflow_id TEXT NOT NULL
+            );
+            CREATE TABLE chunks (
+                chunk_id TEXT PRIMARY KEY,
+                source_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL
+            );
+            CREATE VIRTUAL TABLE chunks_fts USING fts5(
+                chunk_id UNINDEXED,
+                text
+            );
+            """
+        )
+
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "^local retrieval index schema is incompatible and must be "
+            "recreated or rebuilt$"
+        ),
+    ):
+        SQLiteFtsRetrievalProvider(database_path)
+
+
 def test_fts_returns_only_authorized_synthetic_corpus_chunk(
     provider: SQLiteFtsRetrievalProvider,
 ) -> None:

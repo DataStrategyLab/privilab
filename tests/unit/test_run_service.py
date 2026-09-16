@@ -91,7 +91,10 @@ def policy_for(
 def configuration(
     *,
     options: tuple[tuple[str, str], ...] = (
-        ("fixture_manifest", "fixtures/model_outputs/manifest.json"),
+        (
+            "fixture_manifest",
+            "privilab.adapters.models:resources/governed_fixtures/manifest.json",
+        ),
         ("response_format", "research-result-v1"),
     ),
 ) -> RunConfiguration:
