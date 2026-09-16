@@ -373,9 +373,29 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
     OR length(NEW.started_at) NOT IN (27, 32)
     OR substr(NEW.started_at, 1, 26) NOT GLOB
        '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9]'
-    OR substr(NEW.started_at, 1, 4) = '0000'
-    OR substr(NEW.started_at, 12, 2) NOT GLOB '[0-9][0-9]'
+    OR CAST(substr(NEW.started_at, 1, 4) AS INTEGER) NOT BETWEEN 1 AND 9999
+    OR CAST(substr(NEW.started_at, 6, 2) AS INTEGER) NOT BETWEEN 1 AND 12
+    OR CAST(substr(NEW.started_at, 9, 2) AS INTEGER) < 1
+    OR CAST(substr(NEW.started_at, 9, 2) AS INTEGER) >
+       CASE
+           WHEN CAST(substr(NEW.started_at, 6, 2) AS INTEGER) = 2
+               THEN CASE
+                   WHEN CAST(substr(NEW.started_at, 1, 4) AS INTEGER) % 4 = 0
+                        AND (
+                            CAST(substr(NEW.started_at, 1, 4) AS INTEGER) % 100 != 0
+                            OR CAST(substr(NEW.started_at, 1, 4) AS INTEGER) % 400 = 0
+                        )
+                       THEN 29
+                   ELSE 28
+               END
+           WHEN CAST(substr(NEW.started_at, 6, 2) AS INTEGER)
+                IN (4, 6, 9, 11)
+               THEN 30
+           ELSE 31
+       END
     OR CAST(substr(NEW.started_at, 12, 2) AS INTEGER) > 23
+    OR CAST(substr(NEW.started_at, 15, 2) AS INTEGER) > 59
+    OR CAST(substr(NEW.started_at, 18, 2) AS INTEGER) > 59
     OR (
         NOT (
             length(NEW.started_at) = 27
@@ -391,16 +411,33 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
             AND CAST(substr(NEW.started_at, 31, 2) AS INTEGER) <= 59
         )
     )
-    OR julianday(NEW.started_at) IS NULL
-    OR date(substr(NEW.started_at, 1, 26))
-       IS NOT substr(NEW.started_at, 1, 10)
     OR typeof(NEW.completed_at) != 'text'
     OR length(NEW.completed_at) NOT IN (27, 32)
     OR substr(NEW.completed_at, 1, 26) NOT GLOB
        '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9]'
-    OR substr(NEW.completed_at, 1, 4) = '0000'
-    OR substr(NEW.completed_at, 12, 2) NOT GLOB '[0-9][0-9]'
+    OR CAST(substr(NEW.completed_at, 1, 4) AS INTEGER) NOT BETWEEN 1 AND 9999
+    OR CAST(substr(NEW.completed_at, 6, 2) AS INTEGER) NOT BETWEEN 1 AND 12
+    OR CAST(substr(NEW.completed_at, 9, 2) AS INTEGER) < 1
+    OR CAST(substr(NEW.completed_at, 9, 2) AS INTEGER) >
+       CASE
+           WHEN CAST(substr(NEW.completed_at, 6, 2) AS INTEGER) = 2
+               THEN CASE
+                   WHEN CAST(substr(NEW.completed_at, 1, 4) AS INTEGER) % 4 = 0
+                        AND (
+                            CAST(substr(NEW.completed_at, 1, 4) AS INTEGER) % 100 != 0
+                            OR CAST(substr(NEW.completed_at, 1, 4) AS INTEGER) % 400 = 0
+                        )
+                       THEN 29
+                   ELSE 28
+               END
+           WHEN CAST(substr(NEW.completed_at, 6, 2) AS INTEGER)
+                IN (4, 6, 9, 11)
+               THEN 30
+           ELSE 31
+       END
     OR CAST(substr(NEW.completed_at, 12, 2) AS INTEGER) > 23
+    OR CAST(substr(NEW.completed_at, 15, 2) AS INTEGER) > 59
+    OR CAST(substr(NEW.completed_at, 18, 2) AS INTEGER) > 59
     OR (
         NOT (
             length(NEW.completed_at) = 27
@@ -416,9 +453,6 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
             AND CAST(substr(NEW.completed_at, 31, 2) AS INTEGER) <= 59
         )
     )
-    OR julianday(NEW.completed_at) IS NULL
-    OR date(substr(NEW.completed_at, 1, 26))
-       IS NOT substr(NEW.completed_at, 1, 10)
     OR EXISTS (
         WITH
         timestamp_values(kind, value) AS (

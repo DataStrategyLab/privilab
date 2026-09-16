@@ -865,8 +865,10 @@ def test_every_valid_terminal_call_state_finalizes_and_reconstructs(
         ("started_at", "not-a-timestamp"),
         ("started_at", "2026-09-14T12:00:00.000000"),
         ("started_at", "2026-02-30T12:00:00.000000+00:00"),
+        ("started_at", "2026-09-14T12:60:00.000000+00:00"),
         ("started_at", "2026-09-14T12:00:00.000000+24:00"),
         ("started_at", "2026-09-14T12:00:00.000000+0A:00"),
+        ("completed_at", "2026-09-14T12:00:60.000000+00:00"),
         ("completed_at", "2026-09-14T12:00:00.000000+00:60"),
         ("completed_at", "2026-09-13T23:59:59.999999+00:00"),
         ("completed_at", "2026-09-14T11:59:59.999999+00:00"),
@@ -1006,6 +1008,96 @@ def test_exact_timestamp_order_accepts_valid_boundaries(
         record = store.get(RunId(run_id))
         assert record is not None
         assert record.completed_at >= record.started_at
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize(
+    "calendar_date",
+    ("2000-02-29", "2024-02-29", "2026-04-30", "2026-12-31"),
+)
+def test_finalization_accepts_valid_calendar_dates(
+    tmp_path: Path,
+    calendar_date: str,
+) -> None:
+    database_path = tmp_path / f"valid-calendar-{calendar_date}.sqlite3"
+    SQLiteProvenanceStore(database_path).close()
+    run_id = f"valid-calendar-{calendar_date}"
+    timestamp = f"{calendar_date}T12:00:00.000000Z"
+    with sqlite3.connect(database_path) as connection:
+        insert_complete_raw_run(
+            connection,
+            run_id,
+            run_overrides={
+                "started_at": timestamp,
+                "completed_at": timestamp,
+            },
+        )
+        finalized = connection.execute(
+            "UPDATE runs SET is_finalized = 1 WHERE run_id = ?",
+            (run_id,),
+        )
+        assert finalized.rowcount == 1
+
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        record = store.get(RunId(run_id))
+        assert record is not None
+        assert record.started_at.date().isoformat() == calendar_date
+        assert record.completed_at.date().isoformat() == calendar_date
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize("column", ("started_at", "completed_at"))
+@pytest.mark.parametrize(
+    "calendar_date",
+    (
+        "1900-02-29",
+        "2023-02-29",
+        "2024-02-30",
+        "2026-04-31",
+        "2026-00-01",
+        "2026-13-01",
+        "2026-01-00",
+        "2026-01-32",
+    ),
+)
+def test_finalization_rejects_invalid_calendar_dates(
+    tmp_path: Path,
+    column: str,
+    calendar_date: str,
+) -> None:
+    database_path = tmp_path / f"invalid-calendar-{column}-{calendar_date}.sqlite3"
+    SQLiteProvenanceStore(database_path).close()
+    run_id = f"invalid-calendar-{column}-{calendar_date}"
+    run_overrides = {
+        "started_at": "0001-01-01T00:00:00.000000Z",
+        "completed_at": "9999-12-31T23:59:59.999999Z",
+        column: f"{calendar_date}T12:00:00.000000Z",
+    }
+    with sqlite3.connect(database_path) as connection:
+        insert_complete_raw_run(
+            connection,
+            run_id,
+            run_overrides=run_overrides,
+        )
+        with pytest.raises(
+            sqlite3.IntegrityError,
+            match="run provenance is incomplete",
+        ):
+            connection.execute(
+                "UPDATE runs SET is_finalized = 1 WHERE run_id = ?",
+                (run_id,),
+            )
+        assert connection.execute(
+            "SELECT is_finalized FROM runs WHERE run_id = ?",
+            (run_id,),
+        ).fetchone() == (0,)
+
+    store = SQLiteProvenanceStore(database_path)
+    try:
+        assert store.get(RunId(run_id)) is None
     finally:
         store.close()
 
