@@ -82,6 +82,35 @@ _REQUIRED_SCHEMA_SIGNATURES = {
         ("text", "", 0, 0),
     ),
 }
+_ForeignKeySignature = tuple[str, str, str, str, str, str]
+_REQUIRED_FOREIGN_KEYS: dict[str, tuple[_ForeignKeySignature, ...]] = {
+    "sources": (),
+    "source_entitlements": (
+        ("sources", "source_id", "source_id", "NO ACTION", "NO ACTION", "NONE"),
+    ),
+    "chunks": (
+        ("sources", "source_id", "source_id", "NO ACTION", "NO ACTION", "NONE"),
+    ),
+    "chunks_fts": (),
+}
+_REQUIRED_UNIQUE_COLUMNS: dict[str, tuple[tuple[str, ...], ...]] = {
+    "sources": (),
+    "source_entitlements": (
+        (
+            "source_id",
+            "user_id",
+            "role_id",
+            "client_id",
+            "matter_id",
+            "workflow_id",
+        ),
+    ),
+    "chunks": (("source_id", "ordinal"),),
+    "chunks_fts": (),
+}
+_REQUIRED_FTS_DEFINITION = (
+    "createvirtualtablechunks_ftsusingfts5(chunk_idunindexed,text)"
+)
 _INCOMPATIBLE_SCHEMA_MESSAGE = (
     "local retrieval index schema is incompatible and must be recreated or rebuilt"
 )
@@ -169,12 +198,91 @@ def _validate_query(query: object) -> str:
     return query
 
 
+def _quote_identifier(value: str) -> str:
+    return '"' + value.replace('"', '""') + '"'
+
+
 def _schema_signature(
     connection: sqlite3.Connection,
     table: str,
 ) -> tuple[tuple[str, str, int, int], ...]:
-    rows = connection.execute(f'PRAGMA table_info("{table}")').fetchall()
+    rows = connection.execute(
+        f"PRAGMA table_info({_quote_identifier(table)})"
+    ).fetchall()
     return tuple((row[1], row[2].upper(), row[3], row[5]) for row in rows)
+
+
+def _foreign_key_signature(
+    connection: sqlite3.Connection,
+    table: str,
+) -> tuple[_ForeignKeySignature, ...]:
+    rows = connection.execute(
+        f"PRAGMA foreign_key_list({_quote_identifier(table)})"
+    ).fetchall()
+    return tuple(
+        sorted((row[2], row[3], row[4], row[5], row[6], row[7]) for row in rows)
+    )
+
+
+def _unique_constraint_columns(
+    connection: sqlite3.Connection,
+    table: str,
+) -> tuple[tuple[str, ...], ...] | None:
+    indexes = connection.execute(
+        f"PRAGMA index_list({_quote_identifier(table)})"
+    ).fetchall()
+    signatures: list[tuple[str, ...]] = []
+    for index in indexes:
+        if index[2] != 1 or index[3] == "pk":
+            continue
+        if index[4] != 0:
+            return None
+        index_rows = connection.execute(
+            f"PRAGMA index_xinfo({_quote_identifier(index[1])})"
+        ).fetchall()
+        columns: list[str] = []
+        for row in index_rows:
+            if row[5] != 1:
+                continue
+            if not isinstance(row[2], str) or row[3] != 0 or row[4] != "BINARY":
+                return None
+            columns.append(row[2])
+        signatures.append(tuple(columns))
+    return tuple(sorted(signatures))
+
+
+def _schema_definition(connection: sqlite3.Connection, name: str) -> str | None:
+    row = connection.execute(
+        "SELECT type, sql FROM sqlite_schema WHERE name = ?",
+        (name,),
+    ).fetchone()
+    if row is None or row[0] != "table" or not isinstance(row[1], str):
+        return None
+    return row[1]
+
+
+def _normalize_schema_definition(definition: str) -> str:
+    return re.sub(r"\s+", "", definition).casefold()
+
+
+def _has_required_ordinal_check(connection: sqlite3.Connection) -> bool:
+    definition = _schema_definition(connection, "chunks")
+    if definition is None or any(
+        marker in definition for marker in ("--", "/*", "*/", "'", '"', "`", "[")
+    ):
+        return False
+    normalized = _normalize_schema_definition(definition)
+    return normalized.startswith("createtablechunks(") and re.findall(
+        r"check\(([^()]*)\)", normalized
+    ) == ["ordinal>=0"]
+
+
+def _has_required_fts_definition(connection: sqlite3.Connection) -> bool:
+    definition = _schema_definition(connection, "chunks_fts")
+    return (
+        definition is not None
+        and _normalize_schema_definition(definition) == _REQUIRED_FTS_DEFINITION
+    )
 
 
 def _validate_schema_compatibility(connection: sqlite3.Connection) -> None:
@@ -182,6 +290,16 @@ def _validate_schema_compatibility(connection: sqlite3.Connection) -> None:
         for table, expected_signature in _REQUIRED_SCHEMA_SIGNATURES.items():
             if _schema_signature(connection, table) != expected_signature:
                 raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+        for table, expected_foreign_keys in _REQUIRED_FOREIGN_KEYS.items():
+            if _foreign_key_signature(connection, table) != expected_foreign_keys:
+                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+        for table, expected_columns in _REQUIRED_UNIQUE_COLUMNS.items():
+            if _unique_constraint_columns(connection, table) != expected_columns:
+                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+        if not _has_required_ordinal_check(connection):
+            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+        if not _has_required_fts_definition(connection):
+            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
         connection.execute(
             """
             SELECT rowid

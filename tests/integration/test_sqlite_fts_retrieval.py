@@ -27,6 +27,81 @@ from privilab.domain import (
 )
 
 ROOT = Path(__file__).parents[2]
+_INCOMPATIBLE_INDEX_ERROR = (
+    "^local retrieval index schema is incompatible and must be recreated or rebuilt$"
+)
+
+
+def create_constraint_variant_database(
+    database_path: Path,
+    **overrides: str,
+) -> None:
+    definitions = {
+        "entitlement_source": ("source_id TEXT NOT NULL REFERENCES sources(source_id)"),
+        "entitlement_unique": (
+            ", UNIQUE (source_id, user_id, role_id, client_id, matter_id, workflow_id)"
+        ),
+        "chunk_source": "source_id TEXT NOT NULL REFERENCES sources(source_id)",
+        "ordinal": "ordinal INTEGER NOT NULL CHECK (ordinal >= 0)",
+        "chunk_unique": ", UNIQUE (source_id, ordinal)",
+        "fts": (
+            "CREATE VIRTUAL TABLE chunks_fts USING fts5(chunk_id UNINDEXED, text);"
+        ),
+    } | overrides
+    with sqlite3.connect(database_path) as connection:
+        connection.executescript(
+            f"""
+            CREATE TABLE sources (
+                source_id TEXT PRIMARY KEY,
+                source_version TEXT NOT NULL,
+                title TEXT NOT NULL
+            );
+            CREATE TABLE source_entitlements (
+                {definitions["entitlement_source"]},
+                user_id TEXT NOT NULL,
+                role_id TEXT NOT NULL,
+                client_id TEXT NOT NULL,
+                matter_id TEXT NOT NULL,
+                workflow_id TEXT NOT NULL
+                {definitions["entitlement_unique"]}
+            );
+            CREATE TABLE chunks (
+                chunk_id TEXT PRIMARY KEY,
+                {definitions["chunk_source"]},
+                {definitions["ordinal"]},
+                text TEXT NOT NULL
+                {definitions["chunk_unique"]}
+            );
+            {definitions["fts"]}
+            """
+        )
+        connection.execute(
+            """
+            INSERT INTO sources (source_id, source_version, title)
+            VALUES (?, ?, ?)
+            """,
+            ("existing-source", "1.0.0", "Existing synthetic source"),
+        )
+
+
+def retrieval_database_snapshot(database_path: Path) -> tuple[object, ...]:
+    with sqlite3.connect(database_path) as connection:
+        return (
+            connection.execute(
+                """
+                SELECT type, name, tbl_name, sql
+                FROM sqlite_schema
+                ORDER BY type, name
+                """
+            ).fetchall(),
+            connection.execute(
+                """
+                SELECT source_id, source_version, title
+                FROM sources
+                ORDER BY source_id
+                """
+            ).fetchall(),
+        )
 
 
 def context(
@@ -245,6 +320,60 @@ def test_malformed_required_schema_is_rejected_deterministically(
         ),
     ):
         SQLiteFtsRetrievalProvider(database_path)
+
+
+@pytest.mark.parametrize(
+    "schema_overrides",
+    (
+        {"entitlement_source": "source_id TEXT NOT NULL"},
+        {"chunk_source": "source_id TEXT NOT NULL"},
+        {"chunk_source": ("source_id TEXT NOT NULL REFERENCES sources(title)")},
+        {"entitlement_unique": ""},
+        {
+            "entitlement_unique": (
+                ", UNIQUE (source_id, user_id, role_id, client_id, matter_id)"
+            )
+        },
+        {"chunk_unique": ""},
+        {"chunk_unique": ", UNIQUE (chunk_id, ordinal)"},
+        {"ordinal": "ordinal INTEGER NOT NULL"},
+        {"ordinal": "ordinal INTEGER NOT NULL CHECK (ordinal >= -1)"},
+        {"fts": "CREATE TABLE chunks_fts (chunk_id, text);"},
+        {"fts": "CREATE VIRTUAL TABLE chunks_fts USING fts5(chunk_id, text);"},
+        {
+            "fts": (
+                "CREATE VIRTUAL TABLE chunks_fts USING fts5("
+                "chunk_id UNINDEXED, text UNINDEXED);"
+            )
+        },
+    ),
+    ids=(
+        "missing-entitlement-foreign-key",
+        "missing-chunk-foreign-key",
+        "wrong-foreign-key-target-column",
+        "missing-entitlement-unique",
+        "incomplete-entitlement-unique",
+        "missing-chunk-unique",
+        "wrong-chunk-unique",
+        "missing-ordinal-check",
+        "weakened-ordinal-check",
+        "ordinary-table-instead-of-fts5",
+        "indexed-fts-chunk-id",
+        "unindexed-fts-text",
+    ),
+)
+def test_same_column_schema_with_incompatible_constraints_is_rejected_unchanged(
+    tmp_path: Path,
+    schema_overrides: dict[str, str],
+) -> None:
+    database_path = tmp_path / "incompatible-constraints.sqlite3"
+    create_constraint_variant_database(database_path, **schema_overrides)
+    before = retrieval_database_snapshot(database_path)
+
+    with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR):
+        SQLiteFtsRetrievalProvider(database_path)
+
+    assert retrieval_database_snapshot(database_path) == before
 
 
 def test_fts_returns_only_authorized_synthetic_corpus_chunk(
