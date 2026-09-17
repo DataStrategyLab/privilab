@@ -9,6 +9,7 @@ from hashlib import sha256
 from inspect import signature
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -477,6 +478,8 @@ def test_hardening_natural_key_replace_is_immutable_without_recursive_triggers(
 
 def complete_provenance_file_snapshot(database_path: Path) -> tuple[object, ...]:
     with closing(sqlite3.connect(database_path)) as connection:
+        # Snapshot malformed TEXT without conflating it with BLOB storage.
+        connection.text_factory = lambda value: value.decode("utf-8", "surrogateescape")
         return (
             connection.execute(
                 "SELECT type, name, tbl_name, sql FROM sqlite_schema "
@@ -1096,6 +1099,462 @@ def test_review04_pre_remediation_finalizer_is_rejected_without_upgrade(
         connection.executescript(_SCHEMA.replace(bounds, ""))
         insert_complete_raw_run(connection, "preserved")
     assert_incompatible_provenance_is_untouched(database_path, monkeypatch)
+
+
+def corrupt_stored_provenance(
+    database_path: Path,
+    guard_names: tuple[str, ...],
+    statement: str,
+    parameters: tuple[object, ...],
+) -> None:
+    """Deliberate read-corruption fixture, NOT an intact-schema DML attack."""
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.execute("PRAGMA foreign_keys = OFF")
+        before = connection.execute(
+            "SELECT type, name, tbl_name, sql FROM sqlite_schema ORDER BY type, name"
+        ).fetchall()
+        guards = [
+            connection.execute(
+                "SELECT sql FROM sqlite_schema WHERE type = 'trigger' AND name = ?",
+                (name,),
+            ).fetchone()[0]
+            for name in guard_names
+        ]
+        for name in guard_names:
+            connection.execute(f'DROP TRIGGER "{name}"')
+        try:
+            connection.execute(statement, parameters)
+        finally:
+            for definition in guards:
+                connection.execute(definition)
+        assert (
+            connection.execute(
+                "SELECT type, name, tbl_name, sql FROM sqlite_schema "
+                "ORDER BY type, name"
+            ).fetchall()
+            == before
+        )
+
+
+@pytest.mark.parametrize(
+    "variant", ["all-chunks-lost", "one-source-empty", "orphan", "cross-run"]
+)
+def test_review05_reads_reject_inconsistent_source_chunk_associations(
+    tmp_path: Path, variant: str
+) -> None:
+    database_path = tmp_path / "corrupted-associations.sqlite3"
+    sources: tuple[SourceProvenance, ...] = (
+        provenance_source("source-a", ("chunk-a", 17, 0)),
+    )
+    if variant == "one-source-empty":
+        sources += (provenance_source("source-b", ("chunk-b", 23, 1)),)
+    victim = persisted_run("victim", sources=sources)
+    unaffected = persisted_run(
+        "unaffected",
+        sources=(provenance_source("other-source", ("other-chunk", 4, 0)),),
+    )
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(victim)
+        store.append(unaffected)
+    if variant in ("all-chunks-lost", "one-source-empty"):
+        corrupt_stored_provenance(
+            database_path,
+            ("prevent_finalized_run_chunks_delete",),
+            "DELETE FROM run_chunks WHERE run_id = ? AND source_id = ?",
+            ("victim", "source-b" if variant == "one-source-empty" else "source-a"),
+        )
+    else:
+        corrupt_stored_provenance(
+            database_path,
+            ("prevent_finalized_run_chunks_insert",),
+            "INSERT INTO run_chunks VALUES (?, ?, ?, ?, ?)",
+            (
+                "victim",
+                "other-source" if variant == "cross-run" else "missing-source",
+                "orphan",
+                9,
+                1,
+            ),
+        )
+    before = complete_provenance_file_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        assert store.get(unaffected.run_id) == unaffected
+        with pytest.raises(
+            ValueError, match="^stored source/chunk associations are inconsistent$"
+        ):
+            store.get(victim.run_id)
+        assert store.get(unaffected.run_id) == unaffected
+    assert complete_provenance_file_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize("field", ["started_at", "completed_at"])
+@pytest.mark.parametrize(
+    "separator", [" ", "\x00", "x"], ids=["space", "nul", "alternative"]
+)
+def test_review05_read_timestamp_separator_matches_finalization(
+    tmp_path: Path, field: str, separator: str
+) -> None:
+    value = f"2026-09-14{separator}12:00:00.000000+00:00"
+    assert_stored_timestamp_parity(tmp_path, field, value)
+
+
+def assert_stored_timestamp_parity(
+    tmp_path: Path,
+    field: str,
+    value: object,
+    *,
+    expression: str = "?",
+    expected: datetime | None = None,
+    error: str = "stored {field} is invalid",
+) -> None:
+    database_path = tmp_path / "corrupted-timestamp.sqlite3"
+    victim = persisted_run("victim")
+    if expected is not None:
+        victim = replace(victim, started_at=expected, completed_at=expected)
+    unaffected = persisted_run("unaffected")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(victim)
+        store.append(unaffected)
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        insert_complete_raw_run(
+            connection,
+            "raw",
+            run_overrides={
+                "started_at": victim.started_at.isoformat(timespec="microseconds"),
+                "completed_at": victim.completed_at.isoformat(timespec="microseconds"),
+            },
+        )
+        connection.execute(
+            f"UPDATE runs SET {field} = {expression} WHERE run_id = 'raw'", (value,)
+        )
+        connection.text_factory = lambda value: value.decode("utf-8", "surrogateescape")
+        before_finalization = provenance_database_snapshot(connection)
+        if expected is None:
+            with pytest.raises(
+                sqlite3.IntegrityError, match="run provenance is incomplete"
+            ):
+                connection.execute(
+                    "UPDATE runs SET is_finalized = 1 WHERE run_id = 'raw'"
+                )
+            assert connection.execute(
+                "SELECT is_finalized FROM runs WHERE run_id = 'raw'"
+            ).fetchone() == (0,)
+            assert provenance_database_snapshot(connection) == before_finalization
+        else:
+            connection.execute("UPDATE runs SET is_finalized = 1 WHERE run_id = 'raw'")
+    corrupt_stored_provenance(
+        database_path,
+        ("prevent_finalized_run_update",),
+        f"UPDATE runs SET {field} = {expression} WHERE run_id = ?",
+        (value, "victim"),
+    )
+    before = complete_provenance_file_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        assert store.get(unaffected.run_id) == unaffected
+        if expected is None:
+            assert store.get(RunId("raw")) is None
+            with pytest.raises(ValueError, match=f"^{error.format(field=field)}$"):
+                store.get(victim.run_id)
+        else:
+            for run_id in (victim.run_id, RunId("raw")):
+                record = store.get(run_id)
+                assert record is not None
+                assert record.started_at == record.completed_at == expected
+                assert record.started_at.tzinfo is record.completed_at.tzinfo is UTC
+        assert store.get(unaffected.run_id) == unaffected
+    assert complete_provenance_file_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize("field", ["started_at", "completed_at"])
+@pytest.mark.parametrize(
+    "value",
+    [
+        "2026-09-14t12:00:00.000000Z",
+        "2026-09-14é12:00:00.000000Z",
+        "٢٠٢٦-09-14T12:00:00.000000Z",
+        "2026-09-\x0014T12:00:00.000000Z",
+        "2026-09-14T12:00:00.000000Z\x00",
+        "2026-09-14T12:00:00.000000Z\x00junk",
+        "2026-09-14T12:00:00.000000Zjunk",
+        "2026-09-14T12:00:00.000000Z\n",
+        "2026-09-14T12:00:00.000000Z ",
+        " 2026-09-14T12:00:00.000000Z",
+        "2026-09-14T12:00:00Z",
+        "2026-09-14T12:00:00.00000Z",
+        "2026-09-14T12:00:00.0000000Z",
+        "2026-09-14T12:00:00,000000Z",
+        "2026-09-14T12:00:00.000000",
+        "2026-09-14T12:00:00.000000z",
+        "2026-09-14T12:00:00.000000+24:00",
+        "2026-09-14T12:00:00.000000-24:00",
+        "2026-09-14T12:00:00.000000+00:60",
+        "2026-09-14T12:00:00.000000-00:60",
+        "2026-09-14T12:00:00.000000+0100",
+        "2026-09-14T12:00:00.000000+01",
+        "2026-09-14T12:00:00.000000+00:00:30",
+        "2026-09-14T12:00:00.000000-00:00:30",
+        "2026-09-14T12:00:00.000000+00:00:00.000001",
+        "2026-09-14T12:00:00.000000-00:00:00.000001",
+        "2026-09-14T24:00:00.000000Z",
+        "2026-09-14T12:60:00.000000Z",
+        "2026-09-14T12:00:60.000000Z",
+        "0000-09-14T12:00:00.000000Z",
+        "10000-09-14T12:00:00.000000Z",
+        "2026-00-14T12:00:00.000000Z",
+        "2026-13-14T12:00:00.000000Z",
+        "2026-09-00T12:00:00.000000Z",
+        "2026-09-32T12:00:00.000000Z",
+        "2026-04-31T12:00:00.000000Z",
+        "2026-02-29T12:00:00.000000Z",
+        "2000-02-30T12:00:00.000000Z",
+        "1900-02-29T12:00:00.000000Z",
+        b"2026-09-14T12:00:00.000000Z",  # Valid bytes, wrong BLOB storage class.
+        123,  # TEXT affinity coerces numeric writes; still invalid timestamp text.
+        1.5,
+    ],
+)
+def test_review05_invalid_timestamp_matrix_matches_finalization(
+    tmp_path: Path, field: str, value: object
+) -> None:
+    assert_stored_timestamp_parity(tmp_path, field, value)
+
+
+@pytest.mark.parametrize("field", ["started_at", "completed_at"])
+@pytest.mark.parametrize(
+    "value",
+    [b"2026-09-14\x8012:00:00.000000Z", b"2026-09-14T12:00:00.000000Z\xff"],
+)
+def test_review05_malformed_timestamp_bytes_are_sanitized(
+    tmp_path: Path, field: str, value: bytes
+) -> None:
+    assert_stored_timestamp_parity(tmp_path, field, value, expression="CAST(? AS TEXT)")
+
+
+@pytest.mark.parametrize("field", ["started_at", "completed_at"])
+@pytest.mark.parametrize(
+    "value",
+    [
+        "0001-01-01T00:00:59.999999+00:01",
+        "9999-12-31T23:59:00.000000-00:01",
+    ],
+)
+def test_review05_timestamp_utc_overflow_matches_finalization(
+    tmp_path: Path, field: str, value: str
+) -> None:
+    assert_stored_timestamp_parity(
+        tmp_path, field, value, error="{field} must be representable in UTC"
+    )
+
+
+@pytest.mark.parametrize("field", ["started_at", "completed_at"])
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("2026-09-14T12:00:00.123456Z", datetime(2026, 9, 14, 12, 0, 0, 123456, UTC)),
+        (
+            "2026-09-14T12:00:00.123456+00:00",
+            datetime(2026, 9, 14, 12, 0, 0, 123456, UTC),
+        ),
+        (
+            "2026-09-14T12:00:00.123456-00:00",
+            datetime(2026, 9, 14, 12, 0, 0, 123456, UTC),
+        ),
+        (
+            "2026-09-14T13:30:00.123456+01:30",
+            datetime(2026, 9, 14, 12, 0, 0, 123456, UTC),
+        ),
+        (
+            "2026-09-14T06:15:00.123456-05:45",
+            datetime(2026, 9, 14, 12, 0, 0, 123456, UTC),
+        ),
+        (
+            "2026-09-14T12:00:00.123456+23:59",
+            datetime(2026, 9, 13, 12, 1, 0, 123456, UTC),
+        ),
+        (
+            "2026-09-14T12:00:00.123456-23:59",
+            datetime(2026, 9, 15, 11, 59, 0, 123456, UTC),
+        ),
+        ("0001-01-01T00:00:00.000000Z", datetime.min.replace(tzinfo=UTC)),
+        ("9999-12-31T23:59:59.999999Z", datetime.max.replace(tzinfo=UTC)),
+        ("0001-01-01T00:01:00.000000+00:01", datetime.min.replace(tzinfo=UTC)),
+        ("9999-12-31T23:58:59.999999-00:01", datetime.max.replace(tzinfo=UTC)),
+        ("2000-02-29T12:00:00.000000Z", datetime(2000, 2, 29, 12, tzinfo=UTC)),
+        ("0004-02-29T12:00:00.000000Z", datetime(4, 2, 29, 12, tzinfo=UTC)),
+    ],
+)
+def test_review05_valid_timestamp_matrix_matches_finalization(
+    tmp_path: Path, field: str, value: str, expected: datetime
+) -> None:
+    assert_stored_timestamp_parity(tmp_path, field, value, expected=expected)
+
+
+@pytest.mark.parametrize("microseconds", [-1, 0, 1])
+def test_review05_reconstruction_preserves_exact_instant_order(
+    tmp_path: Path, microseconds: int
+) -> None:
+    database_path = tmp_path / "order.sqlite3"
+    start = datetime(2026, 9, 14, 12, 0, 0, 123456, UTC)
+    completion = start + timedelta(microseconds=microseconds)
+    started_text = start.astimezone(timezone(timedelta(hours=1))).isoformat(
+        timespec="microseconds"
+    )
+    completed_text = completion.astimezone(timezone(timedelta(hours=-5))).isoformat(
+        timespec="microseconds"
+    )
+    unaffected = persisted_run("unaffected")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(
+            replace(persisted_run("victim"), started_at=start, completed_at=start)
+        )
+        store.append(unaffected)
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        insert_complete_raw_run(
+            connection,
+            "raw",
+            run_overrides={
+                "started_at": started_text,
+                "completed_at": completed_text,
+            },
+        )
+        if microseconds < 0:
+            with pytest.raises(
+                sqlite3.IntegrityError, match="run provenance is incomplete"
+            ):
+                connection.execute(
+                    "UPDATE runs SET is_finalized = 1 WHERE run_id = 'raw'"
+                )
+        else:
+            connection.execute("UPDATE runs SET is_finalized = 1 WHERE run_id = 'raw'")
+    corrupt_stored_provenance(
+        database_path,
+        ("prevent_finalized_run_update",),
+        "UPDATE runs SET started_at = ?, completed_at = ? WHERE run_id = 'victim'",
+        (started_text, completed_text),
+    )
+    before = complete_provenance_file_snapshot(database_path)
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        if microseconds < 0:
+            with pytest.raises(
+                ValueError, match="^completed_at must not precede started_at$"
+            ):
+                store.get(RunId("victim"))
+            assert store.get(RunId("raw")) is None
+        else:
+            for run_id in (RunId("victim"), RunId("raw")):
+                record = store.get(run_id)
+                assert record is not None
+                assert record.started_at == start
+                assert record.completed_at == completion
+        assert store.get(unaffected.run_id) == unaffected
+    assert complete_provenance_file_snapshot(database_path) == before
+
+
+def test_review05_timezone_fold_round_trip_and_reverse_rejection(
+    tmp_path: Path,
+) -> None:
+    early = datetime(
+        2026, 11, 1, 1, 30, 0, 123456, ZoneInfo("America/New_York"), fold=0
+    )
+    late = early.replace(fold=1)
+    record = replace(persisted_run("fold"), started_at=early, completed_at=late)
+    assert record.started_at == datetime(2026, 11, 1, 5, 30, 0, 123456, UTC)
+    assert record.completed_at == datetime(2026, 11, 1, 6, 30, 0, 123456, UTC)
+    with pytest.raises(ValueError, match="^completed_at must not precede started_at$"):
+        replace(record, started_at=late, completed_at=early)
+    database_path = tmp_path / "fold.sqlite3"
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(record)
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        assert store.get(record.run_id) == record
+
+
+@pytest.mark.parametrize("status", list(RunStatus))
+def test_review05_empty_retrieval_and_missing_open_runs_remain_valid(
+    tmp_path: Path, status: RunStatus
+) -> None:
+    record = persisted_run(
+        "empty",
+        unresolved_condition_id="unresolved"
+        if status is RunStatus.PERMISSION_STOPPED
+        else None,
+        failure_stage=FailureStage.RETRIEVAL if status is RunStatus.FAILED else None,
+    )
+    database_path = tmp_path / "empty.sqlite3"
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(record)
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        insert_complete_raw_run(connection, "open")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        assert store.get(record.run_id) == record
+        assert store.get(RunId("open")) is None
+        assert store.get(RunId("missing")) is None
+
+
+def test_review05_source_order_versions_and_local_ordinals_survive_reopen(
+    tmp_path: Path,
+) -> None:
+    record = persisted_run(
+        "interleaved",
+        sources=(
+            provenance_source("z-first", ("z-high", 17, 0), ("z-low", 2, 2)),
+            replace(provenance_source("a-second", ("a", 8, 1)), source_version="2.0.0"),
+        ),
+    )
+    database_path = tmp_path / "source-order.sqlite3"
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(record)
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        reopened = store.get(record.run_id)
+        assert reopened == record
+        assert reopened is not None
+        assert [
+            (source.source_id, source.source_version) for source in reopened.sources
+        ] == [
+            ("z-first", "1.0.0"),
+            ("a-second", "2.0.0"),
+        ]
+        assert [
+            (chunk.chunk_id, chunk.ordinal, chunk.retrieval_position)
+            for _, _, chunk in reopened.chunks_in_retrieval_order
+        ] == [
+            ("z-high", 17, 0),
+            ("a", 8, 1),
+            ("z-low", 2, 2),
+        ]
+
+
+def test_review05_nonempty_source_still_rejects_global_position_gaps(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "position-gap.sqlite3"
+    record = persisted_run(
+        "victim",
+        sources=(provenance_source("source", ("first", 0, 0), ("last", 1, 1)),),
+    )
+    unaffected = persisted_run("unaffected")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(record)
+        store.append(unaffected)
+    corrupt_stored_provenance(
+        database_path,
+        ("prevent_finalized_run_chunks_delete",),
+        "DELETE FROM run_chunks WHERE run_id = ? AND retrieval_position = 0",
+        ("victim",),
+    )
+    before = complete_provenance_file_snapshot(database_path)
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        with pytest.raises(
+            ValueError,
+            match="^retrieval positions must be unique and contiguous from zero$",
+        ):
+            store.get(record.run_id)
+        assert store.get(unaffected.run_id) == unaffected
+    assert complete_provenance_file_snapshot(database_path) == before
 
 
 def test_review03_rejects_governed_trigger_name_on_unrelated_table(

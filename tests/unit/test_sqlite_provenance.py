@@ -1,6 +1,7 @@
 import json
 import sqlite3
 from contextlib import closing
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -12,10 +13,38 @@ from privilab.adapters.storage.sqlite_provenance import (
     _expected_schema,
     _options_json,
     _read_options,
+    _read_timestamp,
     _unique_indexes,
     _validate_existing_schema,
 )
 from privilab.application import RunConfiguration
+
+
+@pytest.mark.parametrize("field", ["started_at", "completed_at"])
+@pytest.mark.parametrize("storage_class", ["blob", "integer", "real", "null"])
+def test_review05_timestamp_parser_rejects_nontext_storage(
+    field: str, storage_class: str
+) -> None:
+    with pytest.raises(ValueError, match=f"^stored {field} is invalid$"):
+        _read_timestamp(b"2026-09-14T12:00:00.000000Z", storage_class, field)
+
+
+@pytest.mark.parametrize("field", ["started_at", "completed_at"])
+@pytest.mark.parametrize("value", [None, 1, 1.5, "2026-09-14T12:00:00.000000Z"])
+def test_review05_timestamp_parser_requires_complete_byte_projection(
+    field: str, value: object
+) -> None:
+    with pytest.raises(ValueError, match=f"^stored {field} is invalid$"):
+        _read_timestamp(value, "text", field)
+
+
+def test_review05_timestamp_parser_leaves_canonicalization_to_provenance() -> None:
+    parsed = _read_timestamp(b"2026-09-14T13:30:00.123456+01:30", "text", "started_at")
+    assert parsed.hour == 13
+    assert parsed.minute == 30
+    assert parsed.microsecond == 123456
+    assert parsed.utcoffset() == timedelta(hours=1, minutes=30)
+    assert parsed.astimezone(UTC) == datetime(2026, 9, 14, 12, 0, 0, 123456, UTC)
 
 
 @pytest.mark.parametrize(

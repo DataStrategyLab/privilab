@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from contextlib import closing
 from datetime import datetime
@@ -1271,6 +1272,33 @@ def _validate_existing_schema(
         raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
 
 
+_STORED_TIMESTAMP = re.compile(
+    rb"[0-9]{4}-[0-9]{2}-[0-9]{2}T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]"
+    rb"\.[0-9]{6}(?:Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])"
+)
+
+
+def _read_timestamp(value: object, storage_class: str, field_name: str) -> datetime:
+    """Validate SQLite TEXT bytes before Python's broader ISO parser sees them.
+
+    The query preserves the original storage class and fetches bytes to avoid
+    SQLite's automatic UTF-8 decoding errors exposing malformed stored contents.
+    RunProvenance still owns UTC representability, canonicalization and ordering.
+    """
+    message = f"stored {field_name} is invalid"
+    if (
+        storage_class != "text"
+        or not isinstance(value, bytes)
+        or _STORED_TIMESTAMP.fullmatch(value) is None
+    ):
+        raise ValueError(message)
+    try:
+        return datetime.fromisoformat(value.decode("ascii"))
+    except ValueError:
+        # Includes Gregorian calendar validation; never echo the stored value.
+        raise ValueError(message) from None
+
+
 def _options_json(configuration: RunConfiguration) -> str:
     return json.dumps(
         dict(sorted(configuration.options)),
@@ -1468,7 +1496,18 @@ class SQLiteProvenanceStore:
             raise TypeError("run_id must be a RunId")
         with self._lock:
             run = self._connection.execute(
-                "SELECT * FROM runs WHERE run_id = ? AND is_finalized = 1",
+                """
+                SELECT CAST(started_at AS BLOB) AS started_at,
+                       typeof(started_at) AS started_at_type,
+                       CAST(completed_at AS BLOB) AS completed_at,
+                       typeof(completed_at) AS completed_at_type,
+                       status, stop_reason, failure_stage, synthetic_context,
+                       user_id, role_id, client_id, matter_id, workflow_id,
+                       policy_id, policy_version, policy_schema_version,
+                       permission_state, configuration_hash, retrieval_called,
+                       model_called
+                FROM runs WHERE run_id = ? AND is_finalized = 1
+                """,
                 (run_id.value,),
             ).fetchone()
             if run is None:
@@ -1488,14 +1527,14 @@ class SQLiteProvenanceStore:
             ).fetchall()
             source_rows = self._connection.execute(
                 """
-                SELECT run_sources.source_id, run_sources.source_version
-                FROM run_sources
-                JOIN run_chunks
-                  ON run_chunks.run_id = run_sources.run_id
-                 AND run_chunks.source_id = run_sources.source_id
-                WHERE run_sources.run_id = ?
-                GROUP BY run_sources.source_id, run_sources.source_version
-                ORDER BY min(run_chunks.retrieval_position)
+                SELECT source_id, source_version FROM run_sources WHERE run_id = ?
+                """,
+                (run_id.value,),
+            ).fetchall()
+            chunk_rows = self._connection.execute(
+                """
+                SELECT source_id, chunk_id, ordinal, retrieval_position
+                FROM run_chunks WHERE run_id = ? ORDER BY retrieval_position
                 """,
                 (run_id.value,),
             ).fetchall()
@@ -1503,28 +1542,35 @@ class SQLiteProvenanceStore:
                 "SELECT * FROM model_executions WHERE run_id = ?",
                 (run_id.value,),
             ).fetchone()
+            chunks_by_source: dict[str, list[ChunkProvenance]] = {
+                source["source_id"]: [] for source in source_rows
+            }
+            for chunk in chunk_rows:
+                if chunk["source_id"] not in chunks_by_source:
+                    raise ValueError(
+                        "stored source/chunk associations are inconsistent"
+                    )
+                chunks_by_source[chunk["source_id"]].append(
+                    ChunkProvenance(
+                        chunk_id=chunk["chunk_id"],
+                        ordinal=chunk["ordinal"],
+                        retrieval_position=chunk["retrieval_position"],
+                    )
+                )
+            if any(not chunks for chunks in chunks_by_source.values()):
+                raise ValueError("stored source/chunk associations are inconsistent")
             sources = tuple(
                 SourceProvenance(
                     source_id=source["source_id"],
                     source_version=source["source_version"],
-                    chunks=tuple(
-                        ChunkProvenance(
-                            chunk_id=chunk["chunk_id"],
-                            ordinal=chunk["ordinal"],
-                            retrieval_position=chunk["retrieval_position"],
-                        )
-                        for chunk in self._connection.execute(
-                            """
-                            SELECT chunk_id, ordinal, retrieval_position
-                            FROM run_chunks
-                            WHERE run_id = ? AND source_id = ?
-                            ORDER BY retrieval_position
-                            """,
-                            (run_id.value, source["source_id"]),
-                        ).fetchall()
+                    chunks=tuple(chunks_by_source[source["source_id"]]),
+                )
+                for source in sorted(
+                    source_rows,
+                    key=lambda row: (
+                        chunks_by_source[row["source_id"]][0].retrieval_position
                     ),
                 )
-                for source in source_rows
             )
 
         configuration = RunConfiguration(
@@ -1572,8 +1618,12 @@ class SQLiteProvenanceStore:
             )
         return RunProvenance(
             run_id=run_id,
-            started_at=datetime.fromisoformat(run["started_at"]),
-            completed_at=datetime.fromisoformat(run["completed_at"]),
+            started_at=_read_timestamp(
+                run["started_at"], run["started_at_type"], "started_at"
+            ),
+            completed_at=_read_timestamp(
+                run["completed_at"], run["completed_at_type"], "completed_at"
+            ),
             status=RunStatus(run["status"]),
             context=ContextProvenance(
                 user_id=run["user_id"],
