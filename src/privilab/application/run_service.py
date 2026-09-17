@@ -11,6 +11,7 @@ from privilab.application.model_provider import (
     ModelProvider,
     ModelRequest,
     ModelSourceChunk,
+    _validate_text,
 )
 from privilab.application.permissions import (
     PermissionPolicy,
@@ -252,6 +253,7 @@ class RunService:
         satisfied_conditions: frozenset[ConditionId] = frozenset(),
     ) -> RunOutcome:
         """Execute one immutable attempt and append its trusted provenance."""
+        _validate_text(task_text, "task_text")
         run_id = self._run_id_factory()
         if not isinstance(run_id, RunId):
             raise TypeError("run_id_factory must return a RunId")

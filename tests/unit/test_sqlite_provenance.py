@@ -12,12 +12,65 @@ from privilab.adapters.storage.sqlite_provenance import (
     _SCHEMA,
     _expected_schema,
     _options_json,
+    _read_flag,
     _read_options,
     _read_timestamp,
     _unique_indexes,
     _validate_existing_schema,
 )
 from privilab.application import RunConfiguration
+
+
+@pytest.mark.parametrize(
+    "field", ["synthetic_context", "retrieval_called", "model_called"]
+)
+@pytest.mark.parametrize(
+    "value, storage",
+    [
+        (None, "null"),
+        ("0", "text"),
+        ("1", "text"),
+        ("false", "text"),
+        (b"1", "blob"),
+        (0.0, "real"),
+        (1.0, "real"),
+        (1.5, "real"),
+        (-1, "integer"),
+        (2, "integer"),
+        (True, "integer"),
+        (False, "integer"),
+    ],
+)
+def test_r06_03_flag_validator_rejects_noncanonical_representations(
+    field: str, value: object, storage: str
+) -> None:
+    with pytest.raises(ValueError, match=f"^stored {field} is invalid$"):
+        _read_flag(value, storage, field)
+
+
+@pytest.mark.parametrize(
+    "field", ["synthetic_context", "retrieval_called", "model_called"]
+)
+@pytest.mark.parametrize("storage", ["text", "real", "blob", "null"])
+def test_r06_03_flag_validator_requires_integer_storage(
+    field: str, storage: str
+) -> None:
+    with pytest.raises(ValueError, match=f"^stored {field} is invalid$"):
+        _read_flag(1, storage, field)
+
+
+@pytest.mark.parametrize(
+    "field", ["synthetic_context", "retrieval_called", "model_called"]
+)
+@pytest.mark.parametrize("value", [0, 1])
+def test_r06_03_flag_validator_preserves_canonical_values(
+    field: str, value: int
+) -> None:
+    if field == "synthetic_context" and value == 0:
+        with pytest.raises(ValueError, match="^stored synthetic_context is invalid$"):
+            _read_flag(value, "integer", field)
+    else:
+        assert _read_flag(value, "integer", field) is bool(value)
 
 
 @pytest.mark.parametrize("field", ["started_at", "completed_at"])

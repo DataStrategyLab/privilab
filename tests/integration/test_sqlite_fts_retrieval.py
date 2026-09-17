@@ -6,17 +6,28 @@ from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
 from pathlib import Path
+from typing import Any
+from unittest.mock import Mock
 
 import pytest
 
+from privilab.adapters.models import FixtureModelProvider
 from privilab.adapters.retrieval import SQLiteFtsRetrievalProvider
+from privilab.adapters.retrieval import sqlite_fts as retrieval_sqlite
 from privilab.adapters.retrieval.sqlite_fts import _SCHEMA
-from privilab.application import access_scope_for, parse_permission_policy
+from privilab.adapters.storage import SQLiteProvenanceStore
+from privilab.application import (
+    ModelRequest,
+    RunService,
+    access_scope_for,
+    parse_permission_policy,
+)
 from privilab.domain import (
     AccessScope,
     ChunkId,
     ClientContext,
     MatterContext,
+    ResearchResult,
     RetrievalChunk,
     RetrievalSource,
     Role,
@@ -120,6 +131,386 @@ def retrieval_database_snapshot(database_path: Path) -> tuple[object, ...]:
                 ).fetchall()
             },
         )
+
+
+def r06_physical_snapshot(database_path: Path) -> tuple[object, ...]:
+    # Broken virtual tables may be unreadable; inspect all underlying rows instead.
+    with closing(sqlite3.connect(database_path)) as connection:
+        schema = connection.execute(
+            "SELECT type, name, tbl_name, sql FROM sqlite_schema ORDER BY type, name"
+        ).fetchall()
+        return schema, {
+            name: sorted(
+                connection.execute('SELECT * FROM "' + name + '"').fetchall(),
+                key=repr,
+            )
+            for kind, name, _table, sql in schema
+            if kind == "table" and not sql.upper().startswith("CREATE VIRTUAL")
+        }
+
+
+def assert_r06_retrieval_rejected_unchanged(
+    database_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    before = r06_physical_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    statements: list[str] = []
+    connections: list[sqlite3.Connection] = []
+    original = sqlite3.connect
+
+    def connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        connection: sqlite3.Connection = original(*args, **kwargs)
+        if str(args[0]) == str(database_path):
+            connection.set_trace_callback(statements.append)
+            connections.append(connection)
+        return connection
+
+    with monkeypatch.context() as patch:
+        patch.setattr(sqlite3, "connect", connect)
+        with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR):
+            with closing(SQLiteFtsRetrievalProvider(database_path)):
+                pass
+    assert connections
+    for connection in connections:
+        with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+            connection.execute("SELECT 1")
+    assert not any(
+        sql.lstrip()
+        .upper()
+        .startswith(("CREATE", "ALTER", "DROP", "INSERT", "UPDATE", "DELETE"))
+        for sql in statements
+    )
+    assert r06_physical_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+def test_r06_01_entitlement_trigger_cannot_reach_real_model_boundary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database_path = tmp_path / "malicious-trigger.sqlite3"
+    SQLiteFtsRetrievalProvider(database_path).close()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.executescript(
+            "CREATE TRIGGER clone_entitlement AFTER INSERT ON source_entitlements "
+            "WHEN NEW.user_id = 'Alice' BEGIN "
+            "INSERT INTO source_entitlements VALUES (NEW.source_id, 'alice', "
+            "NEW.role_id, NEW.client_id, NEW.matter_id, NEW.workflow_id); END;"
+        )
+    before = r06_physical_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    requests: list[ModelRequest] = []
+    generate = FixtureModelProvider.generate
+
+    def capture(self: FixtureModelProvider, request: ModelRequest) -> ResearchResult:
+        requests.append(request)
+        return generate(self, request)
+
+    monkeypatch.setattr(FixtureModelProvider, "generate", capture)
+    with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR):
+        with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+            retrieval.index_source(
+                source(
+                    "private",
+                    (("private-chunk", 0, "notice Alice-only synthetic text"),),
+                    entitlements=(
+                        ("Alice", "role-a", "client-a", "matter-a", "workflow-a"),
+                    ),
+                )
+            )
+            with closing(SQLiteProvenanceStore(tmp_path / "runs.sqlite3")) as store:
+                service = RunService.from_governed_fixture(
+                    policy=parse_permission_policy(
+                        {
+                            "schema_version": 1,
+                            "policy_id": "r06",
+                            "policy_version": "1",
+                            "synthetic": True,
+                            "required_context": [],
+                            "rules": [
+                                {
+                                    "rule_id": "allow",
+                                    "effect": "ALLOW",
+                                    "match": {},
+                                    "condition_ids": [],
+                                }
+                            ],
+                        }
+                    ),
+                    retrieval_provider=retrieval,
+                    fixture_id="model-output.synthetic-happy-path.001",
+                    provenance_store=store,
+                    configuration_id="r06",
+                    configuration_version="1",
+                    retrieval_provider_id="sqlite-fts5",
+                    retrieval_provider_version="1",
+                )
+                service.run(
+                    context=context(user_id="alice"),
+                    task_text="Synthetic task",
+                    query="notice",
+                )
+                assert [chunk.source_id for chunk in requests[0].source_chunks] == [
+                    "private"
+                ]
+                print("R06-01 baseline: Alice-only text reached alice ModelRequest")
+    assert requests == []
+    assert r06_physical_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+    assert_r06_retrieval_rejected_unchanged(database_path, monkeypatch)
+
+
+def test_r06_05_replace_conflict_cannot_desynchronize_fts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database_path = tmp_path / "replace.sqlite3"
+    create_constraint_variant_database(
+        database_path, chunk_unique=", UNIQUE (source_id, ordinal) ON CONFLICT REPLACE"
+    )
+    with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR):
+        with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+            retrieval.index_source(source("private", (("original", 0, "notice"),)))
+            assert len(retrieval.retrieve("notice", scope_for())) == 1
+            with closing(sqlite3.connect(database_path)) as connection, connection:
+                connection.execute("PRAGMA foreign_keys=ON")
+                connection.execute("PRAGMA recursive_triggers=OFF")
+                connection.execute(
+                    "INSERT INTO chunks VALUES ('replacement', 'private', 0, 'changed')"
+                )
+                assert connection.execute("SELECT chunk_id FROM chunks").fetchall() == [
+                    ("replacement",)
+                ]
+                assert connection.execute(
+                    "SELECT chunk_id FROM chunks_fts"
+                ).fetchall() == [("original",)]
+            assert retrieval.retrieve("notice", scope_for()) == ()
+            print(
+                "R06-05 baseline: replacement chunk and stale FTS row; "
+                "authorized result disappeared"
+            )
+    assert_r06_retrieval_rejected_unchanged(database_path, monkeypatch)
+
+
+@pytest.mark.parametrize("shadow", ["idx", "content", "data"])
+@pytest.mark.parametrize("mode", ["missing", "altered"])
+def test_r06_06_damaged_fts_shadows_rejected_at_construction(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, shadow: str, mode: str
+) -> None:
+    database_path = tmp_path / "damaged.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        retrieval.index_source(source("source", (("chunk", 0, "notice"),)))
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.execute(f"DROP TABLE chunks_fts_{shadow}")
+        if mode == "altered":
+            connection.execute(f"CREATE TABLE chunks_fts_{shadow}(dummy TEXT)")
+    assert_r06_retrieval_rejected_unchanged(database_path, monkeypatch)
+
+
+@pytest.mark.parametrize("table", ["sources", "source_entitlements", "chunks"])
+@pytest.mark.parametrize("mixed_case", [False, True])
+def test_r06_01_all_ordinary_table_triggers_reject_before_ddl(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, table: str, mixed_case: bool
+) -> None:
+    database_path = tmp_path / "trigger.sqlite3"
+    SQLiteFtsRetrievalProvider(database_path).close()
+    if mixed_case:
+        table = table.title()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.execute(
+            f"CREATE TRIGGER surprise AFTER INSERT ON {table} BEGIN SELECT 1; END"
+        )
+    assert_r06_retrieval_rejected_unchanged(database_path, monkeypatch)
+
+
+@pytest.mark.parametrize(
+    "name",
+    ["SoUrCeS", "source_entitlements", "chunks", "Chunks_Fts", "Chunks_Fts_Data"],
+)
+def test_r06_01_complete_schema_trigger_name_collision_on_unrelated_table(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str
+) -> None:
+    database_path = tmp_path / "collision.sqlite3"
+    SQLiteFtsRetrievalProvider(database_path).close()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.execute("CREATE TABLE unrelated(value TEXT)")
+        connection.execute(
+            f"CREATE TRIGGER {name} AFTER INSERT ON unrelated BEGIN SELECT 1; END"
+        )
+    assert_r06_retrieval_rejected_unchanged(database_path, monkeypatch)
+
+
+_R06_KEYS = (
+    "source_id TEXT PRIMARY KEY",
+    "chunk_id TEXT PRIMARY KEY",
+    "UNIQUE (source_id, user_id, role_id, client_id, matter_id, workflow_id)",
+    "UNIQUE (source_id, ordinal)",
+)
+
+
+@pytest.mark.parametrize("key", _R06_KEYS)
+@pytest.mark.parametrize("action", ["REPLACE", "IGNORE", "FAIL", "ROLLBACK"])
+def test_r06_05_incompatible_conflict_actions_rejected_without_mutation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, key: str, action: str
+) -> None:
+    database_path = tmp_path / "conflict.sqlite3"
+    with closing(sqlite3.connect(database_path)) as connection:
+        connection.executescript(_SCHEMA.replace(key, key + f" ON CONFLICT {action}"))
+    assert_r06_retrieval_rejected_unchanged(database_path, monkeypatch)
+
+
+@pytest.mark.parametrize("key", _R06_KEYS)
+@pytest.mark.parametrize("action", ["", " ON CONFLICT ABORT"])
+def test_r06_05_default_and_explicit_abort_conflict_semantics_remain_valid(
+    tmp_path: Path, key: str, action: str
+) -> None:
+    database_path = tmp_path / "abort.sqlite3"
+    with closing(sqlite3.connect(database_path)) as connection:
+        connection.executescript(_SCHEMA.replace(key, key + action))
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        retrieval.index_source(source("source", (("chunk", 0, "notice"),)))
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        assert [
+            chunk.chunk_id.value for chunk in retrieval.retrieve("notice", scope_for())
+        ] == ["chunk"]
+
+
+@pytest.mark.parametrize("populated", [False, True])
+def test_r06_06_readiness_probes_are_read_only_and_valid_indexes_reopen(
+    tmp_path: Path, populated: bool
+) -> None:
+    database_path = tmp_path / "ready.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        if populated:
+            retrieval.index_source(source("source", (("chunk", 0, "notice"),)))
+    before = r06_physical_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with closing(sqlite3.connect(database_path)) as connection:
+        connection.execute("PRAGMA query_only=ON")
+        statements: list[str] = []
+        connection.set_trace_callback(statements.append)
+        retrieval_sqlite._validate_schema_compatibility(connection)
+    assert any(
+        "SELECT chunk_id, text FROM chunks_fts LIMIT 1" in sql for sql in statements
+    )
+    assert any("MATCH" in sql and "LIMIT 1" in sql for sql in statements)
+    assert not any("LIMIT 0" in sql or "integrity-check" in sql for sql in statements)
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        assert len(retrieval.retrieve("notice", scope_for())) == int(populated)
+    assert r06_physical_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize("fail", [False, True])
+def test_r06_reference_catalog_uses_only_trusted_sql_and_closes_connections(
+    monkeypatch: pytest.MonkeyPatch, fail: bool
+) -> None:
+    original = sqlite3.connect
+    references: list[sqlite3.Connection] = []
+
+    class Reference(sqlite3.Connection):
+        def executescript(self, sql_script: str, /) -> sqlite3.Cursor:
+            assert sql_script == _SCHEMA
+            if fail:
+                raise sqlite3.DatabaseError("synthetic reference failure")
+            return super().executescript(sql_script)
+
+    def connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        assert args == (":memory:",)
+        connection: sqlite3.Connection = original(*args, **kwargs, factory=Reference)
+        references.append(connection)
+        return connection
+
+    retrieval_sqlite._expected_schema.cache_clear()
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(sqlite3, "connect", connect)
+            if fail:
+                with pytest.raises(
+                    sqlite3.DatabaseError, match="synthetic reference failure"
+                ):
+                    retrieval_sqlite._expected_schema()
+            else:
+                catalog = retrieval_sqlite._expected_schema()
+                assert retrieval_sqlite._expected_schema() is catalog
+                assert len(catalog.objects) == 9
+                assert all(kind == "table" for kind, _name, _table in catalog.objects)
+                assert isinstance(catalog, tuple)
+                assert all(
+                    isinstance(structure, tuple)
+                    for _name, structure in catalog.structures
+                )
+        assert len(references) == 1
+        with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+            references[0].execute("SELECT 1")
+    finally:
+        retrieval_sqlite._expected_schema.cache_clear()
+
+
+@pytest.mark.parametrize(
+    "task", ["   ", "invalid\ud800", 123], ids=["whitespace", "surrogate", "wrong-type"]
+)
+def test_r06_07_invalid_task_cannot_read_real_sources_or_write_provenance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, task: Any
+) -> None:
+    with (
+        closing(
+            SQLiteFtsRetrievalProvider(tmp_path / "retrieval.sqlite3")
+        ) as retrieval,
+        closing(SQLiteProvenanceStore(tmp_path / "runs.sqlite3")) as store,
+    ):
+        retrieval.index_source(
+            source("source", (("chunk", 0, "notice protected synthetic text"),))
+        )
+        retrieve = Mock(wraps=retrieval.retrieve)
+        append = Mock(wraps=store.append)
+        generate = Mock(side_effect=AssertionError("model must not execute"))
+        monkeypatch.setattr(retrieval, "retrieve", retrieve)
+        monkeypatch.setattr(store, "append", append)
+        monkeypatch.setattr(FixtureModelProvider, "generate", generate)
+        service = RunService.from_governed_fixture(
+            policy=parse_permission_policy(
+                {
+                    "schema_version": 1,
+                    "policy_id": "r06",
+                    "policy_version": "1",
+                    "synthetic": True,
+                    "required_context": [],
+                    "rules": [
+                        {
+                            "rule_id": "allow",
+                            "effect": "ALLOW",
+                            "match": {},
+                            "condition_ids": [],
+                        }
+                    ],
+                }
+            ),
+            retrieval_provider=retrieval,
+            provenance_store=store,
+            fixture_id="model-output.synthetic-happy-path.001",
+            configuration_id="r06",
+            configuration_version="1",
+            retrieval_provider_id="sqlite-fts5",
+            retrieval_provider_version="1",
+        )
+        with pytest.raises((TypeError, ValueError)) as expected:
+            ModelRequest(task, ())
+        with pytest.raises(type(expected.value), match=f"^{expected.value}$"):
+            service.run(context=context(), task_text=task, query="notice")
+        retrieve.assert_not_called()
+        generate.assert_not_called()
+        append.assert_not_called()
+    with closing(sqlite3.connect(tmp_path / "runs.sqlite3")) as connection:
+        for table in (
+            "runs",
+            "run_configurations",
+            "run_permission_conditions",
+            "run_sources",
+            "run_chunks",
+            "model_executions",
+        ):
+            assert connection.execute(f"SELECT count(*) FROM {table}").fetchone() == (
+                0,
+            )
 
 
 def test_hardening_rejects_nocase_column_with_binary_unique(tmp_path: Path) -> None:

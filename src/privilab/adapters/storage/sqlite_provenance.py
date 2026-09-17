@@ -216,7 +216,17 @@ END;
 CREATE TRIGGER IF NOT EXISTS finalized_run_requires_complete_provenance
 BEFORE UPDATE OF is_finalized ON runs
 WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
-    NOT EXISTS (
+    (
+        NEW.status IS 'FAILED'
+        AND (
+            (NEW.failure_stage IS 'PERMISSION' AND NEW.permission_state IS NOT NULL)
+            OR (
+                NEW.failure_stage IS 'AUTHORIZATION'
+                AND NEW.permission_state IS NOT 'ALLOW'
+            )
+        )
+    )
+    OR NOT EXISTS (
         SELECT 1 FROM run_configurations
         WHERE run_id = NEW.run_id
     )
@@ -1309,6 +1319,35 @@ def _options_json(configuration: RunConfiguration) -> str:
     )
 
 
+def _read_flag(value: object, storage_class: str, field_name: str) -> bool:
+    """Accept only the canonical stored SQLite representation, before coercion."""
+    allowed = (1,) if field_name == "synthetic_context" else (0, 1)
+    if storage_class != "integer" or type(value) is not int or value not in allowed:
+        raise ValueError(f"stored {field_name} is invalid")
+    return bool(value)
+
+
+def _read_permission(
+    run: sqlite3.Row, conditions: list[sqlite3.Row]
+) -> PermissionProvenance | None:
+    """Represent every permission field and condition, or reject the record."""
+    metadata = (run["policy_id"], run["policy_version"], run["policy_schema_version"])
+    if run["permission_state"] is None:
+        if any(value is not None for value in metadata) or conditions:
+            raise ValueError("stored permission provenance is inconsistent")
+        return None
+    try:
+        return PermissionProvenance(
+            policy_id=run["policy_id"],
+            policy_version=run["policy_version"],
+            policy_schema_version=run["policy_schema_version"],
+            state=PermissionState(run["permission_state"]),
+            unresolved_condition_ids=tuple(row["condition_id"] for row in conditions),
+        )
+    except (TypeError, ValueError):
+        raise ValueError("stored permission provenance is inconsistent") from None
+
+
 def _read_options(payload: str) -> tuple[tuple[str, str], ...]:
     def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
         values: dict[str, object] = {}
@@ -1505,13 +1544,29 @@ class SQLiteProvenanceStore:
                        user_id, role_id, client_id, matter_id, workflow_id,
                        policy_id, policy_version, policy_schema_version,
                        permission_state, configuration_hash, retrieval_called,
-                       model_called
+                       model_called,
+                       typeof(synthetic_context) AS synthetic_context_type,
+                       typeof(retrieval_called) AS retrieval_called_type,
+                       typeof(model_called) AS model_called_type
                 FROM runs WHERE run_id = ? AND is_finalized = 1
                 """,
                 (run_id.value,),
             ).fetchone()
             if run is None:
                 return None
+            synthetic = _read_flag(
+                run["synthetic_context"],
+                run["synthetic_context_type"],
+                "synthetic_context",
+            )
+            retrieval_called = _read_flag(
+                run["retrieval_called"],
+                run["retrieval_called_type"],
+                "retrieval_called",
+            )
+            model_called = _read_flag(
+                run["model_called"], run["model_called_type"], "model_called"
+            )
             configuration_row = self._connection.execute(
                 "SELECT * FROM run_configurations WHERE run_id = ?",
                 (run_id.value,),
@@ -1588,7 +1643,7 @@ class SQLiteProvenanceStore:
             retrieval_limit=configuration_row["retrieval_limit"],
             options=_read_options(configuration_row["options_json"]),
         )
-        if bool(run["model_called"]) != (model_execution is not None):
+        if model_called != (model_execution is not None):
             raise ValueError("stored model execution provenance is inconsistent")
         if model_execution is not None and (
             model_execution["provider_id"],
@@ -1605,17 +1660,7 @@ class SQLiteProvenanceStore:
         ):
             raise ValueError("stored model identity does not match run configuration")
 
-        permission = None
-        if run["permission_state"] is not None:
-            permission = PermissionProvenance(
-                policy_id=run["policy_id"],
-                policy_version=run["policy_version"],
-                policy_schema_version=run["policy_schema_version"],
-                state=PermissionState(run["permission_state"]),
-                unresolved_condition_ids=tuple(
-                    condition["condition_id"] for condition in condition_rows
-                ),
-            )
+        permission = _read_permission(run, condition_rows)
         return RunProvenance(
             run_id=run_id,
             started_at=_read_timestamp(
@@ -1631,13 +1676,13 @@ class SQLiteProvenanceStore:
                 client_id=run["client_id"],
                 matter_id=run["matter_id"],
                 workflow_id=run["workflow_id"],
-                synthetic=bool(run["synthetic_context"]),
+                synthetic=synthetic,
             ),
             configuration=configuration,
             configuration_hash=run["configuration_hash"],
             permission=permission,
-            retrieval_called=bool(run["retrieval_called"]),
-            model_called=bool(run["model_called"]),
+            retrieval_called=retrieval_called,
+            model_called=model_called,
             sources=sources,
             stop_reason=(
                 None

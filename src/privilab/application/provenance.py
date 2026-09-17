@@ -452,6 +452,18 @@ class RunProvenance:
         elif self.status is RunStatus.FAILED:
             if self.failure_stage is None or self.stop_reason is not None:
                 raise ValueError("failed runs require only a failure stage")
+            if self.failure_stage is FailureStage.PERMISSION:
+                if self.permission is not None:
+                    raise ValueError(
+                        "permission failure cannot have a completed decision"
+                    )
+            elif (
+                self.permission is None
+                or self.permission.state is not PermissionState.ALLOW
+            ):
+                raise ValueError(
+                    "post-permission failure requires an effective ALLOW decision"
+                )
             expected_calls = {
                 FailureStage.PERMISSION: (False, False),
                 FailureStage.AUTHORIZATION: (False, False),

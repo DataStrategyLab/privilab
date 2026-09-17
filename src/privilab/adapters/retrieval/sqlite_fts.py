@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import re
 import sqlite3
+from contextlib import closing
+from functools import cache
 from pathlib import Path
 from threading import RLock
+from typing import NamedTuple
 
 from privilab.domain.retrieval import (
     AccessScope,
@@ -57,81 +60,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
 );
 """
 
-_REQUIRED_SCHEMA_SIGNATURES = {
-    "sources": (
-        ("source_id", "TEXT", 0, 1),
-        ("source_version", "TEXT", 1, 0),
-        ("title", "TEXT", 1, 0),
-    ),
-    "source_entitlements": (
-        ("source_id", "TEXT", 1, 0),
-        ("user_id", "TEXT", 1, 0),
-        ("role_id", "TEXT", 1, 0),
-        ("client_id", "TEXT", 1, 0),
-        ("matter_id", "TEXT", 1, 0),
-        ("workflow_id", "TEXT", 1, 0),
-    ),
-    "chunks": (
-        ("chunk_id", "TEXT", 0, 1),
-        ("source_id", "TEXT", 1, 0),
-        ("ordinal", "INTEGER", 1, 0),
-        ("text", "TEXT", 1, 0),
-    ),
-    "chunks_fts": (
-        ("chunk_id", "", 0, 0),
-        ("text", "", 0, 0),
-    ),
-}
-_ForeignKeySignature = tuple[str, str, str, str, str, str]
-_REQUIRED_FOREIGN_KEYS: dict[str, tuple[_ForeignKeySignature, ...]] = {
-    "sources": (),
-    "source_entitlements": (
-        ("sources", "source_id", "source_id", "NO ACTION", "NO ACTION", "NONE"),
-    ),
-    "chunks": (
-        ("sources", "source_id", "source_id", "NO ACTION", "NO ACTION", "NONE"),
-    ),
-    "chunks_fts": (),
-}
-_REQUIRED_UNIQUE_COLUMNS: dict[str, tuple[tuple[str, ...], ...]] = {
-    "sources": (),
-    "source_entitlements": (
-        (
-            "source_id",
-            "user_id",
-            "role_id",
-            "client_id",
-            "matter_id",
-            "workflow_id",
-        ),
-    ),
-    "chunks": (("source_id", "ordinal"),),
-    "chunks_fts": (),
-}
-_REQUIRED_FTS_DEFINITION = (
-    "createvirtualtablechunks_ftsusingfts5(chunk_idunindexed,text)"
-)
-_BINARY_IDENTITY_DECLARATIONS = {
-    "sources": {"source_id": "source_id TEXT PRIMARY KEY"},
-    "source_entitlements": {
-        "source_id": "source_id TEXT NOT NULL REFERENCES sources(source_id)",
-        **{
-            name: f"{name} TEXT NOT NULL"
-            for name in ("user_id", "role_id", "client_id", "matter_id", "workflow_id")
-        },
-    },
-    "chunks": {
-        "chunk_id": "chunk_id TEXT PRIMARY KEY",
-        "source_id": "source_id TEXT NOT NULL REFERENCES sources(source_id)",
-    },
-}
-_GOVERNED_SCHEMA_NAMES = (
-    *_REQUIRED_SCHEMA_SIGNATURES,
-    *(
-        f"chunks_fts_{suffix}"
-        for suffix in ("data", "idx", "content", "docsize", "config")
-    ),
-)
+_RETRIEVAL_TABLES = ("sources", "source_entitlements", "chunks", "chunks_fts")
 _INCOMPATIBLE_SCHEMA_MESSAGE = (
     "local retrieval index schema is incompatible and must be recreated or rebuilt"
 )
@@ -223,53 +152,44 @@ def _quote_identifier(value: str) -> str:
     return '"' + value.replace('"', '""') + '"'
 
 
-def _schema_signature(
-    connection: sqlite3.Connection,
-    table: str,
-) -> tuple[tuple[str, str, int, int], ...]:
-    rows = connection.execute(
-        f"PRAGMA table_info({_quote_identifier(table)})"
-    ).fetchall()
-    return tuple((row[1], row[2].upper(), row[3], row[5]) for row in rows)
-
-
-def _foreign_key_signature(
-    connection: sqlite3.Connection,
-    table: str,
-) -> tuple[_ForeignKeySignature, ...]:
-    rows = connection.execute(
-        f"PRAGMA foreign_key_list({_quote_identifier(table)})"
-    ).fetchall()
+def _metadata_rows(cursor: sqlite3.Cursor) -> tuple[tuple[object, ...], ...]:
     return tuple(
-        sorted((row[2], row[3], row[4], row[5], row[6], row[7]) for row in rows)
+        tuple(value.lower() if isinstance(value, str) else value for value in row)
+        for row in cursor
     )
 
 
-def _unique_constraint_columns(
-    connection: sqlite3.Connection,
-    table: str,
-) -> tuple[tuple[str, ...], ...] | None:
-    indexes = connection.execute(
-        f"PRAGMA index_list({_quote_identifier(table)})"
-    ).fetchall()
-    signatures: list[tuple[str, ...]] = []
-    for index in indexes:
-        if index[2] != 1 or index[3] == "pk":
+def _table_structure(connection: sqlite3.Connection, table: str) -> tuple[object, ...]:
+    """Current-runtime structure, including hidden columns and conflict identities."""
+    quoted = _quote_identifier(table)
+    layout = _metadata_rows(
+        connection.execute(
+            "SELECT type, ncol, wr, strict FROM pragma_table_list "
+            "WHERE schema = 'main' AND name = ? COLLATE NOCASE",
+            (table,),
+        )
+    )
+    columns = _metadata_rows(connection.execute(f"PRAGMA table_xinfo({quoted})"))
+    foreign_keys = _metadata_rows(
+        connection.execute(f"PRAGMA foreign_key_list({quoted})")
+    )
+    indexes = []
+    for index in connection.execute(f"PRAGMA index_list({quoted})"):
+        if not index[2]:
             continue
-        if index[4] != 0:
-            return None
-        index_rows = connection.execute(
-            f"PRAGMA index_xinfo({_quote_identifier(index[1])})"
-        ).fetchall()
-        columns: list[str] = []
-        for row in index_rows:
-            if row[5] != 1:
-                continue
-            if not isinstance(row[2], str) or row[3] != 0 or row[4] != "BINARY":
-                return None
-            columns.append(row[2])
-        signatures.append(tuple(columns))
-    return tuple(sorted(signatures))
+        indexes.append(
+            (
+                index[2],
+                index[3],
+                index[4],
+                _metadata_rows(
+                    connection.execute(
+                        f"PRAGMA index_xinfo({_quote_identifier(index[1])})"
+                    )
+                ),
+            )
+        )
+    return layout, columns, foreign_keys, tuple(sorted(indexes, key=repr))
 
 
 def _schema_definition(connection: sqlite3.Connection, name: str) -> str | None:
@@ -286,135 +206,154 @@ def _normalize_schema_definition(definition: str) -> str:
     return re.sub(r"\s+", "", definition).casefold()
 
 
-def _has_binary_identity_columns(connection: sqlite3.Connection) -> bool:
-    """Recognize only unambiguous governed column declarations, not arbitrary SQL.
+def _table_declarations(definition: str, table: str) -> tuple[str, ...]:
+    """Bounded static grammar: preserve constraints, allow only BINARY/default ABORT.
 
-    UNIQUE index collations do not establish the columns' comparison semantics.
-    Read the authoritative declarations, allowing one explicit BINARY clause
-    or SQLite's default BINARY. Quoting, comments and other syntax fail closed.
+    SQLite does not expose column collations, CHECK expressions or conflict
+    actions as structured metadata. Compare these declarations with our trusted
+    reference, never execute target SQL. Quotes/comments/unknown syntax fail closed.
     """
-    for table, required in _BINARY_IDENTITY_DECLARATIONS.items():
-        definition = _schema_definition(connection, table)
-        if (
-            definition is None
-            or re.fullmatch(r"[\w\s(),>=]+", definition, re.ASCII) is None
-        ):
-            return False
-        match = re.fullmatch(
-            rf"CREATE\s+TABLE\s+{table}\s*\((.*)\)",
-            definition,
-            re.IGNORECASE | re.ASCII | re.DOTALL,
+    if re.fullmatch(r"[\w\s(),>=]+", definition, re.ASCII) is None:
+        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+    match = re.fullmatch(
+        rf"CREATE\s+TABLE\s+{re.escape(table)}\s*\((.*)\)",
+        definition,
+        re.IGNORECASE | re.ASCII | re.DOTALL,
+    )
+    if match is None:
+        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+    declarations: list[str] = []
+    depth = start = 0
+    body = match[1]
+    for index, character in enumerate(body):
+        if character == "(":
+            depth += 1
+        elif character == ")":
+            depth -= 1
+        elif character == "," and depth == 0:
+            declarations.append(body[start:index].strip())
+            start = index + 1
+        if depth < 0 or depth > 2:
+            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+    if depth != 0:
+        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+    declarations.append(body[start:].strip())
+    normalized = []
+    for clause in declarations:
+        # At most one collation per column declaration; UNIQUE key collations
+        # are independently checked through index_xinfo.
+        unique = re.match(r"UNIQUE\s*\(", clause, re.IGNORECASE | re.ASCII)
+        clause = re.sub(
+            r"\bCOLLATE\s+BINARY\b",
+            "",
+            clause,
+            count=0 if unique else 1,
+            flags=re.IGNORECASE | re.ASCII,
         )
-        if match is None:
-            return False
-        # Split only top-level declarations; REFERENCES/UNIQUE/CHECK use commas
-        # and parentheses too. No quoted strings or comments can hide delimiters.
-        declarations = []
-        depth = start = 0
-        body = match[1]
-        for index, character in enumerate(body):
-            if character == "(":
-                depth += 1
-            elif character == ")":
-                depth -= 1
-            elif character == "," and depth == 0:
-                declarations.append(body[start:index].strip())
-                start = index + 1
-            if depth < 0 or depth > 2:
-                return False
-        if depth != 0:
-            return False
-        declarations.append(body[start:].strip())
-        for column, expected in required.items():
-            candidates = [
-                clause
-                for clause in declarations
-                if re.match(rf"{column}\s", clause, re.IGNORECASE | re.ASCII)
-            ]
-            if len(candidates) != 1:
-                return False
+        if unique or re.search(r"\bPRIMARY\s+KEY\b", clause, re.IGNORECASE | re.ASCII):
             clause = re.sub(
-                r"\bCOLLATE\s+BINARY\b",
+                r"\bON\s+CONFLICT\s+ABORT\b",
                 "",
-                candidates[0],
+                clause,
                 count=1,
                 flags=re.IGNORECASE | re.ASCII,
             )
-            if _normalize_schema_definition(clause) != _normalize_schema_definition(
-                expected
-            ):
-                return False
-    return True
+        normalized.append(_normalize_schema_definition(clause))
+    return tuple(normalized)
 
 
-def _has_required_ordinal_check(connection: sqlite3.Connection) -> bool:
-    definition = _schema_definition(connection, "chunks")
-    if definition is None or any(
-        marker in definition for marker in ("--", "/*", "*/", "'", '"', "`", "[")
-    ):
-        return False
-    normalized = _normalize_schema_definition(definition)
-    return normalized.startswith("createtablechunks(") and re.findall(
-        r"check\(([^()]*)\)", normalized
-    ) == ["ordinal>=0"]
+class _SchemaCatalog(NamedTuple):
+    objects: tuple[tuple[str, str, str], ...]
+    structures: tuple[tuple[str, tuple[object, ...]], ...]
+    declarations: tuple[tuple[str, tuple[str, ...]], ...]
+    fts_definition: str
 
 
-def _has_required_fts_definition(connection: sqlite3.Connection) -> bool:
-    definition = _schema_definition(connection, "chunks_fts")
-    return (
-        definition is not None
-        and _normalize_schema_definition(definition) == _REQUIRED_FTS_DEFINITION
+@cache
+def _expected_schema() -> _SchemaCatalog:
+    """Derive immutable expectations solely from our SQL in the same runtime."""
+    with closing(sqlite3.connect(":memory:")) as reference:
+        reference.executescript(_SCHEMA)
+        objects = tuple(
+            reference.execute(
+                "SELECT type, name, tbl_name FROM sqlite_schema "
+                "WHERE type IN ('table', 'trigger') ORDER BY type, name"
+            )
+        )
+        tables = tuple(row[1] for row in objects if row[0] == "table")
+        declarations = []
+        for table in _RETRIEVAL_TABLES:
+            definition = _schema_definition(reference, table)
+            if definition is None:
+                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+            if table != "chunks_fts":
+                declarations.append((table, _table_declarations(definition, table)))
+        fts = _schema_definition(reference, "chunks_fts")
+        if fts is None:
+            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+        return _SchemaCatalog(
+            objects,
+            tuple((table, _table_structure(reference, table)) for table in tables),
+            tuple(declarations),
+            _normalize_schema_definition(fts),
+        )
+
+
+def _governed_objects(
+    connection: sqlite3.Connection,
+) -> tuple[tuple[str, str, str], ...]:
+    names = tuple(row[1] for row in _expected_schema().objects)
+    parameters = ", ".join("?" for _ in names)
+    rows = connection.execute(
+        f"SELECT type, name, tbl_name FROM sqlite_schema "
+        f"WHERE name COLLATE NOCASE IN ({parameters}) "
+        f"OR (type = 'trigger' AND tbl_name COLLATE NOCASE IN ({parameters}))",
+        names + names,
+    )
+    return tuple(
+        sorted((kind, name.lower(), table.lower()) for kind, name, table in rows)
     )
 
 
 def _validate_schema_compatibility(connection: sqlite3.Connection) -> None:
     try:
-        for table, expected_signature in _REQUIRED_SCHEMA_SIGNATURES.items():
+        expected = _expected_schema()
+        if _governed_objects(connection) != expected.objects:
+            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+        for table, structure in expected.structures:
+            if _table_structure(connection, table) != structure:
+                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+        for table, declarations in expected.declarations:
+            definition = _schema_definition(connection, table)
             if (
-                _schema_definition(connection, table) is None
-                or _schema_signature(connection, table) != expected_signature
+                definition is None
+                or _table_declarations(definition, table) != declarations
             ):
                 raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
-        for table, expected_foreign_keys in _REQUIRED_FOREIGN_KEYS.items():
-            if _foreign_key_signature(connection, table) != expected_foreign_keys:
-                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
-        for table, expected_columns in _REQUIRED_UNIQUE_COLUMNS.items():
-            if _unique_constraint_columns(connection, table) != expected_columns:
-                raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
-        if not _has_required_ordinal_check(connection):
+        fts = _schema_definition(connection, "chunks_fts")
+        if fts is None or _normalize_schema_definition(fts) != expected.fts_definition:
             raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
-        if not _has_required_fts_definition(connection):
-            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
-        if not _has_binary_identity_columns(connection):
-            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+        # Real reads, not LIMIT 0 or an FTS control write. Structure validation
+        # above also catches broken shadows on empty indexes.
+        connection.execute("SELECT chunk_id, text FROM chunks_fts LIMIT 1").fetchall()
         connection.execute(
             """
             SELECT rowid
             FROM chunks_fts
             WHERE chunks_fts MATCH ?
-            LIMIT 0
+            LIMIT 1
             """,
-            ("schema-compatibility-check",),
+            ('"schema-compatibility-check"',),
         ).fetchall()
     except sqlite3.DatabaseError as error:
         raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
 
 
 def _has_existing_retrieval_schema(connection: sqlite3.Connection) -> bool:
-    placeholders = ", ".join("?" for _ in _GOVERNED_SCHEMA_NAMES)
     try:
-        row = connection.execute(
-            f"""
-            SELECT 1
-            FROM sqlite_schema
-            WHERE name COLLATE NOCASE IN ({placeholders})
-            LIMIT 1
-            """,
-            _GOVERNED_SCHEMA_NAMES,
-        ).fetchone()
+        return bool(_governed_objects(connection))
     except sqlite3.DatabaseError as error:
         raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
-    return row is not None
 
 
 class SQLiteFtsRetrievalProvider:

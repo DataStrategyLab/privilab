@@ -1106,10 +1106,14 @@ def corrupt_stored_provenance(
     guard_names: tuple[str, ...],
     statement: str,
     parameters: tuple[object, ...],
+    *,
+    ignore_checks: bool = False,
 ) -> None:
     """Deliberate read-corruption fixture, NOT an intact-schema DML attack."""
     with closing(sqlite3.connect(database_path)) as connection, connection:
         connection.execute("PRAGMA foreign_keys = OFF")
+        if ignore_checks:
+            connection.execute("PRAGMA ignore_check_constraints = ON")
         before = connection.execute(
             "SELECT type, name, tbl_name, sql FROM sqlite_schema ORDER BY type, name"
         ).fetchall()
@@ -1134,6 +1138,406 @@ def corrupt_stored_provenance(
             ).fetchall()
             == before
         )
+
+
+def assert_r06_corrupt_read_rejected(
+    database_path: Path, unaffected: RunProvenance
+) -> None:
+    before = complete_provenance_file_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        assert store.get(unaffected.run_id) == unaffected
+        with pytest.raises(ValueError):
+            store.get(RunId("victim"))
+        assert store.get(unaffected.run_id) == unaffected
+    assert complete_provenance_file_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize(
+    "evidence", ["condition", "policy_id", "policy_version", "policy_schema_version"]
+)
+def test_r06_02_absent_permission_must_not_hide_evidence(
+    tmp_path: Path, evidence: str
+) -> None:
+    database_path = tmp_path / "permission.sqlite3"
+    unaffected = persisted_run("control")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(persisted_run("victim", failure_stage=FailureStage.PERMISSION))
+        store.append(unaffected)
+    if evidence == "condition":
+        corrupt_stored_provenance(
+            database_path,
+            ("prevent_finalized_run_permission_conditions_insert",),
+            "INSERT INTO run_permission_conditions VALUES ('victim', 'hidden')",
+            (),
+        )
+    else:
+        corrupt_stored_provenance(
+            database_path,
+            ("prevent_finalized_run_update",),
+            f"UPDATE runs SET {evidence} = ? WHERE run_id = 'victim'",
+            (1 if evidence == "policy_schema_version" else "hidden",),
+            ignore_checks=True,
+        )
+    assert_r06_corrupt_read_rejected(database_path, unaffected)
+
+
+@pytest.mark.parametrize(
+    "flag", ["synthetic_context", "retrieval_called", "model_called"]
+)
+@pytest.mark.parametrize(
+    "value, storage",
+    [(2, "integer"), (-1, "integer"), (1.5, "real"), ("false", "text"), (b"0", "blob")],
+)
+def test_r06_03_stored_flags_cannot_be_coerced(
+    tmp_path: Path, flag: str, value: object, storage: str
+) -> None:
+    database_path = tmp_path / "flag.sqlite3"
+    unaffected = persisted_run("control")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(persisted_run("victim"))
+        store.append(unaffected)
+    corrupt_stored_provenance(
+        database_path,
+        ("prevent_finalized_run_update",),
+        f"UPDATE runs SET {flag} = ? WHERE run_id = 'victim'",
+        (value,),
+        ignore_checks=True,
+    )
+    with closing(sqlite3.connect(database_path)) as connection:
+        assert connection.execute(
+            f"SELECT typeof({flag}), {flag} FROM runs WHERE run_id='victim'"
+        ).fetchone() == (storage, value)
+    assert_r06_corrupt_read_rejected(database_path, unaffected)
+
+
+@pytest.mark.parametrize(
+    "stage, state",
+    [
+        (FailureStage.PERMISSION, PermissionState.ALLOW),
+        (FailureStage.AUTHORIZATION, PermissionState.BLOCK),
+    ],
+)
+def test_r06_04_application_rejects_impossible_permission_sequence(
+    stage: FailureStage, state: PermissionState
+) -> None:
+    with pytest.raises(ValueError):
+        replace(
+            persisted_run("victim", failure_stage=FailureStage.PERMISSION),
+            failure_stage=stage,
+            permission=PermissionProvenance("policy", "1", 1, state),
+        )
+
+
+@pytest.mark.parametrize(
+    "stage, state", [("PERMISSION", "ALLOW"), ("AUTHORIZATION", "BLOCK")]
+)
+def test_r06_04_raw_finalization_rejects_impossible_permission_sequence(
+    tmp_path: Path, stage: str, state: str
+) -> None:
+    database_path = tmp_path / "raw-state.sqlite3"
+    SQLiteProvenanceStore(database_path).close()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        insert_complete_raw_run(
+            connection,
+            "victim",
+            run_overrides={
+                "status": "FAILED",
+                "failure_stage": stage,
+                "permission_state": state,
+                "retrieval_called": 0,
+                "model_called": 0,
+            },
+        )
+        before = provenance_database_snapshot(connection)
+        with pytest.raises(
+            sqlite3.IntegrityError, match="run provenance is incomplete"
+        ):
+            connection.execute("UPDATE runs SET is_finalized=1 WHERE run_id='victim'")
+        assert provenance_database_snapshot(connection) == before
+
+
+@pytest.mark.parametrize(
+    "stage, state", [("PERMISSION", "ALLOW"), ("AUTHORIZATION", "BLOCK")]
+)
+def test_r06_04_reconstruction_rejects_impossible_permission_sequence(
+    tmp_path: Path, stage: str, state: str
+) -> None:
+    database_path = tmp_path / "corrupt-state.sqlite3"
+    unaffected = persisted_run("control")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(persisted_run("victim", failure_stage=FailureStage.AUTHORIZATION))
+        store.append(unaffected)
+    corrupt_stored_provenance(
+        database_path,
+        ("prevent_finalized_run_update",),
+        "UPDATE runs SET failure_stage=?, permission_state=? WHERE run_id='victim'",
+        (stage, state),
+    )
+    assert_r06_corrupt_read_rejected(database_path, unaffected)
+
+
+@pytest.mark.parametrize(
+    "column", ["policy_id", "policy_version", "policy_schema_version"]
+)
+def test_r06_02_present_permission_requires_complete_policy(
+    tmp_path: Path, column: str
+) -> None:
+    database_path = tmp_path / "partial-policy.sqlite3"
+    unaffected = persisted_run("control")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(persisted_run("victim"))
+        store.append(unaffected)
+    corrupt_stored_provenance(
+        database_path,
+        ("prevent_finalized_run_update",),
+        f"UPDATE runs SET {column}=NULL WHERE run_id='victim'",
+        (),
+        ignore_checks=True,
+    )
+    assert_r06_corrupt_read_rejected(database_path, unaffected)
+
+
+@pytest.mark.parametrize(
+    "variant", ["invalid-state", "allow-condition", "conditional-missing-condition"]
+)
+def test_r06_02_permission_conditions_must_match_current_contract(
+    tmp_path: Path, variant: str
+) -> None:
+    database_path = tmp_path / "conditions.sqlite3"
+    unaffected = persisted_run("control")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(
+            persisted_run(
+                "victim",
+                unresolved_condition_id="pending"
+                if variant == "conditional-missing-condition"
+                else None,
+            )
+        )
+        store.append(unaffected)
+    if variant == "invalid-state":
+        guards = ("prevent_finalized_run_update",)
+        sql = "UPDATE runs SET permission_state='invalid' WHERE run_id='victim'"
+    elif variant == "allow-condition":
+        guards = ("prevent_finalized_run_permission_conditions_insert",)
+        sql = "INSERT INTO run_permission_conditions VALUES ('victim', 'hidden')"
+    else:
+        guards = ("prevent_finalized_run_permission_conditions_delete",)
+        sql = "DELETE FROM run_permission_conditions WHERE run_id='victim'"
+    corrupt_stored_provenance(database_path, guards, sql, (), ignore_checks=True)
+    assert_r06_corrupt_read_rejected(database_path, unaffected)
+
+
+@pytest.mark.parametrize("state", [None, *PermissionState])
+def test_r06_02_valid_permission_variants_reopen_losslessly(
+    tmp_path: Path, state: PermissionState | None
+) -> None:
+    record = (
+        persisted_run("permission", failure_stage=FailureStage.PERMISSION)
+        if state is None
+        else persisted_run("permission")
+    )
+    if state in (
+        PermissionState.BLOCK,
+        PermissionState.UNKNOWN,
+        PermissionState.CONDITIONAL,
+    ):
+        reason = {
+            PermissionState.BLOCK: PermissionStopReason.BLOCK,
+            PermissionState.UNKNOWN: PermissionStopReason.UNKNOWN,
+            PermissionState.CONDITIONAL: PermissionStopReason.UNRESOLVED_CONDITIONS,
+        }[state]
+        record = replace(
+            record,
+            status=RunStatus.PERMISSION_STOPPED,
+            retrieval_called=False,
+            model_called=False,
+            stop_reason=reason,
+            permission=PermissionProvenance(
+                "policy",
+                "1",
+                1,
+                state,
+                ("a", "z") if state is PermissionState.CONDITIONAL else (),
+            ),
+        )
+    database_path = tmp_path / "valid-permission.sqlite3"
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(record)
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        assert store.get(record.run_id) == record
+
+
+@pytest.mark.parametrize(
+    "flag", ["retrieval_called", "model_called", "synthetic_context"]
+)
+@pytest.mark.parametrize("value", ["0", "1", 0.0, 1.0])
+def test_r06_03_integer_affinity_is_not_misreported_as_corrupt_storage(
+    tmp_path: Path, flag: str, value: Any
+) -> None:
+    integer = int(float(value))
+    record = persisted_run(
+        "victim", failure_stage=FailureStage.PERMISSION if integer == 0 else None
+    )
+    database_path = tmp_path / "affinity.sqlite3"
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(record)
+    corrupt_stored_provenance(
+        database_path,
+        ("prevent_finalized_run_update",),
+        f"UPDATE runs SET {flag}=? WHERE run_id='victim'",
+        (value,),
+        ignore_checks=True,
+    )
+    with closing(sqlite3.connect(database_path)) as connection:
+        assert connection.execute(
+            f"SELECT typeof({flag}), {flag} FROM runs"
+        ).fetchone() == ("integer", integer)
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        if flag == "synthetic_context" and integer == 0:
+            with pytest.raises(
+                ValueError, match="^stored synthetic_context is invalid$"
+            ):
+                store.get(record.run_id)
+        else:
+            assert store.get(record.run_id) == record
+
+
+def r06_permission(state: PermissionState | None) -> PermissionProvenance | None:
+    if state is None:
+        return None
+    return PermissionProvenance(
+        "policy",
+        "1",
+        1,
+        state,
+        ("pending",) if state is PermissionState.CONDITIONAL else (),
+    )
+
+
+@pytest.mark.parametrize("stage", list(FailureStage))
+@pytest.mark.parametrize("state", [None, *PermissionState])
+def test_r06_04_failure_truth_table_application_and_raw_sql_parity(
+    tmp_path: Path, stage: FailureStage, state: PermissionState | None
+) -> None:
+    allowed = (
+        state is None
+        if stage is FailureStage.PERMISSION
+        else state is PermissionState.ALLOW
+    )
+    baseline = persisted_run("victim", failure_stage=stage)
+    if allowed:
+        record = replace(baseline, permission=r06_permission(state))
+    else:
+        with pytest.raises(ValueError):
+            replace(baseline, permission=r06_permission(state))
+    database_path = tmp_path / "truth-table.sqlite3"
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        if allowed:
+            store.append(record)
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        overrides = {
+            "status": "FAILED",
+            "failure_stage": stage.value,
+            "retrieval_called": int(baseline.retrieval_called),
+            "model_called": int(baseline.model_called),
+            "permission_state": None if state is None else state.value,
+            "policy_id": None if state is None else "policy",
+            "policy_version": None if state is None else "1",
+            "policy_schema_version": None if state is None else 1,
+        }
+
+        def finalize() -> None:
+            insert_complete_raw_run(connection, "raw", run_overrides=overrides)
+            if state is PermissionState.CONDITIONAL:
+                connection.execute(
+                    "INSERT INTO run_permission_conditions VALUES ('raw', 'pending')"
+                )
+            connection.execute("UPDATE runs SET is_finalized=1 WHERE run_id='raw'")
+
+        if allowed:
+            finalize()
+        else:
+            # Existing table CHECKs may reject earlier than the finalization guard.
+            with pytest.raises(sqlite3.IntegrityError):
+                finalize()
+            assert (
+                connection.execute(
+                    "SELECT run_id FROM runs WHERE run_id='raw' AND is_finalized=1"
+                ).fetchall()
+                == []
+            )
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        if allowed:
+            assert store.get(record.run_id) == record
+            raw = store.get(RunId("raw"))
+            assert raw is not None and raw.permission == r06_permission(state)
+            assert raw.failure_stage is stage
+        else:
+            assert store.get(RunId("raw")) is None
+
+
+@pytest.mark.parametrize("stage", list(FailureStage))
+@pytest.mark.parametrize("state", [None, *PermissionState])
+def test_r06_04_failure_truth_table_corrupt_reconstruction_parity(
+    tmp_path: Path, stage: FailureStage, state: PermissionState | None
+) -> None:
+    allowed = (
+        state is None
+        if stage is FailureStage.PERMISSION
+        else state is PermissionState.ALLOW
+    )
+    database_path = tmp_path / "corrupt-truth-table.sqlite3"
+    unaffected = persisted_run("control")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(persisted_run("victim", failure_stage=stage))
+        store.append(unaffected)
+    corrupt_stored_provenance(
+        database_path,
+        ("prevent_finalized_run_update",),
+        "UPDATE runs SET permission_state=?, policy_id=?, policy_version=?, "
+        "policy_schema_version=? WHERE run_id='victim'",
+        (None, None, None, None) if state is None else (state.value, "policy", "1", 1),
+        ignore_checks=True,
+    )
+    if state is PermissionState.CONDITIONAL:
+        corrupt_stored_provenance(
+            database_path,
+            ("prevent_finalized_run_permission_conditions_insert",),
+            "INSERT INTO run_permission_conditions VALUES ('victim', 'pending')",
+            (),
+        )
+    if allowed:
+        with closing(SQLiteProvenanceStore(database_path)) as store:
+            record = store.get(RunId("victim"))
+            assert record is not None and record.permission == r06_permission(state)
+    else:
+        assert_r06_corrupt_read_rejected(database_path, unaffected)
+
+
+def test_r06_04_old_finalizer_is_rejected_without_upgrade(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database_path = tmp_path / "old-finalizer.sqlite3"
+    correction = """    (
+        NEW.status IS 'FAILED'
+        AND (
+            (NEW.failure_stage IS 'PERMISSION' AND NEW.permission_state IS NOT NULL)
+            OR (
+                NEW.failure_stage IS 'AUTHORIZATION'
+                AND NEW.permission_state IS NOT 'ALLOW'
+            )
+        )
+    )
+    OR """
+    assert correction in _SCHEMA
+    with closing(sqlite3.connect(database_path)) as connection:
+        connection.executescript(_SCHEMA.replace(correction, "    ", 1))
+        insert_complete_raw_run(connection, "preserved")
+        connection.commit()
+    assert_incompatible_provenance_is_untouched(database_path, monkeypatch)
 
 
 @pytest.mark.parametrize(

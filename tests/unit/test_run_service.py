@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import FrozenInstanceError, replace
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
 
@@ -18,9 +19,12 @@ from privilab.application import (
     RunProvenance,
     RunService,
     RunStatus,
+    access_scope_for,
+    evaluate_permission,
     governed_configuration_hash,
     parse_permission_policy,
 )
+from privilab.application import run_service as run_module
 from privilab.domain import (
     AccessScope,
     ChunkId,
@@ -196,6 +200,54 @@ def id_factory(*values: str) -> Callable[[], RunId]:
 
 def clock() -> datetime:
     return datetime(2026, 9, 13, 12, 0, tzinfo=UTC)
+
+
+@pytest.mark.parametrize(
+    "task", ["   ", "invalid\ud800", 123], ids=["whitespace", "surrogate", "wrong-type"]
+)
+def test_r06_07_invalid_task_stops_before_protected_progression(
+    task: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    retrieval = RetrievalSpy(
+        (
+            RetrievedChunk(
+                SourceId("source"),
+                ChunkId("chunk"),
+                0,
+                "Synthetic title",
+                "Synthetic protected text",
+                source_version="1",
+            ),
+        )
+    )
+    model = ModelSpy()
+    store = MemoryProvenanceStore()
+    permission = Mock(wraps=evaluate_permission)
+    scope = Mock(wraps=access_scope_for)
+    identity = Mock(return_value=RunId("invalid"))
+    now = Mock(wraps=clock)
+    monkeypatch.setattr(run_module, "evaluate_permission", permission)
+    monkeypatch.setattr(run_module, "access_scope_for", scope)
+    service = RunService._from_components_for_testing(
+        policy=policy_for(),
+        retrieval_provider=retrieval,
+        model_provider=model,
+        provenance_store=store,
+        configuration=configuration(),
+        run_id_factory=identity,
+        clock=now,
+    )
+    with pytest.raises((TypeError, ValueError)) as expected:
+        ModelRequest(task, ())
+    with pytest.raises(type(expected.value), match=f"^{expected.value}$"):
+        service.run(context=context(), task_text=task, query="notice")
+    assert retrieval.calls == []
+    assert model.requests == []
+    assert store.records == {}
+    permission.assert_not_called()
+    scope.assert_not_called()
+    identity.assert_not_called()
+    now.assert_not_called()
 
 
 def timestamp_provenance(started_at: Any, completed_at: Any) -> RunProvenance:
