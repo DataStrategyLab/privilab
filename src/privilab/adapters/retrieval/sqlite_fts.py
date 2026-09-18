@@ -8,6 +8,7 @@ from contextlib import closing
 from functools import cache
 from pathlib import Path
 from threading import RLock
+from time import monotonic
 from typing import NamedTuple
 
 from privilab.domain.retrieval import (
@@ -376,6 +377,33 @@ def _has_existing_retrieval_schema(connection: sqlite3.Connection) -> bool:
         raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
 
 
+def _validate_fts_integrity(connection: sqlite3.Connection) -> None:
+    """Run the native control command only on a physical, disposable clone."""
+    # Bound backup's own retry loop, independently of connection timeouts:
+    # at most five BUSY/LOCKED callbacks, 10ms between retries, and a five-second
+    # deadline checked after each step of at most 256 pages. This is a cooperative
+    # step bound, not an interrupt of an individual native SQLite operation.
+    deadline = monotonic() + 5.0
+    busy_steps = 0
+
+    def progress(status: int, remaining: int, total: int) -> None:
+        nonlocal busy_steps
+        if status in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
+            busy_steps += 1
+        if busy_steps >= 5 or monotonic() >= deadline:
+            raise sqlite3.OperationalError("retrieval validation backup limit exceeded")
+
+    try:
+        with closing(sqlite3.connect(":memory:", timeout=0)) as clone:
+            connection.backup(clone, pages=256, progress=progress, sleep=0.01)
+            _validate_schema_compatibility(clone)
+            clone.execute(
+                "INSERT INTO chunks_fts(chunks_fts) VALUES('integrity-check')"
+            )
+    except sqlite3.DatabaseError as error:
+        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
+
+
 class SQLiteFtsRetrievalProvider:
     """Trusted local index administration plus authorization-scoped retrieval."""
 
@@ -387,10 +415,14 @@ class SQLiteFtsRetrievalProvider:
         try:
             with self._lock:
                 self._connection.execute("PRAGMA foreign_keys = ON")
-                if _has_existing_retrieval_schema(self._connection):
+                existing = _has_existing_retrieval_schema(self._connection)
+                if existing:
                     _validate_schema_compatibility(self._connection)
+                    _validate_fts_integrity(self._connection)
                 self._connection.executescript(_SCHEMA)
                 _validate_schema_compatibility(self._connection)
+                if not existing:
+                    _validate_fts_integrity(self._connection)
         except Exception:
             self._connection.close()
             raise

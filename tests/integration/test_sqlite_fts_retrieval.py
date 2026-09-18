@@ -184,6 +184,213 @@ def assert_r06_retrieval_rejected_unchanged(
     assert database_path.read_bytes() == before_bytes
 
 
+@pytest.mark.parametrize("mode", ["shifted-rowids", "missing-postings"])
+def test_post_r08_postings_corruption_rejects_at_constructor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mode: str
+) -> None:
+    database_path = tmp_path / "postings.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        retrieval.index_source(source("source", (("chunk", 0, "notice"),)))
+        assert len(retrieval.retrieve("notice", scope_for())) == 1
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        schema = connection.execute(
+            "SELECT * FROM sqlite_schema ORDER BY name"
+        ).fetchall()
+        chunks = connection.execute("SELECT * FROM chunks").fetchall()
+        visible = connection.execute("SELECT chunk_id, text FROM chunks_fts").fetchall()
+        if mode == "shifted-rowids":
+            connection.execute("UPDATE chunks_fts_content SET id = id + 100")
+        else:
+            content = connection.execute("SELECT * FROM chunks_fts_content").fetchall()
+            connection.execute("DELETE FROM chunks_fts")
+            connection.executemany(
+                "INSERT INTO chunks_fts_content VALUES (?, ?, ?)", content
+            )
+        assert (
+            connection.execute("SELECT * FROM sqlite_schema ORDER BY name").fetchall()
+            == schema
+        )
+        assert connection.execute("SELECT * FROM chunks").fetchall() == chunks
+        assert (
+            connection.execute("SELECT chunk_id, text FROM chunks_fts").fetchall()
+            == visible
+        )
+    # The exception surrounds construction only; no trusted retrieval may begin.
+    assert_r06_retrieval_rejected_unchanged(database_path, monkeypatch)
+
+
+@pytest.mark.parametrize("existing", [False, True], ids=["fresh", "existing"])
+@pytest.mark.parametrize(
+    "failure",
+    [
+        "none",
+        "transient-busy",
+        "backup-error",
+        "schema-error",
+        "integrity-error",
+        "busy",
+        "locked",
+        "deadline",
+        "backup-memory",
+        "schema-memory",
+        "integrity-memory",
+    ],
+)
+def test_post_r08_clone_gate_order_command_and_cleanup(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    existing: bool,
+    failure: str,
+) -> None:
+    database_path = tmp_path / "clone-boundary.sqlite3"
+    if existing:
+        with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+            retrieval.index_source(source("original", (("original", 0, "notice"),)))
+    # Exclude the independently tested schema-reference connection from tracking.
+    retrieval_sqlite._expected_schema()
+    before_bytes = database_path.read_bytes() if existing else None
+    original_connect = sqlite3.connect
+    original_validate = retrieval_sqlite._validate_schema_compatibility
+    targets: list[sqlite3.Connection] = []
+    clones: list[sqlite3.Connection] = []
+    events: list[str] = []
+    target_sql: list[str] = []
+    clone_sql: list[str] = []
+    retries: list[int] = []
+
+    class Tracked(sqlite3.Connection):
+        role: str = ""
+
+        def executescript(self, sql_script: str, /) -> sqlite3.Cursor:
+            events.append(f"ddl-{self.role}")
+            assert self.role == "target" and sql_script == _SCHEMA
+            return super().executescript(sql_script)
+
+        def backup(self, *args: Any, **kwargs: Any) -> None:
+            events.append("backup")
+            assert self.role == "target" and args[0] in clones
+            assert kwargs["pages"] == 256 and kwargs["sleep"] == 0.01
+            if failure == "backup-error":
+                raise sqlite3.OperationalError("injected backup failure")
+            if failure == "backup-memory":
+                raise MemoryError("injected backup exhaustion")
+            if failure in ("busy", "locked", "deadline"):
+                status = {
+                    "busy": sqlite3.SQLITE_BUSY,
+                    "locked": sqlite3.SQLITE_LOCKED,
+                    "deadline": sqlite3.SQLITE_OK,
+                }[failure]
+                for _ in range(10):
+                    retries.append(status)
+                    kwargs["progress"](status, 1, 2)
+                pytest.fail("backup must stop within its internal bound")
+            if failure == "transient-busy":
+                for status in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
+                    retries.append(status)
+                    kwargs["progress"](status, 1, 2)
+            super().backup(*args, **kwargs)
+
+        def execute(self, sql: str, parameters: Any = (), /) -> sqlite3.Cursor:
+            if "integrity-check" in sql:
+                events.append(f"integrity-{self.role}")
+                assert self.role == "clone"
+                if failure == "integrity-error":
+                    raise sqlite3.DatabaseError("injected integrity failure")
+                if failure == "integrity-memory":
+                    raise MemoryError("injected integrity exhaustion")
+            return super().execute(sql, parameters)
+
+    def connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        clone = str(args[0]) == ":memory:"
+        assert clone or str(args[0]) == str(database_path)
+        if clone:
+            assert kwargs["timeout"] == 0
+        connection = original_connect(*args, **kwargs, factory=Tracked)
+        connection.role = "clone" if clone else "target"
+        (clones if clone else targets).append(connection)
+        connection.set_trace_callback((clone_sql if clone else target_sql).append)
+        return connection
+
+    def validate(connection: sqlite3.Connection) -> None:
+        clone = connection in clones
+        events.append("validate-clone" if clone else "validate-target")
+        if clone and failure == "schema-error":
+            raise sqlite3.OperationalError("injected clone compatibility failure")
+        if clone and failure == "schema-memory":
+            raise MemoryError("injected clone compatibility exhaustion")
+        original_validate(connection)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(sqlite3, "connect", connect)
+        patch.setattr(retrieval_sqlite, "_validate_schema_compatibility", validate)
+        if failure == "deadline":
+            patch.setattr(retrieval_sqlite, "monotonic", Mock(side_effect=[0.0, 5.0]))
+        if failure in ("none", "transient-busy"):
+            with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+                expected = (
+                    [
+                        "validate-target",
+                        "backup",
+                        "validate-clone",
+                        "integrity-clone",
+                        "ddl-target",
+                        "validate-target",
+                    ]
+                    if existing
+                    else [
+                        "ddl-target",
+                        "validate-target",
+                        "backup",
+                        "validate-clone",
+                        "integrity-clone",
+                    ]
+                )
+                assert events == expected
+                if existing:
+                    assert database_path.read_bytes() == before_bytes
+                retrieval.index_source(source("new", (("new", 0, "notice"),)))
+                assert len(retrieval.retrieve("notice", scope_for())) == 1 + int(
+                    existing
+                )
+        elif failure.endswith("memory"):
+            with pytest.raises(MemoryError, match="injected"):
+                SQLiteFtsRetrievalProvider(database_path)
+        else:
+            with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR):
+                SQLiteFtsRetrievalProvider(database_path)
+    assert len(clones) == len(targets) == events.count("backup") == 1
+    for connection in [*clones, *targets]:
+        with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+            connection.execute("SELECT 1")
+    assert not any("integrity-check" in sql for sql in target_sql)
+    assert "ddl-clone" not in events
+    if failure in ("none", "transient-busy"):
+        assert sum("integrity-check" in sql for sql in clone_sql) == 1
+    if failure in ("busy", "locked"):
+        assert len(retries) == 5
+    if failure == "deadline":
+        assert len(retries) == 1
+    if existing and failure not in ("none", "transient-busy"):
+        assert "ddl-target" not in events
+        assert database_path.read_bytes() == before_bytes
+
+
+def test_post_r08_compatibility_validator_is_independent_read_only(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database_path = tmp_path / "read-only.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        retrieval.index_source(source("source", (("chunk", 0, "notice"),)))
+    gate = Mock(side_effect=AssertionError("compatibility must not call clone gate"))
+    monkeypatch.setattr(retrieval_sqlite, "_validate_fts_integrity", gate)
+    before = database_path.read_bytes()
+    with closing(sqlite3.connect(database_path)) as connection:
+        connection.execute("PRAGMA query_only = ON")
+        retrieval_sqlite._validate_schema_compatibility(connection)
+    gate.assert_not_called()
+    assert database_path.read_bytes() == before
+
+
 def test_post_r07_a_missing_populated_content_rejects_before_retrieval(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
