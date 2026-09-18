@@ -1140,6 +1140,125 @@ def corrupt_stored_provenance(
         )
 
 
+def test_post_r07_b_blob_options_cannot_finalize(tmp_path: Path) -> None:
+    database_path = tmp_path / "blob-options-finalization.sqlite3"
+    SQLiteProvenanceStore(database_path).close()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        insert_complete_raw_run(connection, "blob-options")
+        connection.execute(
+            "UPDATE run_configurations "
+            'SET options_json = CAST(\'{"safe":"value"}\' AS BLOB)'
+        )
+        assert connection.execute(
+            "SELECT typeof(options_json), options_json FROM run_configurations"
+        ).fetchone() == ("blob", b'{"safe":"value"}')
+    before = complete_provenance_file_snapshot(database_path)
+    with pytest.raises(sqlite3.IntegrityError, match="run provenance is incomplete"):
+        with closing(sqlite3.connect(database_path)) as connection, connection:
+            connection.execute("UPDATE runs SET is_finalized = 1")
+        with closing(SQLiteProvenanceStore(database_path)) as store:
+            record = store.get(RunId("blob-options"))
+            assert record is not None
+            assert record.configuration.options == (("safe", "value"),)
+            print("Finding B baseline: BLOB options finalized and reconstructed")
+    assert complete_provenance_file_snapshot(database_path) == before
+
+
+def test_post_r07_b_corrupted_finalized_blob_options_cannot_reconstruct(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "blob-options-read.sqlite3"
+    control = persisted_run("control")
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        store.append(persisted_run("victim"))
+        store.append(control)
+    corrupt_stored_provenance(
+        database_path,
+        ("prevent_finalized_run_configurations_update",),
+        "UPDATE run_configurations SET options_json = CAST(? AS BLOB) "
+        "WHERE run_id = 'victim'",
+        ('{"safe":"value"}',),
+    )
+    with closing(sqlite3.connect(database_path)) as connection:
+        assert connection.execute(
+            "SELECT typeof(options_json), options_json FROM run_configurations "
+            "WHERE run_id = 'victim'"
+        ).fetchone() == ("blob", b'{"safe":"value"}')
+    before = complete_provenance_file_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        assert store.get(control.run_id) == control
+        with pytest.raises(
+            ValueError, match="^stored configuration options are invalid$"
+        ):
+            record = store.get(RunId("victim"))
+            assert record is not None
+            assert record.configuration.options == (("safe", "value"),)
+            print("Finding B baseline: get() normalized corrupted BLOB options")
+        assert store.get(control.run_id) == control
+    assert complete_provenance_file_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize(
+    "expression, value",
+    [("?", '{"safe":"value"}'), ("CAST(? AS TEXT)", b'{"safe":"value"}')],
+    ids=["text", "explicit-text-cast"],
+)
+def test_post_r07_b_canonical_text_options_finalize_and_reopen(
+    tmp_path: Path, expression: str, value: str | bytes
+) -> None:
+    database_path = tmp_path / "canonical-options.sqlite3"
+    SQLiteProvenanceStore(database_path).close()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        insert_complete_raw_run(connection, "text-options")
+        connection.execute(
+            f"UPDATE run_configurations SET options_json = {expression}", (value,)
+        )
+        assert connection.execute(
+            "SELECT typeof(options_json), options_json FROM run_configurations"
+        ).fetchone() == ("text", '{"safe":"value"}')
+        connection.execute("UPDATE runs SET is_finalized = 1")
+    before = complete_provenance_file_snapshot(database_path)
+    with closing(SQLiteProvenanceStore(database_path)) as store:
+        record = store.get(RunId("text-options"))
+        assert record is not None
+        assert record.configuration.options == (("safe", "value"),)
+    assert complete_provenance_file_snapshot(database_path) == before
+
+
+@pytest.mark.parametrize("value, stored", [(123, "123"), (1.5, "1.5")])
+def test_post_r07_b_text_affinity_does_not_skip_json_object_validation(
+    tmp_path: Path, value: int | float, stored: str
+) -> None:
+    database_path = tmp_path / "options-affinity.sqlite3"
+    SQLiteProvenanceStore(database_path).close()
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        insert_complete_raw_run(connection, "numeric-options")
+        connection.execute("UPDATE run_configurations SET options_json = ?", (value,))
+        assert connection.execute(
+            "SELECT typeof(options_json), options_json FROM run_configurations"
+        ).fetchone() == ("text", stored)
+        with pytest.raises(
+            sqlite3.IntegrityError, match="run provenance is incomplete"
+        ):
+            connection.execute("UPDATE runs SET is_finalized = 1")
+
+
+def test_post_r07_b_old_options_finalizer_rejected_without_repair(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database_path = tmp_path / "old-options-finalizer.sqlite3"
+    guard = (
+        "                  WHEN typeof(configuration.options_json) != 'text' THEN 1\n"
+    )
+    assert guard in _SCHEMA
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.executescript(_SCHEMA.replace(guard, "", 1))
+        insert_complete_raw_run(connection, "preserved")
+    assert_incompatible_provenance_is_untouched(database_path, monkeypatch)
+
+
 def assert_r06_corrupt_read_rejected(
     database_path: Path, unaffected: RunProvenance
 ) -> None:

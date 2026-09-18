@@ -695,6 +695,7 @@ WHEN OLD.is_finalized = 0 AND NEW.is_finalized = 1 AND (
                   )
               )
               OR CASE
+                  WHEN typeof(configuration.options_json) != 'text' THEN 1
                   WHEN json_valid(configuration.options_json) = 0 THEN 1
                   WHEN json_type(configuration.options_json) IS NOT 'object'
                       THEN 1
@@ -1348,7 +1349,10 @@ def _read_permission(
         raise ValueError("stored permission provenance is inconsistent") from None
 
 
-def _read_options(payload: str) -> tuple[tuple[str, str], ...]:
+def _read_options(payload: object, storage_class: str) -> tuple[tuple[str, str], ...]:
+    if storage_class != "text" or not isinstance(payload, str):
+        raise ValueError("stored configuration options are invalid")
+
     def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
         values: dict[str, object] = {}
         for name, value in pairs:
@@ -1568,7 +1572,8 @@ class SQLiteProvenanceStore:
                 run["model_called"], run["model_called_type"], "model_called"
             )
             configuration_row = self._connection.execute(
-                "SELECT * FROM run_configurations WHERE run_id = ?",
+                "SELECT *, typeof(options_json) AS options_json_type "
+                "FROM run_configurations WHERE run_id = ?",
                 (run_id.value,),
             ).fetchone()
             if configuration_row is None:
@@ -1641,7 +1646,10 @@ class SQLiteProvenanceStore:
                 configuration_row["retrieval_provider_version"]
             ),
             retrieval_limit=configuration_row["retrieval_limit"],
-            options=_read_options(configuration_row["options_json"]),
+            options=_read_options(
+                configuration_row["options_json"],
+                configuration_row["options_json_type"],
+            ),
         )
         if model_called != (model_execution is not None):
             raise ValueError("stored model execution provenance is inconsistent")

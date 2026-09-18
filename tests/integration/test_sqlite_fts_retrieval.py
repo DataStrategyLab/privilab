@@ -184,6 +184,100 @@ def assert_r06_retrieval_rejected_unchanged(
     assert database_path.read_bytes() == before_bytes
 
 
+def test_post_r07_a_missing_populated_content_rejects_before_retrieval(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database_path = tmp_path / "missing-content-row.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        retrieval.index_source(source("source", (("chunk", 0, "notice"),)))
+        assert len(retrieval.retrieve("notice", scope_for())) == 1
+    before_schema, before_rows = r06_physical_snapshot(database_path)
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        removed = connection.execute(
+            "DELETE FROM chunks_fts_content WHERE c0 = 'chunk'"
+        )
+        assert removed.rowcount == 1
+    schema, rows = r06_physical_snapshot(database_path)
+    assert schema == before_schema
+    assert isinstance(rows, dict) and isinstance(before_rows, dict)
+    assert rows["chunks_fts_content"] == []
+    assert {
+        name: data for name, data in rows.items() if name != "chunks_fts_content"
+    } == {
+        name: data for name, data in before_rows.items() if name != "chunks_fts_content"
+    }
+    before_bytes = database_path.read_bytes()
+    with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR):
+        with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+            with pytest.raises(sqlite3.DatabaseError, match="malformed|missing row"):
+                retrieval.retrieve("notice", scope_for())
+            print("Finding A baseline: constructor accepted; real MATCH was malformed")
+    assert r06_physical_snapshot(database_path) == (schema, rows)
+    assert database_path.read_bytes() == before_bytes
+    assert_r06_retrieval_rejected_unchanged(database_path, monkeypatch)
+
+
+@pytest.mark.parametrize(
+    "text, query, expected",
+    [
+        (None, "notice", 0),
+        ("notice", "notice", 2),
+        ('A "notice" with FTS punctuation: * + - ( )', "notice", 2),
+        ("Avis café — naïve", "cafe", 2),
+        ("法令公告", '"法令公告"', 2),
+        ("!!! 🧪 —", "notice", 0),
+        ("notice " * 2000, "notice", 2),
+    ],
+    ids=["empty", "populated", "quotes", "unicode", "cjk", "no-tokens", "long"],
+)
+def test_post_r07_a_valid_content_reopens_without_writes(
+    tmp_path: Path, text: str | None, query: str, expected: int
+) -> None:
+    database_path = tmp_path / "valid-content.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        if text is not None:
+            retrieval.index_source(
+                source("source", (("first", 0, text), ("second", 1, text)))
+            )
+        assert len(retrieval.retrieve(query, scope_for())) == expected
+    before = r06_physical_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    with closing(sqlite3.connect(database_path)) as connection:
+        connection.execute("PRAGMA query_only = ON")
+        retrieval_sqlite._validate_schema_compatibility(connection)
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        assert len(retrieval.retrieve(query, scope_for())) == expected
+    assert r06_physical_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "DELETE FROM chunks_fts_content WHERE c0 = 'second'",
+        "UPDATE chunks_fts_content SET c1 = 'different' WHERE c0 = 'second'",
+        "INSERT INTO chunks_fts_content(c0, c1) VALUES ('second', 'notice')",
+        "INSERT INTO chunks_fts_content(c0, c1) VALUES ('orphan', 'notice')",
+    ],
+    ids=["missing-later-row", "text-mismatch", "duplicate", "orphan"],
+)
+def test_post_r07_a_content_correlation_checks_all_governed_entries(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mutation: str
+) -> None:
+    database_path = tmp_path / "content-correlation.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        retrieval.index_source(
+            source("source", (("first", 0, "notice"), ("second", 1, "notice")))
+        )
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        connection.execute(mutation)
+        # The old LIMIT 1 content read still succeeds in each case.
+        assert connection.execute(
+            "SELECT chunk_id, text FROM chunks_fts LIMIT 1"
+        ).fetchone() == ("first", "notice")
+    assert_r06_retrieval_rejected_unchanged(database_path, monkeypatch)
+
+
 def test_r06_01_entitlement_trigger_cannot_reach_real_model_boundary(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

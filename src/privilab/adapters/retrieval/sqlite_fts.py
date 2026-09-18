@@ -345,6 +345,26 @@ def _validate_schema_compatibility(connection: sqlite3.Connection) -> None:
             """,
             ('"schema-compatibility-check"',),
         ).fetchall()
+        # Compare all governed entries, not a sampled/possibly absent token.
+        # FTS content must represent each application chunk exactly once, with
+        # identical text. This read-only multiset comparison also finds missing
+        # content rows while their index postings remain. It needs no tokenizer
+        # assumptions, target writes, or FTS control commands.
+        inconsistent_content = connection.execute(
+            """
+            SELECT 1
+            FROM (
+                SELECT chunk_id, text, 1 AS balance FROM chunks
+                UNION ALL
+                SELECT chunk_id, text, -1 AS balance FROM chunks_fts
+            )
+            GROUP BY chunk_id, text
+            HAVING sum(balance) != 0
+            LIMIT 1
+            """
+        ).fetchone()
+        if inconsistent_content is not None:
+            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
     except sqlite3.DatabaseError as error:
         raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
 

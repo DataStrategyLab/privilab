@@ -112,7 +112,23 @@ def test_review05_timestamp_parser_leaves_canonicalization_to_provenance() -> No
 )
 def test_review03_read_options_rejects_duplicate_decoded_keys(payload: str) -> None:
     with pytest.raises(ValueError, match="^stored configuration options are invalid$"):
-        _read_options(payload)
+        _read_options(payload, "text")
+
+
+@pytest.mark.parametrize("storage_class", ["blob", "integer", "real", "null"])
+def test_post_r07_b_options_reader_requires_text_storage(storage_class: str) -> None:
+    with pytest.raises(ValueError, match="^stored configuration options are invalid$"):
+        _read_options('{"safe":"value"}', storage_class)
+
+
+@pytest.mark.parametrize(
+    "payload", [b'{"safe":"value"}', bytearray(b'{"safe":"value"}'), None, 1, 1.5]
+)
+def test_post_r07_b_options_reader_requires_string_before_parsing(
+    payload: object,
+) -> None:
+    with pytest.raises(ValueError, match="^stored configuration options are invalid$"):
+        _read_options(payload, "text")
 
 
 @pytest.mark.parametrize(
@@ -125,13 +141,13 @@ def test_review03_read_options_rejects_duplicate_decoded_keys(payload: str) -> N
     ],
 )
 def test_review03_read_options_preserves_distinct_decoded_keys(payload: str) -> None:
-    assert _read_options(payload) == tuple(sorted(json.loads(payload).items()))
+    assert _read_options(payload, "text") == tuple(sorted(json.loads(payload).items()))
 
 
 @pytest.mark.parametrize("payload", ["not-json", "[]", "null", '{"x":1}', '{"x":{}}'])
 def test_review03_read_options_rejects_invalid_structure(payload: str) -> None:
     with pytest.raises(ValueError):
-        _read_options(payload)
+        _read_options(payload, "text")
 
 
 def test_review03_options_serialization_is_deterministic() -> None:
@@ -150,7 +166,7 @@ def test_review03_options_serialization_is_deterministic() -> None:
             options=ordered,
         )
         serialized.append(_options_json(configuration))
-        assert _read_options(serialized[-1]) == configuration.options
+        assert _read_options(serialized[-1], "text") == configuration.options
     assert serialized == ['{"X":"two","x":"one","x\\u0000a":"value","é":"café"}'] * 3
 
 
