@@ -89,10 +89,10 @@
   attribution: "None; authored for this repository."
   restrictions: "Synthetic demonstration content only; not legal advice, matter data, or live model output."
   repository_paths:
-    - "fixtures/model_outputs/manifest.json"
-    - "fixtures/model_outputs/synthetic_happy_path_v1.json"
-    - "fixtures/model_outputs/synthetic_citation_failure_v1.json"
-    - "fixtures/model_outputs/synthetic_malformed_output_v1.json"
+    - "src/privilab/adapters/models/resources/governed_fixtures/manifest.json"
+    - "src/privilab/adapters/models/resources/governed_fixtures/synthetic_happy_path_v1.json"
+    - "src/privilab/adapters/models/resources/governed_fixtures/synthetic_citation_failure_v1.json"
+    - "src/privilab/adapters/models/resources/governed_fixtures/synthetic_malformed_output_v1.json"
   reviewer: "Codex"
   open_questions: []
 

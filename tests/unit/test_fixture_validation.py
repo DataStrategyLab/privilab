@@ -9,6 +9,10 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+GOVERNED_FIXTURES_RELATIVE = Path(
+    "src/privilab/adapters/models/resources/governed_fixtures"
+)
+GOVERNED_FIXTURES = ROOT / GOVERNED_FIXTURES_RELATIVE
 MODULE_SPEC = importlib.util.spec_from_file_location(
     "validate_fixtures", ROOT / "scripts/validate_fixtures.py"
 )
@@ -39,7 +43,7 @@ def test_manifest_dispatch_is_independent_of_checkout_ancestor_names(
         repository / "fixtures/contexts/manifest.json",
         repository / "fixtures/permissions/manifest.json",
         repository / "fixtures/corpus/manifest.json",
-        repository / "fixtures/model_outputs/manifest.json",
+        repository / GOVERNED_FIXTURES_RELATIVE / "manifest.json",
     )
     calls: list[tuple[str, Path]] = []
 
@@ -266,8 +270,8 @@ def write_model_output_fixture_tree(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> Path:
     repository = tmp_path / "repository"
-    fixture_dir = repository / "fixtures/model_outputs"
-    shutil.copytree(ROOT / "fixtures/model_outputs", fixture_dir)
+    fixture_dir = repository / GOVERNED_FIXTURES_RELATIVE
+    shutil.copytree(GOVERNED_FIXTURES, fixture_dir)
     monkeypatch.setattr(VALIDATOR, "ROOT", repository)
     return fixture_dir / "manifest.json"
 
@@ -277,10 +281,14 @@ def model_output_registry() -> dict[str, dict[str, object]]:
     test_registry["fixture:synthetic-model-outputs"] = {
         **test_registry["fixture:synthetic-model-outputs"],
         "repository_paths": [
-            "fixtures/model_outputs/manifest.json",
-            "fixtures/model_outputs/synthetic_happy_path_v1.json",
-            "fixtures/model_outputs/synthetic_citation_failure_v1.json",
-            "fixtures/model_outputs/synthetic_malformed_output_v1.json",
+            (GOVERNED_FIXTURES_RELATIVE / "manifest.json").as_posix(),
+            (GOVERNED_FIXTURES_RELATIVE / "synthetic_happy_path_v1.json").as_posix(),
+            (
+                GOVERNED_FIXTURES_RELATIVE / "synthetic_citation_failure_v1.json"
+            ).as_posix(),
+            (
+                GOVERNED_FIXTURES_RELATIVE / "synthetic_malformed_output_v1.json"
+            ).as_posix(),
         ],
     }
     return test_registry
@@ -291,7 +299,7 @@ def update_manifested_fixture_hash(manifest: Path, fixture_id: str) -> None:
     entry = next(
         item for item in manifest_payload["fixtures"] if item["id"] == fixture_id
     )
-    fixture_path = VALIDATOR.ROOT / entry["path"]
+    fixture_path = manifest.parent / entry["path"]
     entry["content_hash"] = VALIDATOR.content_hash(fixture_path)
     manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
 
@@ -916,7 +924,7 @@ def test_permission_payload_rejects_unexpected_envelope_fields(
 
 def test_controlled_model_output_scenarios_validate() -> None:
     VALIDATOR.validate_model_output_fixture(
-        ROOT / "fixtures/model_outputs/manifest.json",
+        GOVERNED_FIXTURES / "manifest.json",
         model_output_registry(),
     )
 
@@ -961,9 +969,7 @@ def test_model_output_validator_rejects_arbitrary_malformed_shapes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     manifest = write_model_output_fixture_tree(tmp_path, monkeypatch)
-    fixture_path = (
-        VALIDATOR.ROOT / "fixtures/model_outputs/synthetic_malformed_output_v1.json"
-    )
+    fixture_path = manifest.parent / "synthetic_malformed_output_v1.json"
     fixture_path.write_text(
         json.dumps(
             {
@@ -983,9 +989,7 @@ def test_deliberately_malformed_model_output_cannot_be_replaced_by_a_valid_resul
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     manifest = write_model_output_fixture_tree(tmp_path, monkeypatch)
-    fixture_path = (
-        VALIDATOR.ROOT / "fixtures/model_outputs/synthetic_malformed_output_v1.json"
-    )
+    fixture_path = manifest.parent / "synthetic_malformed_output_v1.json"
     payload = json.loads(fixture_path.read_text(encoding="utf-8"))
     payload["citations"][0]["chunk_id"] = "synthetic-chunk-001"
     fixture_path.write_text(json.dumps(payload), encoding="utf-8")

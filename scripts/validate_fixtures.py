@@ -35,17 +35,17 @@ FIXTURE_DOCUMENTATION_PATHS = {
 MODEL_OUTPUT_FIXTURES = {
     "model-output.synthetic-happy-path.001": (
         "1.0.0",
-        "fixtures/model_outputs/synthetic_happy_path_v1.json",
+        "synthetic_happy_path_v1.json",
         "happy-path",
     ),
     "model-output.synthetic-citation-failure.001": (
         "1.0.0",
-        "fixtures/model_outputs/synthetic_citation_failure_v1.json",
+        "synthetic_citation_failure_v1.json",
         "citation-failure",
     ),
     "model-output.synthetic-malformed.001": (
         "1.0.0",
-        "fixtures/model_outputs/synthetic_malformed_output_v1.json",
+        "synthetic_malformed_output_v1.json",
         "malformed-output",
     ),
 }
@@ -117,11 +117,17 @@ def is_utf8_encodable(value: str) -> bool:
     return True
 
 
-def resolve_fixture_path(manifest_path: Path, raw_path: object) -> Path:
+def resolve_fixture_path(
+    manifest_path: Path,
+    raw_path: object,
+    *,
+    fixture_root: Path | None = None,
+) -> Path:
     if not isinstance(raw_path, str) or Path(raw_path).is_absolute():
         raise ValueError(f"{manifest_path}: fixture paths must be relative")
+    root = fixture_root or ROOT
     try:
-        fixture_path = (ROOT / raw_path).resolve(strict=True)
+        fixture_path = (root / raw_path).resolve(strict=True)
         fixture_path.relative_to(manifest_path.parent.resolve())
         fixture_path.relative_to(ROOT.resolve())
     except (OSError, ValueError) as error:
@@ -137,6 +143,8 @@ def validate_manifest(
     path: Path,
     registry: dict[str, dict[str, Any]],
     collection_key: Literal["fixtures", "records"],
+    *,
+    fixture_root: Path | None = None,
 ) -> set[str]:
     manifest = load_json(path)
     expected_manifest_fields = {"schema_version", collection_key}
@@ -185,7 +193,11 @@ def validate_manifest(
             )
         if entry["synthetic"] is not True:
             raise ValueError(f"{path}: DSL-106 fixtures must be synthetic")
-        fixture_path = resolve_fixture_path(path, entry["path"])
+        fixture_path = resolve_fixture_path(
+            path,
+            entry["path"],
+            fixture_root=fixture_root,
+        )
         if fixture_path in referenced_paths:
             raise ValueError(f"{path}: fixture paths must reference unique files")
         referenced_paths.add(fixture_path)
@@ -353,7 +365,12 @@ def validate_model_output_fixture(
 ) -> None:
     """Validate the exact controlled DSL-110 model-output scenarios."""
     manifest = load_json(path)
-    fixture_ids = validate_manifest(path, registry, "fixtures")
+    fixture_ids = validate_manifest(
+        path,
+        registry,
+        "fixtures",
+        fixture_root=path.parent,
+    )
     if fixture_ids != set(MODEL_OUTPUT_FIXTURES):
         raise ValueError(
             "model-output manifest must contain exactly the approved scenarios"
@@ -390,7 +407,11 @@ def validate_model_output_fixture(
                 f"{scenario} scenario"
             )
 
-        fixture_path = resolve_fixture_path(path, entry["path"])
+        fixture_path = resolve_fixture_path(
+            path,
+            entry["path"],
+            fixture_root=path.parent,
+        )
         output_json = fixture_path.read_text(encoding="utf-8")
         if scenario == "malformed-output":
             payload = load_json(fixture_path)
@@ -502,7 +523,10 @@ def validate() -> None:
         ROOT / "fixtures/contexts/manifest.json": validate_context_fixture,
         ROOT / "fixtures/permissions/manifest.json": validate_permission_fixture,
         ROOT / "fixtures/corpus/manifest.json": validate_corpus,
-        ROOT / "fixtures/model_outputs/manifest.json": validate_model_output_fixture,
+        ROOT
+        / "src/privilab/adapters/models/resources/governed_fixtures/manifest.json": (
+            validate_model_output_fixture
+        ),
     }
     for manifest, validator in manifest_validators.items():
         validator(manifest, registry)

@@ -66,7 +66,10 @@ build-check:
 	trap 'rm -rf "$$temp_root"' EXIT HUP INT TERM; \
 	UV_CACHE_DIR="$$temp_root/uv-cache" UV_OFFLINE=1 "$(UV)" build \
 		--offline --no-sources --out-dir "$$out" >/dev/null; \
-	test "$$(find "$$out" -type f | wc -l | tr -d ' ')" -ge 2
+	test "$$(find "$$out" -type f | wc -l | tr -d ' ')" -ge 2; \
+	wheel="$$(find "$$out" -type f -name '*.whl' -print -quit)"; \
+	test -n "$$wheel"; \
+	"$(PYTHON)" scripts/verify_built_package.py "$$wheel" "$$temp_root/smoke"
 
 tests:
 	@echo "==> unit, integration, and security tests"
