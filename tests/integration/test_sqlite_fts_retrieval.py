@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import subprocess
+import sys
 import traceback
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
@@ -183,6 +185,341 @@ def assert_r06_retrieval_rejected_unchanged(
     )
     assert r06_physical_snapshot(database_path) == before
     assert database_path.read_bytes() == before_bytes
+
+
+def post_r11_raw_snapshot(database_path: Path) -> tuple[object, ...]:
+    with closing(sqlite3.connect(database_path)) as connection:
+        schema = connection.execute(
+            "SELECT type, name, tbl_name, sql FROM sqlite_schema ORDER BY type, name"
+        ).fetchall()
+        # Preserve malformed TEXT bytes without normalizing or repairing them.
+        connection.text_factory = bytes
+        rows = {
+            name: connection.execute(
+                'SELECT * FROM "' + name.replace('"', '""') + '"'
+            ).fetchall()
+            for kind, name, _, _ in schema
+            if kind == "table"
+        }
+        return schema, rows
+
+
+def post_r11_heap_probe(database_path: Path, limit: int) -> dict[str, Any]:
+    """Called only by a disposable subprocess, never by the pytest process."""
+    retrieval_sqlite._expected_schema()
+    original = sqlite3.connect
+    handles: list[sqlite3.Connection] = []
+    events: list[tuple[str, str, bool]] = []
+    primary: list[MemoryError] = []
+
+    class Tracked(sqlite3.Connection):
+        def execute(self, sql: str, parameters: Any = (), /) -> sqlite3.Cursor:
+            stage = (
+                "scratch-read"
+                if "FROM temp._privilab_fts_completion_vocab" in sql
+                else "rollback"
+                if sql.startswith("ROLLBACK TO")
+                else "release"
+                if sql.startswith("RELEASE")
+                else "savepoint"
+                if sql.startswith("SAVEPOINT")
+                else ""
+            )
+            if stage:
+                events.append((stage, "attempt", self.in_transaction))
+            try:
+                return super().execute(sql, parameters)
+            except Exception as error:
+                if stage:
+                    events.append((stage, type(error).__name__, self.in_transaction))
+                    if stage == "scratch-read" and isinstance(error, MemoryError):
+                        primary.append(error)
+                raise
+
+    def connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        connection = original(*args, **kwargs, factory=Tracked)
+        handles.append(connection)
+        return connection
+
+    with closing(original(":memory:")) as control:
+        assert control.execute(f"PRAGMA hard_heap_limit={limit}").fetchone() == (limit,)
+    before = database_path.read_bytes()
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(sqlite3, "connect", connect)
+        try:
+            with closing(SQLiteFtsRetrievalProvider(database_path)):
+                pass
+        except Exception as error:
+            result = {
+                "limit": limit,
+                "outer": type(error).__name__,
+                "same_primary": bool(primary and error is primary[0]),
+                "events": events,
+            }
+        else:
+            raise AssertionError("real allocation pressure must fail construction")
+    assert len(handles) == 2
+    for connection in handles:
+        with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+            connection.execute("SELECT 1")
+    assert database_path.read_bytes() == before
+    return result
+
+
+def test_post_r11_real_sqlite_memory_pressure_preserves_primary(tmp_path: Path) -> None:
+    path = tmp_path / "healthy.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(path)) as provider:
+        provider.index_source(source("source", (("chunk", 0, "法" * 10923),)))
+        assert len(provider.retrieve("法" * 10923, scope_for())) == 1
+    with closing(SQLiteFtsRetrievalProvider(path)) as provider:
+        assert len(provider.retrieve("法" * 10923, scope_for())) == 1
+        assert (
+            provider.retrieve(
+                "法" * 10923,
+                scope_for(
+                    user_id="user-b",
+                    role_id="role-b",
+                    client_id="client-b",
+                    matter_id="matter-b",
+                    workflow_id="workflow-b",
+                ),
+            )
+            == ()
+        )
+    snapshot = post_r11_raw_snapshot(path)
+    before_bytes = path.read_bytes()
+    with closing(sqlite3.connect(":memory:")) as control:
+        before_limit = control.execute("PRAGMA hard_heap_limit").fetchone()
+    results = []
+    for limit in (2000000, 3000000, 5000000):
+        child = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import json, runpy, sys; from pathlib import Path; "
+                "ns = runpy.run_path(sys.argv[1]); "
+                "print(json.dumps(ns['post_r11_heap_probe']("
+                "Path(sys.argv[2]), int(sys.argv[3]))))",
+                str(Path(__file__).resolve()),
+                str(path),
+                str(limit),
+            ],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        result = json.loads(child.stdout)
+        assert result["outer"] == "MemoryError", result
+        results.append(result)
+    # A failure before completion is not evidence for this finding. Require
+    # actual native scratch-read OOM, automatic rollback, and both cleanup tries.
+    qualifying = [
+        r for r in results if ["scratch-read", "MemoryError", False] in r["events"]
+    ]
+    assert qualifying, results
+    for result in qualifying:
+        assert result["same_primary"] is True
+        assert ["rollback", "OperationalError", False] in result["events"]
+        assert ["release", "OperationalError", False] in result["events"]
+    with closing(sqlite3.connect(":memory:")) as control:
+        assert control.execute("PRAGMA hard_heap_limit").fetchone() == before_limit
+    assert post_r11_raw_snapshot(path) == snapshot
+    assert path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize(
+    "body_kind, rollback_kind, release_kind",
+    [
+        ("memory", "database", "database"),
+        ("database", "database", "database"),
+        ("other", "database", "memory"),
+        ("database", "memory", "database"),
+        ("none", "database", "none"),
+        ("none", "none", "database"),
+        ("none", "memory", "none"),
+        ("none", "none", "memory"),
+        ("none", "memory", "database"),
+        ("none", "database", "memory"),
+    ],
+    ids=[
+        "primary-memory",
+        "primary-sqlite",
+        "primary-other",
+        "primary-sqlite-cleanup-memory",
+        "rollback-only-sqlite",
+        "release-only-sqlite",
+        "rollback-only-memory",
+        "release-only-memory",
+        "cleanup-memory-then-sqlite",
+        "cleanup-sqlite-then-memory",
+    ],
+)
+def test_post_r11_cleanup_exception_precedence_and_disposal(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    body_kind: str,
+    rollback_kind: str,
+    release_kind: str,
+) -> None:
+    path = tmp_path / "cleanup.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(path)) as provider:
+        provider.index_source(source("source", (("chunk", 0, "法" * 10923),)))
+    before = post_r11_raw_snapshot(path)
+    before_bytes = path.read_bytes()
+    original = sqlite3.connect
+    connections: list[sqlite3.Connection] = []
+    events: list[str] = []
+    marker = "SYNTHETIC_PRIVATE_CLEANUP_MARKER"
+
+    def failure(kind: str) -> Exception | None:
+        return {
+            "memory": MemoryError(marker),
+            "database": sqlite3.DatabaseError(marker),
+            "other": ValueError(marker),
+            "none": None,
+        }[kind]
+
+    primary, rollback, release = map(failure, (body_kind, rollback_kind, release_kind))
+    expected = primary or next(
+        (e for e in (rollback, release) if isinstance(e, MemoryError)),
+        rollback or release,
+    )
+    assert expected is not None
+
+    class ObservedCursor(sqlite3.Cursor):
+        def __next__(self) -> Any:
+            row = super().__next__()
+            if row[0] in (1, 2):
+                assert row[1:] == ("text", ("法" * 10923).encode()[:32768])
+                events.append(f"verified-scratch-row-{row[0]}")
+            return row
+
+    class Tracked(sqlite3.Connection):
+        def execute(self, sql: str, parameters: Any = (), /) -> sqlite3.Cursor:
+            if "FROM temp._privilab_fts_completion_vocab" in sql:
+                events.append("body")
+                if primary is not None:
+                    raise primary
+                return self.cursor(factory=ObservedCursor).execute(sql, parameters)
+            for prefix, label, injected in (
+                ("ROLLBACK TO", "rollback", rollback),
+                ("RELEASE", "release", release),
+            ):
+                if sql.startswith(prefix):
+                    events.append(label)
+                    if injected is not None:
+                        raise injected
+            if "FROM main.chunks_fts" in sql:
+                events.append("governed-match")
+            return super().execute(sql, parameters)
+
+    def connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        connection = original(*args, **kwargs, factory=Tracked)
+        connections.append(connection)
+        return connection
+
+    with monkeypatch.context() as patch:
+        patch.setattr(sqlite3, "connect", connect)
+        if isinstance(expected, sqlite3.DatabaseError):
+            with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR) as caught:
+                SQLiteFtsRetrievalProvider(path)
+            assert caught.value.__context__ is expected
+            assert caught.value.__cause__ is None
+            assert marker not in "".join(traceback.format_exception(caught.value))
+        else:
+            with pytest.raises(type(expected)) as propagated:
+                SQLiteFtsRetrievalProvider(path)
+            assert propagated.value is expected
+    assert events[-2:] == ["rollback", "release"]
+    if primary is None:
+        assert events[:3] == [
+            "body",
+            "verified-scratch-row-1",
+            "verified-scratch-row-2",
+        ]
+    assert "governed-match" not in events
+    assert len(connections) == 2
+    for connection in connections:
+        with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+            connection.execute("SELECT 1")
+    assert post_r11_raw_snapshot(path) == before
+    assert path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize("column", ["c0", "c1"], ids=["chunk-id", "text"])
+def test_post_r11_schema_diagnostics_are_source_free(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, column: str
+) -> None:
+    path = tmp_path / "diagnostic.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(path)) as provider:
+        provider.index_source(source("source", (("chunk", 0, "quartz"),)))
+    marker = "SYNTHETIC_R11_SOURCE_MARKER"
+    with closing(sqlite3.connect(path)) as connection, connection:
+        connection.execute(
+            f"UPDATE chunks_fts_content SET {column}=CAST(? AS TEXT)",
+            (marker.encode() + b"\xff",),
+        )
+    before = post_r11_raw_snapshot(path)
+    before_bytes = path.read_bytes()
+    original = sqlite3.connect
+    handles: list[sqlite3.Connection] = []
+
+    def connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        connection: sqlite3.Connection = original(*args, **kwargs)
+        handles.append(connection)
+        return connection
+
+    with monkeypatch.context() as patch:
+        patch.setattr(sqlite3, "connect", connect)
+        with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR) as caught:
+            SQLiteFtsRetrievalProvider(path)
+    diagnostic = "".join(traceback.format_exception(caught.value))
+    assert "local retrieval index schema is incompatible" in diagnostic
+    assert marker not in diagnostic
+    assert "Could not decode to UTF-8" not in diagnostic
+    assert caught.value.__cause__ is None
+    assert caught.value.__suppress_context__ is True
+    # from None suppresses rendering, not Python's internal context retention.
+    assert isinstance(caught.value.__context__, sqlite3.DatabaseError)
+    assert len(handles) == 1  # Target rejection precedes clone construction.
+    with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+        handles[0].execute("SELECT 1")
+    assert post_r11_raw_snapshot(path) == before
+    assert path.read_bytes() == before_bytes
+
+
+def test_post_r11_schema_memory_error_is_not_translated(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "schema-memory.sqlite3"
+    SQLiteFtsRetrievalProvider(path).close()
+    original = sqlite3.connect
+    handles: list[sqlite3.Connection] = []
+    primary = MemoryError("synthetic resource exhaustion")
+
+    class Tracked(sqlite3.Connection):
+        def execute(self, sql: str, parameters: Any = (), /) -> sqlite3.Cursor:
+            if sql == "SELECT chunk_id, text FROM chunks_fts LIMIT 1":
+                raise primary
+            return super().execute(sql, parameters)
+
+    def connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        connection = original(*args, **kwargs, factory=Tracked)
+        handles.append(connection)
+        return connection
+
+    before = path.read_bytes()
+    with monkeypatch.context() as patch:
+        patch.setattr(sqlite3, "connect", connect)
+        with pytest.raises(MemoryError) as caught:
+            SQLiteFtsRetrievalProvider(path)
+    assert caught.value is primary
+    assert len(handles) == 1
+    with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+        handles[0].execute("SELECT 1")
+    assert path.read_bytes() == before
 
 
 @pytest.mark.parametrize(

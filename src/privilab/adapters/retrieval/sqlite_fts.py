@@ -370,8 +370,9 @@ def _validate_schema_compatibility(connection: sqlite3.Connection) -> None:
         ).fetchone()
         if inconsistent_content is not None:
             raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
-    except sqlite3.DatabaseError as error:
-        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
+    except sqlite3.DatabaseError:
+        # SQLite decoding diagnostics can contain indexed content.
+        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from None
 
 
 def _has_existing_retrieval_schema(connection: sqlite3.Connection) -> bool:
@@ -432,6 +433,7 @@ def _fts_match_term(clone: sqlite3.Connection, raw: bytes) -> str:
     for batch in batched(candidates, 256, strict=False):
         verified = None
         clone.execute("SAVEPOINT _privilab_fts_completion_batch").close()
+        body_failed = False
         try:
             clone.executemany(
                 "INSERT INTO temp._privilab_fts_completion_scratch(rowid, text) "
@@ -460,9 +462,30 @@ def _fts_match_term(clone: sqlite3.Connection, raw: bytes) -> str:
                     if len(tokens) == 1 and token == raw:
                         verified = batch[rowid - 1]
                         break
+        except Exception:
+            body_failed = True
+            raise
         finally:
-            clone.execute("ROLLBACK TO _privilab_fts_completion_batch").close()
-            clone.execute("RELEASE _privilab_fts_completion_batch").close()
+            cleanup_error: Exception | None = None
+            for statement in (
+                "ROLLBACK TO _privilab_fts_completion_batch",
+                "RELEASE _privilab_fts_completion_batch",
+            ):
+                try:
+                    clone.execute(statement).close()
+                except Exception as error:
+                    # Always try RELEASE, including after SQLite auto-rollback.
+                    # Without a body failure, retain cleanup resource exhaustion
+                    # over a SQLite error so it cannot become incompatibility.
+                    if cleanup_error is None or (
+                        isinstance(error, MemoryError)
+                        and not isinstance(cleanup_error, MemoryError)
+                    ):
+                        cleanup_error = error
+            # An in-flight body exception keeps its original identity/precedence.
+            # Otherwise cleanup must succeed before returning any candidate.
+            if not body_failed and cleanup_error is not None:
+                raise cleanup_error
         if verified is not None:
             return verified
         # Release this batch before batched() constructs the next one.
