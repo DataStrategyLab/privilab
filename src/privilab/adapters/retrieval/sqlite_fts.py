@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import re
 import sqlite3
+from collections.abc import Iterator
 from contextlib import closing
 from functools import cache
-from itertools import groupby
+from itertools import batched, groupby, islice, product
 from operator import itemgetter
 from pathlib import Path
 from threading import RLock
@@ -22,6 +23,7 @@ from privilab.domain.retrieval import (
 )
 
 _MAX_LIMIT = 100
+_FTS_TOKEN_BYTE_LIMIT = 32768
 _FTS5_QUERY_ERROR_MARKERS = (
     "fts5: syntax error",
     "fts5: parser stack overflow",
@@ -379,6 +381,95 @@ def _has_existing_retrieval_schema(connection: sqlite3.Connection) -> bool:
         raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
 
 
+def _fts_boundary_candidates(raw: bytes) -> Iterator[str]:
+    """Enumerate every legal scalar completion of a boundary-truncated term."""
+    try:
+        raw.decode("utf-8", errors="strict")
+    except UnicodeDecodeError as error:
+        if (
+            len(raw) != _FTS_TOKEN_BYTE_LIMIT
+            or error.reason != "unexpected end of data"
+            or error.end != len(raw)
+        ):
+            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from None
+        # Strict decoding has validated the entire preceding text and rejected
+        # illegal/overlong/surrogate/out-of-range prefixes before reaching here.
+        prefix = raw[: error.start].decode("utf-8", errors="strict")
+        suffix = raw[error.start :]
+    else:
+        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+    width = 2 if suffix[0] < 0xE0 else 3 if suffix[0] < 0xF0 else 4
+
+    def candidates() -> Iterator[str]:
+        # Lexicographic continuation bytes give deterministic scalar order.
+        # The finite Cartesian product is exhaustive, not a heuristic/cap.
+        for ending in product(range(0x80, 0xC0), repeat=width - len(suffix)):
+            try:
+                scalar = (suffix + bytes(ending)).decode("utf-8", errors="strict")
+            except UnicodeDecodeError:
+                continue
+            yield prefix + scalar
+
+    return candidates()
+
+
+def _fts_match_term(clone: sqlite3.Connection, raw: bytes) -> str:
+    try:
+        return raw.decode("utf-8", errors="strict")
+    except UnicodeDecodeError:
+        candidates = _fts_boundary_candidates(raw)
+
+    # Lazy, clone-only, default-tokenizer scratch objects are reused across
+    # boundary terms. Normal UTF-8 terms never need this sub-path.
+    clone.execute(
+        "CREATE VIRTUAL TABLE IF NOT EXISTS temp._privilab_fts_completion_scratch "
+        "USING fts5(text)"
+    ).close()
+    clone.execute(
+        "CREATE VIRTUAL TABLE IF NOT EXISTS temp._privilab_fts_completion_vocab "
+        "USING fts5vocab(temp, '_privilab_fts_completion_scratch', 'instance')"
+    ).close()
+    for batch in batched(candidates, 256, strict=False):
+        verified = None
+        clone.execute("SAVEPOINT _privilab_fts_completion_batch").close()
+        try:
+            clone.executemany(
+                "INSERT INTO temp._privilab_fts_completion_scratch(rowid, text) "
+                "VALUES (?, ?)",
+                enumerate(batch, 1),
+            ).close()
+            with closing(
+                clone.execute(
+                    """
+                    SELECT doc, typeof(term), CAST(term AS BLOB)
+                    FROM temp._privilab_fts_completion_vocab
+                    WHERE col = 'text'
+                    ORDER BY doc, offset
+                    """
+                )
+            ) as vocabulary:
+                for rowid, entries in groupby(vocabulary, key=itemgetter(0)):
+                    if type(rowid) is not int or not 1 <= rowid <= len(batch):
+                        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+                    tokens = tuple(islice(entries, 2))
+                    _, storage, token = tokens[0]
+                    if storage != "text" or type(token) is not bytes:
+                        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+                    # Exactly one token occurrence, with exactly the original
+                    # bytes; apparent prefix/length/category is insufficient.
+                    if len(tokens) == 1 and token == raw:
+                        verified = batch[rowid - 1]
+                        break
+        finally:
+            clone.execute("ROLLBACK TO _privilab_fts_completion_batch").close()
+            clone.execute("RELEASE _privilab_fts_completion_batch").close()
+        if verified is not None:
+            return verified
+        # Release this batch before batched() constructs the next one.
+        del batch
+    raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+
+
 def _validate_fts_navigation(clone: sqlite3.Connection) -> None:
     """Compare sequential vocabulary postings with ordinary lookup on the clone."""
     try:
@@ -389,20 +480,26 @@ def _validate_fts_navigation(clone: sqlite3.Connection) -> None:
         with closing(
             clone.execute(
                 """
-                SELECT term, doc
+                SELECT typeof(term), CAST(term AS BLOB), doc
                 FROM temp._privilab_fts_validation_vocab
                 WHERE col = 'text'
-                GROUP BY term, doc
-                ORDER BY term, doc
+                GROUP BY typeof(term), CAST(term AS BLOB), doc
+                ORDER BY CAST(term AS BLOB), doc
                 """
             )
         ) as expected:
             # groupby holds only the current term and one lookahead row. Neither
             # postings nor the complete vocabulary are accumulated in Python.
-            for term, documents in groupby(expected, key=itemgetter(0)):
-                if type(term) is not str or not term or "\x00" in term:
+            for (storage, raw), documents in groupby(expected, key=itemgetter(0, 1)):
+                if (
+                    storage != "text"
+                    or type(raw) is not bytes
+                    or not 0 < len(raw) <= _FTS_TOKEN_BYTE_LIMIT
+                ):
                     raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
-                term.encode("utf-8", errors="strict")
+                term = _fts_match_term(clone, raw)
+                if "\x00" in term:
+                    raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
                 expression = 'text : "' + term.replace('"', '""') + '"'
                 with closing(
                     clone.execute(
@@ -415,7 +512,7 @@ def _validate_fts_navigation(clone: sqlite3.Connection) -> None:
                         (expression,),
                     )
                 ) as actual:
-                    for _, doc in documents:
+                    for _, _, doc in documents:
                         row = actual.fetchone()
                         if (
                             type(doc) is not int
