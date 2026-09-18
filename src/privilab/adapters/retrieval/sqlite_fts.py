@@ -6,6 +6,8 @@ import re
 import sqlite3
 from contextlib import closing
 from functools import cache
+from itertools import groupby
+from operator import itemgetter
 from pathlib import Path
 from threading import RLock
 from time import monotonic
@@ -377,6 +379,59 @@ def _has_existing_retrieval_schema(connection: sqlite3.Connection) -> bool:
         raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
 
 
+def _validate_fts_navigation(clone: sqlite3.Connection) -> None:
+    """Compare sequential vocabulary postings with ordinary lookup on the clone."""
+    try:
+        clone.execute(
+            "CREATE VIRTUAL TABLE temp._privilab_fts_validation_vocab "
+            "USING fts5vocab(main, 'chunks_fts', 'instance')"
+        )
+        with closing(
+            clone.execute(
+                """
+                SELECT term, doc
+                FROM temp._privilab_fts_validation_vocab
+                WHERE col = 'text'
+                GROUP BY term, doc
+                ORDER BY term, doc
+                """
+            )
+        ) as expected:
+            # groupby holds only the current term and one lookahead row. Neither
+            # postings nor the complete vocabulary are accumulated in Python.
+            for term, documents in groupby(expected, key=itemgetter(0)):
+                if type(term) is not str or not term or "\x00" in term:
+                    raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+                term.encode("utf-8", errors="strict")
+                expression = 'text : "' + term.replace('"', '""') + '"'
+                with closing(
+                    clone.execute(
+                        """
+                        SELECT rowid
+                        FROM main.chunks_fts
+                        WHERE chunks_fts MATCH ?
+                        ORDER BY rowid
+                        """,
+                        (expression,),
+                    )
+                ) as actual:
+                    for _, doc in documents:
+                        row = actual.fetchone()
+                        if (
+                            type(doc) is not int
+                            or row is None
+                            or type(row[0]) is not int
+                            or row[0] != doc
+                        ):
+                            raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+                    if actual.fetchone() is not None:
+                        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE)
+    except (sqlite3.DatabaseError, UnicodeError):
+        # SQLite/query/encoding diagnostics may contain indexed text. Preserve
+        # the generic readiness contract without rendering that exception chain.
+        raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from None
+
+
 def _validate_fts_integrity(connection: sqlite3.Connection) -> None:
     """Run the native control command only on a physical, disposable clone."""
     # Bound backup's own retry loop, independently of connection timeouts:
@@ -400,6 +455,7 @@ def _validate_fts_integrity(connection: sqlite3.Connection) -> None:
             clone.execute(
                 "INSERT INTO chunks_fts(chunks_fts) VALUES('integrity-check')"
             )
+            _validate_fts_navigation(clone)
     except sqlite3.DatabaseError as error:
         raise RuntimeError(_INCOMPATIBLE_SCHEMA_MESSAGE) from error
 

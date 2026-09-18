@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import traceback
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
@@ -181,6 +182,313 @@ def assert_r06_retrieval_rejected_unchanged(
         for sql in statements
     )
     assert r06_physical_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize("partial", [False, True], ids=["full", "partial"])
+def test_post_r09_navigation_corruption_rejects_at_constructor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, partial: bool
+) -> None:
+    database_path = tmp_path / "navigation.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        retrieval.index_source(
+            source("source", (("quartz", 0, "quartz"), ("omega", 1, "omega " * 8000)))
+        )
+        assert [
+            chunk.chunk_id.value for chunk in retrieval.retrieve("quartz", scope_for())
+        ] == ["quartz"]
+    with closing(sqlite3.connect(database_path)) as connection, connection:
+        schema = connection.execute(
+            "SELECT * FROM sqlite_schema ORDER BY name"
+        ).fetchall()
+        chunks = connection.execute("SELECT * FROM chunks").fetchall()
+        visible = connection.execute("SELECT chunk_id, text FROM chunks_fts").fetchall()
+        assert (
+            connection.execute(
+                "SELECT count(*) FROM chunks_fts_data WHERE length(block) > 1000"
+            ).fetchone()[0]
+            >= 2
+        )
+        navigation_count = connection.execute(
+            "SELECT count(*) FROM chunks_fts_idx"
+        ).fetchone()[0]
+        assert navigation_count > 1
+        connection.execute(
+            "DELETE FROM chunks_fts_idx WHERE term != X''"
+            if partial
+            else "DELETE FROM chunks_fts_idx"
+        )
+        remaining = connection.execute(
+            "SELECT count(*) FROM chunks_fts_idx"
+        ).fetchone()[0]
+        assert 0 < remaining < navigation_count if partial else remaining == 0
+        assert (
+            connection.execute("SELECT * FROM sqlite_schema ORDER BY name").fetchall()
+            == schema
+        )
+        assert connection.execute("SELECT * FROM chunks").fetchall() == chunks
+        assert (
+            connection.execute("SELECT chunk_id, text FROM chunks_fts").fetchall()
+            == visible
+        )
+        # Real ordinary MATCH is wrong before the readiness gate runs.
+        assert (
+            connection.execute(
+                "SELECT rowid FROM chunks_fts WHERE chunks_fts MATCH ?", ('"quartz"',)
+            ).fetchall()
+            == []
+        )
+    assert_r06_retrieval_rejected_unchanged(database_path, monkeypatch)
+    # Construction necessarily precedes RunService composition. Test that public
+    # boundary, without allowing retrieve() or run() to satisfy the raises block.
+    generate = Mock(side_effect=AssertionError("model must not execute"))
+    monkeypatch.setattr(FixtureModelProvider, "generate", generate)
+    with closing(SQLiteProvenanceStore(tmp_path / "runs.sqlite3")) as store:
+        append = Mock(wraps=store.append)
+        monkeypatch.setattr(store, "append", append)
+        with pytest.raises(RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR):
+            with closing(SQLiteFtsRetrievalProvider(database_path)):
+                pytest.fail("corrupt provider must not become a RunService dependency")
+        append.assert_not_called()
+    generate.assert_not_called()
+    with closing(sqlite3.connect(tmp_path / "runs.sqlite3")) as connection:
+        assert connection.execute("SELECT count(*) FROM runs").fetchone() == (0,)
+
+
+@pytest.mark.parametrize(
+    "text, terms",
+    [
+        ("quartz", ("quartz",)),
+        ("QuArTz QUARTZ quartz", ("quartz",)),
+        ("café naïve", ("cafe", "naive")),
+        ("法令公告", ("法令公告",)),
+        ('alpha-beta "gamma"', ("alpha", "beta", "gamma")),
+        ("!!! —", ()),
+        ("omega " * 8000 + "quartz", ("omega", "quartz")),
+    ],
+    ids=[
+        "ascii",
+        "normalized",
+        "diacritics",
+        "cjk",
+        "punctuation",
+        "tokenless",
+        "multipage",
+    ],
+)
+def test_post_r09_real_vocabulary_roundtrip_and_healthy_reopen(
+    tmp_path: Path, text: str, terms: tuple[str, ...]
+) -> None:
+    database_path = tmp_path / "healthy.sqlite3"
+    SQLiteFtsRetrievalProvider(database_path).close()
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        retrieval.index_source(source("first", (("a", 0, text), ("b", 1, text))))
+        retrieval.index_source(source("second", (("c", 0, text),)))
+    before = retrieval_database_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    # Inspect actual normalized vocabulary on a physical clone, not source text.
+    with (
+        closing(sqlite3.connect(database_path)) as target,
+        closing(sqlite3.connect(":memory:")) as clone,
+    ):
+        target.backup(clone)
+        clone.execute(
+            "CREATE VIRTUAL TABLE temp.vocab "
+            "USING fts5vocab(main, 'chunks_fts', 'instance')"
+        )
+        expected = clone.execute(
+            "SELECT term, doc FROM temp.vocab WHERE col = 'text' "
+            "GROUP BY term, doc ORDER BY term, doc"
+        ).fetchall()
+        assert expected == [(term, doc) for term in terms for doc in (1, 2, 3)]
+        for term in terms:
+            assert clone.execute(
+                "SELECT rowid FROM main.chunks_fts "
+                "WHERE chunks_fts MATCH ? ORDER BY rowid",
+                ('text : "' + term.replace('"', '""') + '"',),
+            ).fetchall() == [(1,), (2,), (3,)]
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        assert retrieval_database_snapshot(database_path) == before
+        assert database_path.read_bytes() == before_bytes
+        retrieval.index_source(source("later", (("later", 0, "subsequent"),)))
+        assert [
+            chunk.chunk_id.value
+            for chunk in retrieval.retrieve("subsequent", scope_for())
+        ] == ["later"]
+        assert (
+            retrieval.retrieve(
+                "subsequent",
+                scope_for(
+                    user_id="user-b",
+                    role_id="role-b",
+                    client_id="client-b",
+                    matter_id="matter-b",
+                    workflow_id="workflow-b",
+                ),
+            )
+            == ()
+        )
+
+
+@pytest.mark.parametrize("stage", ["create", "enumerate", "match"])
+@pytest.mark.parametrize("kind", ["database", "memory"])
+def test_post_r09_navigation_error_cleanup(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, stage: str, kind: str
+) -> None:
+    database_path = tmp_path / "fault.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        retrieval.index_source(
+            source("source", (("a", 0, "quartz omega"), ("b", 1, "quartz omega")))
+        )
+    before = retrieval_database_snapshot(database_path)
+    before_bytes = database_path.read_bytes()
+    original_connect = sqlite3.connect
+    connections: list[sqlite3.Connection] = []
+    injected = (
+        MemoryError("private-term-marker")
+        if kind == "memory"
+        else sqlite3.DatabaseError("private-term-marker")
+    )
+    reached: list[str] = []
+
+    class FaultCursor(sqlite3.Cursor):
+        phase = ""
+        reads = 0
+
+        def __next__(self) -> Any:
+            if self.phase == "enumerate" and stage == "enumerate":
+                self.reads += 1
+                if self.reads == 2:
+                    reached.append(stage)
+                    raise injected
+            return super().__next__()
+
+        def fetchone(self) -> Any:
+            if self.phase == "match" and stage == "match":
+                self.reads += 1
+                if self.reads == 2:
+                    reached.append(stage)
+                    raise injected
+            return super().fetchone()
+
+    class Tracked(sqlite3.Connection):
+        clone = False
+
+        def execute(self, sql: str, parameters: Any = (), /) -> sqlite3.Cursor:
+            cursor = self.cursor(factory=FaultCursor)
+            if self.clone:
+                if (
+                    "CREATE VIRTUAL TABLE temp._privilab_fts_validation_vocab" in sql
+                    and stage == "create"
+                ):
+                    reached.append(stage)
+                    raise injected
+                if "FROM temp._privilab_fts_validation_vocab" in sql:
+                    cursor.phase = "enumerate"
+                if "FROM main.chunks_fts" in sql and "MATCH ?" in sql:
+                    cursor.phase = "match"
+            return cursor.execute(sql, parameters)
+
+    def connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        connection = original_connect(*args, **kwargs, factory=Tracked)
+        connection.clone = str(args[0]) == ":memory:"
+        connections.append(connection)
+        return connection
+
+    with monkeypatch.context() as patch:
+        patch.setattr(sqlite3, "connect", connect)
+        if kind == "memory":
+            with pytest.raises(MemoryError) as memory_error:
+                SQLiteFtsRetrievalProvider(database_path)
+            assert memory_error.value is injected
+        else:
+            with pytest.raises(
+                RuntimeError, match=_INCOMPATIBLE_INDEX_ERROR
+            ) as database_error:
+                SQLiteFtsRetrievalProvider(database_path)
+            assert "private-term-marker" not in "".join(
+                traceback.format_exception(database_error.value)
+            )
+    assert reached == [stage]
+    assert len(connections) == 2
+    for connection in connections:
+        with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+            connection.execute("SELECT 1")
+    assert retrieval_database_snapshot(database_path) == before
+    assert database_path.read_bytes() == before_bytes
+
+
+def test_post_r09_navigation_uses_only_existing_clone_after_native_check(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database_path = tmp_path / "clone-only.sqlite3"
+    with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+        retrieval.index_source(
+            source("source", (("a", 0, "quartz quartz"), ("b", 1, "quartz")))
+        )
+    original_connect = sqlite3.connect
+    connections: list[sqlite3.Connection] = []
+    commands: list[tuple[bool, str, Any]] = []
+
+    class Tracked(sqlite3.Connection):
+        clone = False
+
+        def execute(self, sql: str, parameters: Any = (), /) -> sqlite3.Cursor:
+            commands.append((self.clone, sql, parameters))
+            return super().execute(sql, parameters)
+
+        def close(self) -> None:
+            temp_objects = (
+                super()
+                .execute("SELECT name FROM sqlite_temp_schema WHERE type = 'table'")
+                .fetchall()
+            )
+            persistent = (
+                super()
+                .execute(
+                    "SELECT name FROM main.sqlite_schema "
+                    "WHERE name = '_privilab_fts_validation_vocab'"
+                )
+                .fetchall()
+            )
+            super().close()
+            assert temp_objects == (
+                [("_privilab_fts_validation_vocab",)] if self.clone else []
+            )
+            assert persistent == []
+
+    def connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        connection = original_connect(*args, **kwargs, factory=Tracked)
+        connection.clone = str(args[0]) == ":memory:"
+        connections.append(connection)
+        return connection
+
+    before_bytes = database_path.read_bytes()
+    with monkeypatch.context() as patch:
+        patch.setattr(sqlite3, "connect", connect)
+        with closing(SQLiteFtsRetrievalProvider(database_path)) as retrieval:
+            assert len(retrieval.retrieve("quartz", scope_for())) == 2
+    assert len(connections) == 2
+    for connection in connections:
+        with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+            connection.execute("SELECT 1")
+    stages = []
+    for clone, sql, parameters in commands:
+        if "integrity-check" in sql:
+            assert clone
+            stages.append("native")
+        if "CREATE VIRTUAL TABLE temp._privilab_fts_validation_vocab" in sql:
+            assert clone and "fts5vocab(main, 'chunks_fts', 'instance')" in sql
+            stages.append("vocab")
+        if "FROM temp._privilab_fts_validation_vocab" in sql:
+            assert clone and "WHERE col = 'text'" in sql
+            assert "GROUP BY term, doc" in sql and "ORDER BY term, doc" in sql
+            stages.append("expected")
+        if "FROM main.chunks_fts" in sql and "MATCH ?" in sql:
+            assert clone and parameters == ('text : "quartz"',)
+            assert "ORDER BY rowid" in sql and "quartz" not in sql
+            stages.append("actual")
+    assert stages == ["native", "vocab", "expected", "actual"]
     assert database_path.read_bytes() == before_bytes
 
 
