@@ -75,6 +75,24 @@
   reviewer: "Codex"
   open_questions: []
 
+- id: "fixture:synthetic-preview"
+  kind: "fixture"
+  name: "Repository-authored synthetic preview composition"
+  source: "Repository-authored fixture"
+  version_or_commit: "1.0.0"
+  reviewed_date: "2026-09-18"
+  license: "Synthetic content (no external license)"
+  license_source: "Repository-authored synthetic content; no external source."
+  intended_use: "Fixed task, context variants, policy, and source records for the local current-run fixture preview."
+  permitted_use_basis: "Repository-authored synthetic content."
+  attribution_required: false
+  attribution: "None; authored for this repository."
+  restrictions: "Synthetic demonstration content only; not legal advice or matter data."
+  repository_paths:
+    - "src/privilab/web/preview.py"
+  reviewer: "Codex"
+  open_questions: []
+
 - id: "fixture:synthetic-model-outputs"
   kind: "fixture"
   name: "Repository-authored synthetic model outputs"
