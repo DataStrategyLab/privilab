@@ -36,7 +36,30 @@ def _criterion(result: EvaluationResult, criterion_id: str) -> CriterionResult:
 def _result(
     definition: CriterionDefinition,
     status: CriterionStatus,
+    input_value: EvaluationInput,
 ) -> CriterionResult:
+    reason_code = {
+        EvaluatorKind.PERMISSION_BOUNDARY: {
+            CriterionStatus.PASS: ReasonCode.PERMISSION_BOUNDARY_RESPECTED,
+            CriterionStatus.FAIL: ReasonCode.PERMISSION_BOUNDARY_VIOLATION,
+        },
+        EvaluatorKind.AUTHORIZED_SOURCE: {
+            CriterionStatus.PASS: ReasonCode.SOURCES_IN_RUN_CONTEXT,
+            CriterionStatus.FAIL: ReasonCode.SOURCE_NOT_IN_RUN_CONTEXT,
+            CriterionStatus.UNKNOWN: ReasonCode.GENERATED_OUTPUT_UNAVAILABLE,
+        },
+        EvaluatorKind.CITATION_RESOLUTION: {
+            CriterionStatus.PASS: ReasonCode.CITATIONS_RESOLVED,
+            CriterionStatus.FAIL: ReasonCode.CITATION_NOT_IN_RUN_CONTEXT,
+            CriterionStatus.UNKNOWN: ReasonCode.GENERATED_OUTPUT_UNAVAILABLE,
+        },
+        EvaluatorKind.PROVENANCE_COMPLETENESS: {
+            CriterionStatus.PASS: ReasonCode.PROVENANCE_COMPLETE,
+            CriterionStatus.FAIL: ReasonCode.PROVENANCE_INCOMPLETE,
+        },
+    }.get(definition.evaluator_kind, {}).get(
+        status, ReasonCode.EVALUATOR_EXECUTION_ERROR
+    )
     return CriterionResult(
         criterion_id=definition.criterion_id,
         criterion_version=definition.criterion_version,
@@ -44,7 +67,15 @@ def _result(
         evaluator_version=definition.evaluator_version,
         criticality=definition.criticality,
         status=status,
-        evidence=EvaluationEvidence((ReasonCode.PROVENANCE_COMPLETE,), 0, 0),
+        evidence=EvaluationEvidence(
+            (reason_code,),
+            0
+            if input_value.provenance is None
+            else len(input_value.provenance.sources),
+            0
+            if input_value.outcome.result is None
+            else len(input_value.outcome.result.citations),
+        ),
     )
 
 
@@ -66,9 +97,12 @@ def _task_with_optional_criterion() -> tuple[TaskDefinition, CriterionDefinition
     )
 
 
-def _passing_results(task: TaskDefinition) -> tuple[CriterionResult, ...]:
+def _passing_results(
+    task: TaskDefinition, input_value: EvaluationInput
+) -> tuple[CriterionResult, ...]:
     return tuple(
-        _result(definition, CriterionStatus.PASS) for definition in task.rubric.criteria
+        _result(definition, CriterionStatus.PASS, input_value)
+        for definition in task.rubric.criteria
     )
 
 
@@ -265,7 +299,11 @@ def test_noncritical_fail_or_unknown_does_not_independently_block() -> None:
     task, definition = _task_with_optional_criterion()
     for status in (CriterionStatus.FAIL, CriterionStatus.UNKNOWN):
         results = tuple(
-            _result(item, status if item == definition else CriterionStatus.PASS)
+            _result(
+                item,
+                status if item == definition else CriterionStatus.PASS,
+                input_value,
+            )
             for item in task.rubric.criteria
         )
         assert calculate_gate(input_value, task, results).status is GateStatus.PASS
@@ -276,10 +314,12 @@ def test_execution_error_and_invalid_or_empty_result_sets_block() -> None:
         CitationReference("synthetic-source", "synthetic-chunk")
     )
     task, definition = _task_with_optional_criterion()
-    passing = _passing_results(task)
+    passing = _passing_results(task, input_value)
     error_results = tuple(
         _result(
-            item, CriterionStatus.ERROR if item == definition else CriterionStatus.PASS
+            item,
+            CriterionStatus.ERROR if item == definition else CriterionStatus.PASS,
+            input_value,
         )
         for item in task.rubric.criteria
     )
@@ -293,6 +333,69 @@ def test_execution_error_and_invalid_or_empty_result_sets_block() -> None:
     assert (
         calculate_gate(input_value, task, wrong_version_results).status
         is GateStatus.BLOCK
+    )
+
+
+def test_gate_rejects_result_with_evidence_contradicting_its_status() -> None:
+    input_value = _generated_input(
+        CitationReference("synthetic-source", "synthetic-chunk")
+    )
+    results = _passing_results(p0_task_definition(), input_value)
+    contradictory = replace(
+        results[0],
+        evidence=EvaluationEvidence(
+            (ReasonCode.EVALUATOR_EXECUTION_ERROR,),
+            1,
+            1,
+        ),
+    )
+    gate = calculate_gate(
+        input_value,
+        p0_task_definition(),
+        (contradictory,) + results[1:],
+    )
+    assert gate.status is GateStatus.BLOCK
+    assert any(
+        block.reason_code is ReasonCode.RESULT_SET_INVALID for block in gate.blocks
+    )
+
+
+def test_gate_rejects_fabricated_critical_pass_for_failed_input() -> None:
+    input_value = _generated_input(
+        CitationReference("outside-source", "synthetic-chunk")
+    )
+    gate = calculate_gate(
+        input_value,
+        p0_task_definition(),
+        _passing_results(p0_task_definition(), input_value),
+    )
+    assert gate.status is GateStatus.BLOCK
+    assert any(
+        block.reason_code is ReasonCode.RESULT_SET_INVALID for block in gate.blocks
+    )
+
+
+def test_type_correct_inconsistent_evaluator_output_invalidates_result_set(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def inconsistent(
+        _: EvaluationInput, __: evaluators.ProvenanceIndex
+    ) -> tuple[CriterionStatus, EvaluationEvidence]:
+        return CriterionStatus.PASS, EvaluationEvidence(
+            (ReasonCode.EVALUATOR_EXECUTION_ERROR,), 1, 1
+        )
+
+    registry = dict(evaluators.EVALUATOR_REGISTRY)
+    registry[EvaluatorKind.AUTHORIZED_SOURCE] = inconsistent
+    monkeypatch.setattr(evaluators, "EVALUATOR_REGISTRY", MappingProxyType(registry))
+    result = evaluate(
+        _generated_input(CitationReference("synthetic-source", "synthetic-chunk"))
+    )
+    assert _criterion(result, "authorized-source").status is CriterionStatus.PASS
+    assert result.gate.status is GateStatus.BLOCK
+    assert any(
+        block.reason_code is ReasonCode.RESULT_SET_INVALID
+        for block in result.gate.blocks
     )
 
 
