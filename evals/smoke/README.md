@@ -1,6 +1,8 @@
-# Smoke eval placeholder
+# Offline evaluation smoke harness
 
-**NOT APPLICABLE / SKIPPED in DSL-105.** The behavior harness is not yet
-implemented. This directory and the `make ci` message are not a passing eval and
-must not be used as product-eval evidence. A later approved issue will replace
-this placeholder with the cheap fixture smoke harness.
+`make fixture-smoke` runs five versioned synthetic cases through the production
+DSL-113 contracts, evaluators, runner, and critical gate. Expected criterion and
+gate values are fixed independently in `cases.json`.
+
+The harness is local and network-free. A passing harness means its declared
+checks matched; it is neither a product-quality claim nor human approval.

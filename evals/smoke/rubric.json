@@ -1,0 +1,38 @@
+{
+  "task_id": "p0-source-grounded-output",
+  "task_version": "1.0.0",
+  "rubric": {
+    "rubric_id": "p0-deterministic-critical-gate",
+    "rubric_version": "1.0.0",
+    "criteria": [
+      {
+        "criterion_id": "authorized-source",
+        "criterion_version": "1.0.0",
+        "evaluator_kind": "authorized-source",
+        "evaluator_version": "1.0.0",
+        "criticality": "CRITICAL"
+      },
+      {
+        "criterion_id": "citation-resolution",
+        "criterion_version": "1.0.0",
+        "evaluator_kind": "citation-resolution",
+        "evaluator_version": "1.0.0",
+        "criticality": "CRITICAL"
+      },
+      {
+        "criterion_id": "permission-boundary",
+        "criterion_version": "1.0.0",
+        "evaluator_kind": "permission-boundary",
+        "evaluator_version": "1.0.0",
+        "criticality": "CRITICAL"
+      },
+      {
+        "criterion_id": "provenance-completeness",
+        "criterion_version": "1.0.0",
+        "evaluator_kind": "provenance-completeness",
+        "evaluator_version": "1.0.0",
+        "criticality": "CRITICAL"
+      }
+    ]
+  }
+}

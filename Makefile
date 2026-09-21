@@ -77,9 +77,7 @@ tests:
 
 fixture-smoke:
 	@echo "==> fixture smoke eval"
-	@echo "NOT APPLICABLE / SKIPPED: the behavior harness is not yet implemented."
-	@echo "This is not PASS and is not product-eval evidence."
-	@test -f evals/smoke/README.md
+	@"$(PYTHON)" -m privilab.evals.smoke
 
 secret-scan:
 	@echo "==> secret scan"

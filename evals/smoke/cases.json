@@ -1,0 +1,66 @@
+{
+  "schema_version": "1",
+  "synthetic": true,
+  "cases": [
+    {
+      "case_id": "valid-generated",
+      "case_version": "1.0.0",
+      "scenario": "valid-generated",
+      "expected_gate": "PASS",
+      "expected_criteria": {
+        "authorized-source": "PASS",
+        "citation-resolution": "PASS",
+        "permission-boundary": "PASS",
+        "provenance-completeness": "PASS"
+      }
+    },
+    {
+      "case_id": "nonexistent-chunk",
+      "case_version": "1.0.0",
+      "scenario": "nonexistent-chunk",
+      "expected_gate": "BLOCK",
+      "expected_criteria": {
+        "authorized-source": "PASS",
+        "citation-resolution": "FAIL",
+        "permission-boundary": "PASS",
+        "provenance-completeness": "PASS"
+      }
+    },
+    {
+      "case_id": "source-outside-run-context",
+      "case_version": "1.0.0",
+      "scenario": "source-outside-run-context",
+      "expected_gate": "BLOCK",
+      "expected_criteria": {
+        "authorized-source": "FAIL",
+        "citation-resolution": "FAIL",
+        "permission-boundary": "PASS",
+        "provenance-completeness": "PASS"
+      }
+    },
+    {
+      "case_id": "permission-stopped",
+      "case_version": "1.0.0",
+      "scenario": "permission-stopped",
+      "expected_gate": "BLOCK",
+      "expected_criteria": {
+        "authorized-source": "UNKNOWN",
+        "citation-resolution": "UNKNOWN",
+        "permission-boundary": "PASS",
+        "provenance-completeness": "PASS"
+      }
+    },
+    {
+      "case_id": "evaluator-execution-error",
+      "case_version": "1.0.0",
+      "scenario": "evaluator-execution-error",
+      "expected_gate": "BLOCK",
+      "expected_criteria": {
+        "authorized-source": "ERROR",
+        "citation-resolution": "PASS",
+        "permission-boundary": "PASS",
+        "provenance-completeness": "PASS"
+      }
+    }
+  ]
+}
