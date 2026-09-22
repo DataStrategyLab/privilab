@@ -691,8 +691,7 @@ def test_bootstrap_dependency_set_excludes_out_of_scope_components() -> None:
         assert forbidden not in declared
 
 
-def test_smoke_placeholder_is_not_product_evidence() -> None:
+def test_smoke_harness_is_executed_by_ci() -> None:
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
-    assert "NOT APPLICABLE / SKIPPED" in makefile
-    assert "not PASS" in makefile
-    assert "not product-eval evidence" in makefile
+    assert '"$(PYTHON)" -m privilab.evals.smoke' in makefile
+    assert "NOT APPLICABLE / SKIPPED" not in makefile
