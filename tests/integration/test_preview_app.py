@@ -28,6 +28,7 @@ from privilab.application import (
     RunStatus,
 )
 from privilab.application import run_service as run_module
+from privilab.config import Settings
 from privilab.domain import (
     AccessScope,
     ChunkId,
@@ -76,6 +77,13 @@ FORBIDDEN_CLAIMS = (
     "release approved",
     "release approval",
 )
+
+
+@pytest.fixture(autouse=True)
+def preview_settings(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Settings:
+    settings = Settings(preview_database=tmp_path / "preview.sqlite3")
+    monkeypatch.setattr(web_module, "load_settings", lambda: settings)
+    return settings
 
 
 async def request_page(
@@ -247,6 +255,8 @@ def test_new_run_page_has_only_the_controlled_form(
         "blocked-role",
         "missing-workflow",
         "conditional-role",
+        "critical-citation-failure",
+        "malicious-source",
     ]
     assert re.findall(r'<(?:input|select|textarea)[^>]*name="([^"]+)"', html) == [
         "context_choice"
@@ -291,7 +301,7 @@ def test_preview_context_and_synthetic_registration_match_approved_inputs() -> N
     assert len(registered) == 1
     entry = registered[0]
     assert entry["kind"] == "fixture"
-    assert entry["version_or_commit"] == PREVIEW_VERSION == "1.0.0"
+    assert entry["version_or_commit"] == PREVIEW_VERSION == "1.1.0"
     assert entry["repository_paths"] == ["src/privilab/web/preview.py"]
     assert "Repository-authored" in entry["permitted_use_basis"]
     assert "Synthetic demonstration content only" in entry["restrictions"]
@@ -394,7 +404,7 @@ def test_generated_run_uses_governed_fixture_and_trusted_provenance(
         (c.source_id, c.chunk_id) for c in request.source_chunks
     ]
     for source_id, version, chunk in rows:
-        assert version == "1.0.0"
+        assert version == PREVIEW_VERSION
         assert (
             f"<tr><td>{source_id}</td><td>{version}</td><td>{chunk.chunk_id}</td>"
             f"<td>{chunk.ordinal}</td><td>{chunk.retrieval_position}</td></tr>"
@@ -841,7 +851,7 @@ def test_answer_and_trusted_metadata_are_html_escaped(
     assert len(evidence.records[0].sources) == 3
 
 
-def test_repeated_requests_are_isolated_in_memory_and_independent_of_cwd(
+def test_repeated_requests_persist_evidence_with_transient_fts_independent_of_cwd(
     evidence: RunEvidence,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -879,6 +889,6 @@ def test_repeated_requests_are_isolated_in_memory_and_independent_of_cwd(
     assert first.run_id.value not in stopped_html
     assert stopped.sources == ()
     assert_no_later_sections(stopped_html)
-    assert paths == [":memory:"] * 6
+    assert paths == [":memory:", tmp_path / "preview.sqlite3"] * 3
     assert evidence.closes == ["provenance", "retrieval"] * 3
-    assert list(tmp_path.iterdir()) == []
+    assert {path.name for path in tmp_path.iterdir()} == {"preview.sqlite3"}

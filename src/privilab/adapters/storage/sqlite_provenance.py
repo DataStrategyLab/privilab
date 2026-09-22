@@ -6,11 +6,12 @@ import json
 import re
 import sqlite3
 from contextlib import closing
+from dataclasses import asdict
 from datetime import datetime
 from functools import cache
 from pathlib import Path
 from threading import RLock
-from typing import NamedTuple, cast
+from typing import Any, NamedTuple, cast
 
 from privilab.application.provenance import (
     ChunkProvenance,
@@ -24,7 +25,24 @@ from privilab.application.provenance import (
     RunStatus,
     SourceProvenance,
 )
+from privilab.application.run_review import (
+    EvaluationSnapshot,
+    HumanReview,
+    InvalidEvidence,
+    ReviewConflict,
+    ReviewDecision,
+)
 from privilab.domain import PermissionState
+from privilab.evals import (
+    CriterionCriticality,
+    CriterionResult,
+    CriterionStatus,
+    EvaluationEvidence,
+    EvaluatorKind,
+    GateBlock,
+    GateStatus,
+    ReasonCode,
+)
 
 _PYTHON_STRIP_CHARACTERS_SQL = (
     "char(9, 10, 11, 12, 13, 28, 29, 30, 31, 32, 133, 160, 5760, "
@@ -194,6 +212,21 @@ CREATE TABLE IF NOT EXISTS model_executions (
     model_id TEXT NOT NULL,
     model_version TEXT NOT NULL,
     model_content_hash TEXT
+) WITHOUT ROWID;
+
+CREATE TABLE IF NOT EXISTS run_evaluations (
+    run_id TEXT PRIMARY KEY REFERENCES runs(run_id),
+    snapshot_json TEXT NOT NULL CHECK (
+        typeof(snapshot_json) = 'text' AND json_valid(snapshot_json)
+    )
+) WITHOUT ROWID;
+
+CREATE TABLE IF NOT EXISTS human_reviews (
+    run_id TEXT PRIMARY KEY REFERENCES run_evaluations(run_id),
+    decision TEXT NOT NULL
+        CHECK (decision IN ('APPROVE', 'REJECT', 'REQUEST_REVISION')),
+    reviewer_id TEXT NOT NULL CHECK (reviewer_id = 'synthetic-local-reviewer'),
+    reviewed_at TEXT NOT NULL
 ) WITHOUT ROWID;
 """
 
@@ -1160,6 +1193,145 @@ END;
 )
 
 
+# Match the established append-only protections, including replacement attempts.
+for _evidence_table in ("run_evaluations", "human_reviews"):
+    for _operation in ("UPDATE", "DELETE"):
+        _SCHEMA += f"""
+CREATE TRIGGER IF NOT EXISTS prevent_{_evidence_table}_{_operation.lower()}
+BEFORE {_operation} ON {_evidence_table}
+BEGIN
+    SELECT RAISE(ABORT, '{_evidence_table} is immutable');
+END;
+"""
+    _SCHEMA += f"""
+CREATE TRIGGER IF NOT EXISTS prevent_{_evidence_table}_replace
+BEFORE INSERT ON {_evidence_table}
+WHEN EXISTS (SELECT 1 FROM {_evidence_table} WHERE run_id = NEW.run_id)
+BEGIN
+    SELECT RAISE(ABORT, 'duplicate {_evidence_table}');
+END;
+"""
+_SCHEMA += """
+CREATE TRIGGER IF NOT EXISTS evaluation_requires_finalized_run
+BEFORE INSERT ON run_evaluations
+WHEN NOT EXISTS (SELECT 1 FROM runs WHERE run_id = NEW.run_id AND is_finalized = 1)
+BEGIN
+    SELECT RAISE(ABORT, 'evaluation requires finalized provenance');
+END;
+"""
+
+
+def _evidence_object(value: object, fields: set[str]) -> dict[str, Any]:
+    if not isinstance(value, dict) or set(value) != fields:
+        raise InvalidEvidence("stored evidence fields are invalid")
+    return cast(dict[str, Any], value)
+
+
+def _evidence_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise InvalidEvidence("stored evidence has duplicate fields")
+        result[key] = value
+    return result
+
+
+def _evaluation_json(snapshot: EvaluationSnapshot) -> str:
+    if not isinstance(snapshot, EvaluationSnapshot):
+        raise TypeError("snapshot must be EvaluationSnapshot")
+    payload = asdict(snapshot)
+    payload["run_id"] = snapshot.run_id.value
+    payload["evaluated_at"] = snapshot.evaluated_at.isoformat(timespec="microseconds")
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+
+def _read_evaluation(payload: object, run_id: RunId) -> EvaluationSnapshot:
+    try:
+        if not isinstance(payload, str):
+            raise InvalidEvidence("stored evaluation must be text")
+        raw = _evidence_object(
+            json.loads(payload, object_pairs_hook=_evidence_pairs),
+            {
+                "run_id",
+                "schema_version",
+                "evaluated_at",
+                "task_id",
+                "task_version",
+                "rubric_id",
+                "rubric_version",
+                "criteria",
+                "gate_status",
+                "blocks",
+            },
+        )
+        if raw["run_id"] != run_id.value or not isinstance(raw["evaluated_at"], str):
+            raise InvalidEvidence("stored evaluation linkage is invalid")
+        if not isinstance(raw["criteria"], list) or not isinstance(raw["blocks"], list):
+            raise InvalidEvidence("stored evaluation collections are invalid")
+        criteria = []
+        for value in raw["criteria"]:
+            item = _evidence_object(
+                value,
+                {
+                    "criterion_id",
+                    "criterion_version",
+                    "evaluator_kind",
+                    "evaluator_version",
+                    "criticality",
+                    "status",
+                    "evidence",
+                },
+            )
+            evidence = _evidence_object(
+                item["evidence"], {"reason_codes", "source_count", "citation_count"}
+            )
+            if not isinstance(evidence["reason_codes"], list):
+                raise InvalidEvidence("stored reason codes are invalid")
+            criteria.append(
+                CriterionResult(
+                    item["criterion_id"],
+                    item["criterion_version"],
+                    EvaluatorKind(item["evaluator_kind"]),
+                    item["evaluator_version"],
+                    CriterionCriticality(item["criticality"]),
+                    CriterionStatus(item["status"]),
+                    EvaluationEvidence(
+                        tuple(ReasonCode(code) for code in evidence["reason_codes"]),
+                        evidence["source_count"],
+                        evidence["citation_count"],
+                    ),
+                )
+            )
+        blocks = []
+        for value in raw["blocks"]:
+            block = _evidence_object(
+                value, {"reason_code", "criterion_id", "criterion_version"}
+            )
+            blocks.append(
+                GateBlock(
+                    ReasonCode(block["reason_code"]),
+                    block["criterion_id"],
+                    block["criterion_version"],
+                )
+            )
+        return EvaluationSnapshot(
+            run_id,
+            raw["schema_version"],
+            _read_timestamp(
+                raw["evaluated_at"].encode("utf-8"), "text", "evaluated_at"
+            ),
+            raw["task_id"],
+            raw["task_version"],
+            raw["rubric_id"],
+            raw["rubric_version"],
+            tuple(criteria),
+            GateStatus(raw["gate_status"]),
+            tuple(blocks),
+        )
+    except (ValueError, TypeError, KeyError, UnicodeError, RecursionError):
+        raise InvalidEvidence("stored evaluation is invalid") from None
+
+
 _INCOMPATIBLE_SCHEMA_MESSAGE = (
     "local provenance schema is incompatible; a fresh database is required"
 )
@@ -1385,8 +1557,11 @@ class SQLiteProvenanceStore:
                 self._connection.execute("PRAGMA foreign_keys = ON")
                 self._connection.execute("PRAGMA recursive_triggers = ON")
                 _validate_existing_schema(self._connection, allow_empty=True)
-                self._connection.executescript(_SCHEMA)
+                # executescript commits any prior transaction, so BEGIN belongs
+                # inside the script. Other connections see empty or complete schema.
+                self._connection.executescript("BEGIN IMMEDIATE;\n" + _SCHEMA)
                 _validate_existing_schema(self._connection)
+                self._connection.commit()
         except Exception:
             self._connection.close()
             raise
@@ -1703,6 +1878,88 @@ class SQLiteProvenanceStore:
                 else FailureStage(run["failure_stage"])
             ),
         )
+
+    def append_evaluation(self, snapshot: EvaluationSnapshot) -> None:
+        payload = _evaluation_json(snapshot)
+        # Validate the serialized representation as well as the typed caller value.
+        _read_evaluation(payload, snapshot.run_id)
+        with self._lock, self._connection:
+            self._connection.execute(
+                "INSERT INTO run_evaluations (run_id, snapshot_json) VALUES (?, ?)",
+                (snapshot.run_id.value, payload),
+            )
+
+    def get_evaluation(self, run_id: RunId) -> EvaluationSnapshot | None:
+        if not isinstance(run_id, RunId):
+            raise TypeError("run_id must be RunId")
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT CAST(snapshot_json AS BLOB), typeof(snapshot_json) "
+                "FROM run_evaluations WHERE run_id = ?",
+                (run_id.value,),
+            ).fetchone()
+        if row is None:
+            return None
+        if row[1] != "text" or not isinstance(row[0], bytes):
+            raise InvalidEvidence("stored evaluation must be text")
+        try:
+            payload = row[0].decode("utf-8", errors="strict")
+        except UnicodeError:
+            raise InvalidEvidence("stored evaluation encoding is invalid") from None
+        return _read_evaluation(payload, run_id)
+
+    def append_review(self, review: HumanReview) -> None:
+        if not isinstance(review, HumanReview):
+            raise TypeError("review must be HumanReview")
+        try:
+            with self._lock, self._connection:
+                self._connection.execute(
+                    "INSERT INTO human_reviews "
+                    "(run_id, decision, reviewer_id, reviewed_at) VALUES (?, ?, ?, ?)",
+                    (
+                        review.run_id.value,
+                        review.decision.value,
+                        review.reviewer_id,
+                        review.reviewed_at.isoformat(timespec="microseconds"),
+                    ),
+                )
+        except sqlite3.IntegrityError as error:
+            if (
+                str(error) == "duplicate human_reviews"
+                or error.sqlite_errorcode == sqlite3.SQLITE_CONSTRAINT_PRIMARYKEY
+            ):
+                raise ReviewConflict("human decision is already recorded") from None
+            raise
+
+    def get_review(self, run_id: RunId) -> HumanReview | None:
+        if not isinstance(run_id, RunId):
+            raise TypeError("run_id must be RunId")
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT decision, reviewer_id, "
+                "CAST(reviewed_at AS BLOB), typeof(reviewed_at) "
+                "FROM human_reviews WHERE run_id = ?",
+                (run_id.value,),
+            ).fetchone()
+        if row is None:
+            return None
+        try:
+            return HumanReview(
+                run_id,
+                ReviewDecision(row[0]),
+                _read_timestamp(row[2], row[3], "reviewed_at"),
+                row[1],
+            )
+        except (TypeError, ValueError):
+            raise InvalidEvidence("stored human review is invalid") from None
+
+    def recent_run_ids(self) -> tuple[RunId, ...]:
+        with self._lock:
+            rows = self._connection.execute(
+                "SELECT run_id FROM runs WHERE is_finalized = 1 "
+                "ORDER BY completed_at DESC, run_id DESC LIMIT 25"
+            ).fetchall()
+        return tuple(RunId(row[0]) for row in rows)
 
 
 __all__ = ["SQLiteProvenanceStore"]

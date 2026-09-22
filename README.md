@@ -272,12 +272,78 @@ make preview
 
 Then open <http://127.0.0.1:8000>.
 
+The preview completes a controlled fixture run, records its terminal provenance,
+runs the existing DSL-113 deterministic evaluation, and stores one immutable
+metadata snapshot. Human review remains a separate, explicit action.
+
+Walk through these scenarios:
+
+1. **Standard synthetic researcher**: inspect the transient fixture answer,
+   evaluation criteria and PASS gate. The human decision starts PENDING; choose
+   APPROVE, REJECT or REQUEST_REVISION.
+2. **Blocked role**, **missing workflow**, or **conditional role**: BLOCK, UNKNOWN,
+   or unresolved CONDITIONAL stops progression before retrieval or model calls.
+   These runs are NOT REVIEWABLE.
+3. **Critical citation failure**: inspect the recorded BLOCK. Approval is disabled;
+   REJECT and REQUEST_REVISION remain available.
+4. **Malicious retrieved source**: the governed synthetic injection text reaches
+   authorized model context. Its instructions cannot broaden source access,
+   change the rubric/gate, invoke tools, or create a human decision. The existing
+   citation-failure model fixture produces BLOCK. HTML shows source/chunk metadata
+   and an untrusted-fixture label, never the retrieved text. This demonstrates
+   deterministic controls, not general live-model injection resistance.
+5. Open **Recent run history**, stop and restart `make preview`, and reopen a run.
+   History lists the newest 25 finalized runs by completion time and run ID,
+   descending; older run URLs still work. Reopening and reviewing never rerun
+   generation, retrieval or evaluation.
+
+`synthetic-local-reviewer` is a fixed **local demo identity**, not authenticated
+attribution. Each run permits one immutable decision. REQUEST_REVISION creates no
+revision workflow or lineage; another execution gets an independent run ID. No
+decision constitutes release. Simultaneous valid submissions produce one stored
+decision and one conflict response.
+
+Non-secret preview settings (see `.env.example`):
+
+| Setting | Default / behavior |
+| --- | --- |
+| `PRIVILAB_PREVIEW_DB` | Source-checkout `.local/preview/provenance.sqlite3`; optional absolute database path. |
+| `PRIVILAB_PREVIEW_CORPUS_ROOT` | Source-checkout `fixtures/corpus/`, anchored to the resolved location of `config.py`; optional non-empty absolute corpus path. |
+
+Neither path depends on process CWD. Browser requests cannot set either path.
+Tests can inject absolute paths through `Settings`. Configuration loading does
+not create a database or execute fixtures. The malicious scenario reads its
+injection and trade-notice records from the configured canonical corpus using
+manifest, path-confinement, payload and hash checks. Missing/invalid assets fail
+safely; there is no fallback discovery or second packaged corpus.
+
+SQLite retains terminal provenance, evaluation metadata and the explicit human
+decision. It retains no answer text, task/prompt/query text, model requests,
+retrieved text, reviewer notes or raw exceptions. Generated answers appear only
+on the original execution response; reopening is metadata-only. The FTS index
+remains transient. Evaluation execution or persistence failure leaves the
+terminal run visible but NOT REVIEWABLE, without manufactured evidence.
+
+This version requires a fresh evidence schema. Existing incompatible databases
+are rejected unchanged: there is no migration, repair or automatic deletion.
+Choose a new absolute `PRIVILAB_PREVIEW_DB` path when testing an older checkout's
+database. Strict metadata validation detects invalid records; it does not
+authenticate a deliberately forged local database. Generated database files stay
+untracked.
+
 An optional container workflow is also available:
 
 ```sh
 make container-build
 make container-preview
 ```
+
+The image copies only the existing `fixtures/corpus` subtree and explicitly sets
+`PRIVILAB_PREVIEW_CORPUS_ROOT=/app/fixtures/corpus` and
+`PRIVILAB_PREVIEW_DB=/app/.local/preview/provenance.sqlite3`. The existing container
+command removes its container on exit, so its local database is discarded then;
+use the source-checkout workflow above for the restart/history walkthrough.
+Docker validation is required before DSL-114 completion.
 
 ## Permission-aware retrieval
 

@@ -58,7 +58,7 @@
 
 - id: "fixture:synthetic-corpus"
   kind: "fixture"
-  name: "Repository-authored synthetic corpus record"
+  name: "Repository-authored synthetic corpus records"
   source: "Repository-authored fixture"
   version_or_commit: "1.0.0"
   reviewed_date: "2026-09-04"
@@ -72,6 +72,7 @@
   repository_paths:
     - "fixtures/corpus/manifest.json"
     - "fixtures/corpus/synthetic_trade_notice_v1.json"
+    - "fixtures/corpus/synthetic_injection_v1.json"
   reviewer: "Codex"
   open_questions: []
 
@@ -79,11 +80,11 @@
   kind: "fixture"
   name: "Repository-authored synthetic preview composition"
   source: "Repository-authored fixture"
-  version_or_commit: "1.0.0"
+  version_or_commit: "1.1.0"
   reviewed_date: "2026-09-18"
   license: "Synthetic content (no external license)"
   license_source: "Repository-authored synthetic content; no external source."
-  intended_use: "Fixed task, context variants, policy, and source records for the local current-run fixture preview."
+  intended_use: "Fixed task, context variants, policy, and source records for the local walking-skeleton fixture preview."
   permitted_use_basis: "Repository-authored synthetic content."
   attribution_required: false
   attribution: "None; authored for this repository."

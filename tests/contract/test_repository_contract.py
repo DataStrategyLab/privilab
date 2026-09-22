@@ -552,6 +552,9 @@ def test_docker_context_is_default_deny_and_minimal() -> None:
         "!uv.lock",
         "!src/",
         "!src/**",
+        "!fixtures/",
+        "!fixtures/corpus/",
+        "!fixtures/corpus/**",
     }
     assert {
         "**/.env*",
@@ -615,7 +618,16 @@ def test_docker_context_is_default_deny_and_minimal() -> None:
         if line.startswith("COPY ") and not line.startswith("COPY --from=")
         for source in line.split()[1:-1]
     }
-    assert local_copy_sources == {"pyproject.toml", "uv.lock", "README.md", "src"}
+    assert local_copy_sources == {
+        "pyproject.toml",
+        "uv.lock",
+        "README.md",
+        "src",
+        "fixtures/corpus",
+    }
+    assert "COPY fixtures/corpus ./fixtures/corpus" in dockerfile
+    assert "PRIVILAB_PREVIEW_CORPUS_ROOT=/app/fixtures/corpus" in dockerfile
+    assert "PRIVILAB_PREVIEW_DB=/app/.local/preview/provenance.sqlite3" in dockerfile
 
 
 def test_linear_mcp_exception_and_adr_filename_are_exact() -> None:

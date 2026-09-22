@@ -32,6 +32,8 @@
       <p>Simulated context controls and a fixed synthetic fixture answer.</p>
       <p>Environment: <code>{{ environment }}</code></p>
 
+      <p><a href="/runs">Recent run history</a></p>
+      {% if not reopened %}
       <section aria-labelledby="new-run-heading">
         <h2 id="new-run-heading">New fixture run</h2>
         <dl>
@@ -49,6 +51,8 @@
           <button type="submit">Run synthetic fixture</button>
         </form>
       </section>
+
+      {% endif %}
 
       {% if run_status %}
       <section id="permission-result" aria-labelledby="permission-heading">
@@ -71,7 +75,7 @@
         <p>Model: {{ 'called' if model_called else 'not executed' }}.</p>
       </section>
 
-      {% if run_status == 'GENERATED' %}
+      {% if source_rows %}
       <section id="authorized-sources" aria-labelledby="sources-heading">
         <h2 id="sources-heading">Authorized source/chunk metadata</h2>
         <div class="table-scroll">
@@ -88,6 +92,8 @@
           </table>
         </div>
       </section>
+      {% endif %}
+      {% if answer %}
       <section id="research-result" aria-labelledby="result-heading">
         <h2 id="result-heading">Fixture research draft</h2>
         <p><strong>Presented for reviewer consideration.</strong></p>
@@ -95,6 +101,33 @@
       </section>
       {% endif %}
 
+      {% if reopened %}<p>Reopened metadata only. Generated answer text is not retained.</p>{% endif %}
+      {% if injection_fixture %}<p>Retrieved metadata includes an untrusted synthetic injection fixture. Source text is not displayed.</p>{% endif %}
+      <section id="evaluation">
+        <h2>Deterministic evaluation</h2>
+        {% if gate_status %}
+        <p>Critical gate: <strong>{{ gate_status }}</strong></p>
+        <p>The automated gate is separate from the human decision.</p>
+        <dl>{% for label, value in evaluation_detail %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Criterion / version</th><th>Evaluator / version</th><th>Criticality</th><th>Status</th><th>Evidence</th></tr></thead>
+          <tbody>{% for id, version, evaluator, evaluator_version, criticality, status, reasons, sources, citations in criteria %}
+          <tr><td>{{ id }} / {{ version }}</td><td>{{ evaluator }} / {{ evaluator_version }}</td><td>{{ criticality }}</td><td>{{ status }}</td><td>{{ reasons }}; sources: {{ sources }}; citations: {{ citations }}</td></tr>
+          {% endfor %}</tbody>
+        </table></div>
+        {% if gate_blocks %}<ul>{% for reason, id, version in gate_blocks %}<li>{{ reason }}{% if id %}: {{ id }} / {{ version }}{% endif %}</li>{% endfor %}</ul>{% endif %}
+        {% else %}<p class="error">Evaluation unavailable or incomplete.</p>{% endif %}
+      </section>
+      <section id="human-review">
+        <h2>Human decision</h2>
+        <p>State: <strong>{{ review_state }}</strong></p>
+        <p>Local demo reviewer identity: <code>synthetic-local-reviewer</code>. This is not authenticated attribution or release authority.</p>
+        <dl>{% for label, value in review_detail %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
+        <form method="post" action="/runs/{{ run_id }}/review">
+          {% for decision, enabled in decisions %}<button name="decision" value="{{ decision }}" type="submit"{% if not enabled %} disabled{% endif %}>{{ decision }}</button>{% endfor %}
+        </form>
+        <p>A decision is final for this run. Another execution creates an independent run.</p>
+      </section>
       <details id="run-detail">
         <summary>Basic current-run detail</summary>
         <dl>{% for label, value in run_detail %}<dt>{{ label }}</dt><dd>{{ value if value is not none else 'Not available' }}</dd>{% endfor %}</dl>
