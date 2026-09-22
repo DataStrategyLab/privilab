@@ -10,15 +10,32 @@ import pytest
 from privilab.adapters.storage import SQLiteProvenanceStore
 from privilab.adapters.storage.sqlite_provenance import (
     _SCHEMA,
+    _evaluation_json,
     _expected_schema,
     _options_json,
+    _read_evaluation,
     _read_flag,
     _read_options,
     _read_timestamp,
     _unique_indexes,
     _validate_existing_schema,
 )
-from privilab.application import RunConfiguration
+from privilab.application import RunConfiguration, RunProvenance
+from privilab.application.run_review import (
+    EvaluationSnapshot,
+    HumanReview,
+    InvalidEvidence,
+    ReviewConflict,
+    ReviewDecision,
+    RunReviewService,
+)
+from privilab.web.preview import (
+    CONTEXT_CHOICES,
+    QUERY,
+    STANDARD_CONTEXT,
+    TASK_TEXT,
+    open_preview_run,
+)
 
 
 @pytest.mark.parametrize(
@@ -197,17 +214,19 @@ def test_review03_expected_catalog_is_immutable_cached_and_closes_reference(
             for row in catalog.objects
         )
         assert {row[0] for row in catalog.objects} == {"table", "trigger"}
-        assert sum(row[0] == "table" for row in catalog.objects) == 6
+        assert sum(row[0] == "table" for row in catalog.objects) == 8
         assert isinstance(catalog.unique_indexes, tuple)
-        assert len(catalog.unique_indexes) == 7
+        assert len(catalog.unique_indexes) == 9
         assert tuple(
             (table, unique, origin, partial, tuple(c[2] for c in columns if c[5]))
             for table, unique, origin, partial, columns in catalog.unique_indexes
         ) == (
+            ("human_reviews", 1, "pk", 0, ("run_id",)),
             ("model_executions", 1, "pk", 0, ("run_id",)),
             ("run_chunks", 1, "pk", 0, ("run_id", "chunk_id")),
             ("run_chunks", 1, "u", 0, ("run_id", "retrieval_position")),
             ("run_configurations", 1, "pk", 0, ("run_id",)),
+            ("run_evaluations", 1, "pk", 0, ("run_id",)),
             ("run_permission_conditions", 1, "pk", 0, ("run_id", "condition_id")),
             ("run_sources", 1, "pk", 0, ("run_id", "source_id")),
             ("runs", 1, "pk", 0, ("run_id",)),
@@ -423,3 +442,237 @@ def test_review04_unreadable_or_inconsistent_metadata_fails_closed(
             == schema
         )
     assert database_path.read_bytes() == before
+
+
+@pytest.fixture
+def evidence_snapshot() -> tuple[RunProvenance, EvaluationSnapshot]:
+    with open_preview_run() as (runner, store):
+        _, view = RunReviewService(store, store).execute(
+            runner, context=STANDARD_CONTEXT, task_text=TASK_TEXT, query=QUERY
+        )
+        assert view.evaluation is not None
+        return view.run, view.evaluation
+
+
+def test_evidence_round_trip_duplicate_and_foreign_key_integrity(
+    tmp_path: Path, evidence_snapshot: tuple[RunProvenance, EvaluationSnapshot]
+) -> None:
+    run, snapshot = evidence_snapshot
+    path = tmp_path / "evidence.sqlite3"
+    review = HumanReview(run.run_id, ReviewDecision.APPROVE, datetime.now(UTC))
+    with closing(SQLiteProvenanceStore(path)) as store:
+        assert store._connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
+        with pytest.raises(sqlite3.IntegrityError):
+            store.append_evaluation(snapshot)
+        with pytest.raises(sqlite3.IntegrityError):
+            store.append_review(review)
+        store.append(run)
+        with pytest.raises(sqlite3.IntegrityError):
+            store.append_review(review)
+        store.append_evaluation(snapshot)
+        with pytest.raises(sqlite3.IntegrityError):
+            store.append_evaluation(snapshot)
+        store.append_review(review)
+        with pytest.raises(ReviewConflict):
+            store.append_review(review)
+        assert store.get(run.run_id) == run
+        assert store.get_evaluation(run.run_id) == snapshot
+    with closing(SQLiteProvenanceStore(path)) as store:
+        assert store._connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
+        assert store.get_evaluation(run.run_id) == snapshot
+        assert store.get_review(run.run_id) == review
+
+
+@pytest.mark.parametrize("table", ["run_evaluations", "human_reviews"])
+@pytest.mark.parametrize(
+    "operation", ["UPDATE", "DELETE", "REPLACE", "INSERT OR REPLACE"]
+)
+@pytest.mark.parametrize("recursive", [0, 1])
+def test_evidence_records_prevent_mutation_and_replacement(
+    evidence_snapshot: tuple[RunProvenance, EvaluationSnapshot],
+    table: str,
+    operation: str,
+    recursive: int,
+) -> None:
+    run, snapshot = evidence_snapshot
+    with closing(SQLiteProvenanceStore(":memory:")) as store:
+        store.append(run)
+        store.append_evaluation(snapshot)
+        store.append_review(
+            HumanReview(run.run_id, ReviewDecision.REJECT, datetime.now(UTC))
+        )
+        connection = store._connection
+        connection.execute(f"PRAGMA recursive_triggers={recursive}")
+        before = tuple(connection.iterdump())
+        statement = {
+            "UPDATE": f"UPDATE {table} SET run_id=run_id",
+            "DELETE": f"DELETE FROM {table}",
+            "REPLACE": f"REPLACE INTO {table} SELECT * FROM {table}",
+            "INSERT OR REPLACE": (
+                f"INSERT OR REPLACE INTO {table} SELECT * FROM {table}"
+            ),
+        }[operation]
+        with pytest.raises(sqlite3.IntegrityError):
+            connection.execute(statement)
+        assert tuple(connection.iterdump()) == before
+
+
+def test_storage_has_no_generated_or_pass_eligibility_policy() -> None:
+    for scenario in ("critical-citation-failure", "blocked-role"):
+        context = next(
+            context for key, _, context in CONTEXT_CHOICES if key == scenario
+        )
+        with open_preview_run(context_choice=scenario) as (runner, store):
+            _, view = RunReviewService(store, store).execute(
+                runner, context=context, task_text=TASK_TEXT, query=QUERY
+            )
+            assert view.evaluation is not None
+            # Deliberate direct adapter call: integrity permits it; the application
+            # must reject the same request and hide contradictory stored decisions.
+            review = HumanReview(
+                view.run.run_id, ReviewDecision.APPROVE, datetime.now(UTC)
+            )
+            store.append_review(review)
+            assert store.get_review(view.run.run_id) == review
+            assert (
+                RunReviewService(store, store).get(view.run.run_id).review_state
+                == "NOT REVIEWABLE"
+            )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "extra",
+        "missing",
+        "schema",
+        "cross-run",
+        "timestamp",
+        "naive-time",
+        "kind",
+        "version",
+        "status",
+        "criticality",
+        "count-type",
+        "count-bound",
+        "codes",
+        "reason",
+        "pass-block",
+        "block-pass",
+        "block-reference",
+        "duplicate-criteria",
+    ],
+)
+def test_strict_snapshot_deserialization(
+    evidence_snapshot: tuple[RunProvenance, EvaluationSnapshot], mutation: str
+) -> None:
+    run, snapshot = evidence_snapshot
+    payload = json.loads(_evaluation_json(snapshot))
+    criterion = payload["criteria"][0]
+    if mutation == "extra":
+        payload["answer_text"] = "forbidden"
+    elif mutation == "missing":
+        del payload["task_id"]
+    elif mutation == "schema":
+        payload["schema_version"] = "2"
+    elif mutation == "cross-run":
+        payload["run_id"] = "other-run"
+    elif mutation == "timestamp":
+        payload["evaluated_at"] = "not a timestamp"
+    elif mutation == "naive-time":
+        payload["evaluated_at"] = "2026-09-21T12:00:00"
+    elif mutation == "kind":
+        criterion["evaluator_kind"] = "live-model"
+    elif mutation == "version":
+        criterion["evaluator_version"] = "99"
+    elif mutation == "status":
+        criterion["status"] = "APPROVE"
+    elif mutation == "criticality":
+        criterion["criticality"] = "NON_CRITICAL"
+    elif mutation == "count-type":
+        criterion["evidence"]["source_count"] = True
+    elif mutation == "count-bound":
+        criterion["evidence"]["citation_count"] = 2**64
+    elif mutation == "codes":
+        criterion["evidence"]["reason_codes"] *= 2
+    elif mutation == "reason":
+        criterion["evidence"]["reason_codes"] = ["SOURCE_NOT_IN_RUN_CONTEXT"]
+    elif mutation == "pass-block":
+        payload["blocks"] = [
+            {
+                "reason_code": "OUTPUT_GATE_INELIGIBLE",
+                "criterion_id": None,
+                "criterion_version": None,
+            }
+        ]
+    elif mutation == "block-pass":
+        payload["gate_status"] = "BLOCK"
+    elif mutation == "block-reference":
+        payload["gate_status"] = "BLOCK"
+        payload["blocks"] = [
+            {
+                "reason_code": "CRITICAL_CRITERION_NOT_PASS",
+                "criterion_id": "missing",
+                "criterion_version": "1.0.0",
+            }
+        ]
+    else:
+        payload["criteria"][1] = criterion
+    with pytest.raises(InvalidEvidence):
+        _read_evaluation(json.dumps(payload), run.run_id)
+
+
+def test_duplicate_json_fields_and_nontext_storage_rejected(
+    evidence_snapshot: tuple[RunProvenance, EvaluationSnapshot],
+) -> None:
+    run, snapshot = evidence_snapshot
+    payload = _evaluation_json(snapshot)
+    for invalid in (
+        payload.replace(
+            '"schema_version":"1"', '"schema_version":"1","schema_version":"1"'
+        ),
+        payload.encode(),
+        "[]",
+        "null",
+        "{}",
+    ):
+        with pytest.raises(InvalidEvidence):
+            _read_evaluation(invalid, run.run_id)
+
+
+def test_legacy_schema_rejected_without_repair(tmp_path: Path) -> None:
+    path = tmp_path / "legacy.sqlite3"
+    with closing(SQLiteProvenanceStore(path)):
+        pass
+    with closing(sqlite3.connect(path)) as connection:
+        connection.execute("DROP TABLE human_reviews")
+        connection.execute("DROP TABLE run_evaluations")
+        connection.commit()
+    before = path.read_bytes()
+    with pytest.raises(RuntimeError, match="incompatible"):
+        SQLiteProvenanceStore(path)
+    assert path.read_bytes() == before
+
+
+def test_failed_schema_creation_rolls_back_all_ddl(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "atomic-schema.sqlite3"
+    _expected_schema()
+    connect = sqlite3.connect
+
+    class InterruptedSchema(sqlite3.Connection):
+        def executescript(self, sql_script: str, /) -> sqlite3.Cursor:
+            return super().executescript(sql_script + "\nINVALID DDL;")
+
+    def failing_connection(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        return connect(*args, **kwargs, factory=InterruptedSchema)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(sqlite3, "connect", failing_connection)
+        with pytest.raises(sqlite3.OperationalError):
+            SQLiteProvenanceStore(path)
+    with closing(connect(path)) as connection:
+        assert connection.execute("SELECT name FROM sqlite_schema").fetchall() == []
+    with closing(SQLiteProvenanceStore(path)) as store:
+        assert store.recent_run_ids() == ()

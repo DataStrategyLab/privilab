@@ -1,15 +1,25 @@
 """Local FastAPI/Jinja presentation of the trusted fixture run sequence."""
 
 import re
+from contextlib import closing
 from pathlib import Path
 from urllib.parse import parse_qs
+from uuid import UUID
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from starlette.concurrency import run_in_threadpool
 
-from privilab.application import RunOutcome, RunProvenance, RunStatus
+from privilab.adapters.storage import SQLiteProvenanceStore
+from privilab.application import RunId, RunOutcome, RunProvenance, RunStatus
+from privilab.application.run_review import (
+    ReviewConflict,
+    ReviewDecision,
+    RunNotFound,
+    RunReviewService,
+    RunReviewView,
+)
 from privilab.config import Settings, load_settings
 from privilab.domain import SyntheticRequestContext
 from privilab.web.preview import CONTEXT_CHOICES, QUERY, TASK_TEXT, open_preview_run
@@ -32,22 +42,22 @@ def _unavailable_response() -> HTMLResponse:
     )
 
 
-def _run_values(outcome: RunOutcome, record: RunProvenance) -> dict[str, object]:
+def _run_values(outcome: RunOutcome | None, record: RunProvenance) -> dict[str, object]:
     """Select metadata for presentation without calculating progression."""
     configuration = record.configuration
     permission = record.permission
-    generated = outcome.status is RunStatus.GENERATED
+    generated = record.status is RunStatus.GENERATED
     return {
-        "run_status": outcome.status.value,
-        "permission_state": (
-            outcome.permission_result.state.value if outcome.permission_result else None
-        ),
+        "run_status": record.status.value,
+        "permission_state": (permission.state.value if permission else None),
         "stop_reason": record.stop_reason.value if record.stop_reason else None,
         "conditions": permission.unresolved_condition_ids if permission else (),
-        "failure_stage": outcome.failure_stage.value if outcome.failure_stage else None,
+        "failure_stage": record.failure_stage.value if record.failure_stage else None,
         "retrieval_called": record.retrieval_called,
         "model_called": record.model_called,
-        "answer": outcome.result.answer_text if generated and outcome.result else None,
+        "answer": outcome.result.answer_text
+        if generated and outcome and outcome.result
+        else None,
         "source_rows": (
             tuple(
                 (
@@ -85,7 +95,9 @@ def _run_values(outcome: RunOutcome, record: RunProvenance) -> dict[str, object]
     }
 
 
-async def _context_choice(request: Request) -> str:
+async def _form_choice(request: Request, field: str, choices: set[str]) -> str:
+    if request.query_params:
+        raise ValueError("unexpected query fields")
     media_type = (
         request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
     )
@@ -107,12 +119,75 @@ async def _context_choice(request: Request) -> str:
         errors="strict",
         max_num_fields=1,
     )
-    if set(fields) != {"context_choice"} or len(fields["context_choice"]) != 1:
+    if set(fields) != {field} or len(fields[field]) != 1:
         raise ValueError("invalid form fields")
-    choice = fields["context_choice"][0]
-    if choice not in {key for key, _label, _context in CONTEXT_CHOICES}:
+    choice = fields[field][0]
+    if choice not in choices:
         raise ValueError("unknown synthetic context")
     return choice
+
+
+def _web_run_id(value: str) -> RunId:
+    parsed = UUID(value)
+    if str(parsed) != value or parsed.version != 4:
+        raise ValueError("invalid preview run ID")
+    return RunId(value)
+
+
+def _review_values(view: RunReviewView) -> dict[str, object]:
+    evaluation = view.evaluation
+    review = view.review
+    return {
+        "run_id": view.run.run_id.value,
+        "review_state": view.review_state,
+        "decisions": tuple(
+            (decision.value, decision in view.allowed_decisions)
+            for decision in ReviewDecision
+        ),
+        "review_detail": ()
+        if review is None
+        else (
+            ("Decision", review.decision.value),
+            ("Local demo reviewer identity", review.reviewer_id),
+            ("Reviewed (UTC)", review.reviewed_at.isoformat()),
+        ),
+        "gate_status": evaluation.gate_status.value if evaluation else None,
+        "evaluation_detail": ()
+        if evaluation is None
+        else (
+            ("Evaluation record version", evaluation.schema_version),
+            ("Evaluated (UTC)", evaluation.evaluated_at.isoformat()),
+            ("Task", evaluation.task_id),
+            ("Task version", evaluation.task_version),
+            ("Rubric", evaluation.rubric_id),
+            ("Rubric version", evaluation.rubric_version),
+        ),
+        "criteria": ()
+        if evaluation is None
+        else tuple(
+            (
+                item.criterion_id,
+                item.criterion_version,
+                item.evaluator_kind.value,
+                item.evaluator_version,
+                item.criticality.value,
+                item.status.value,
+                ", ".join(code.value for code in item.evidence.reason_codes),
+                item.evidence.source_count,
+                item.evidence.citation_count,
+            )
+            for item in evaluation.criteria
+        ),
+        "gate_blocks": ()
+        if evaluation is None
+        else tuple(
+            (block.reason_code.value, block.criterion_id, block.criterion_version)
+            for block in evaluation.blocks
+        ),
+        "injection_fixture": any(
+            source.source_id == "synthetic-injection-001" for source in view.run.sources
+        ),
+    }
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -130,35 +205,46 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         *,
         values: dict[str, object] | None = None,
         status_code: int = 200,
+        template: str = "index.html",
     ) -> HTMLResponse:
-        return templates.TemplateResponse(
-            request=request,
-            name="index.html",
-            context={
-                "title": active_settings.title,
-                "banner": active_settings.reference_banner,
-                "environment": active_settings.environment,
-                "choices": tuple((key, label) for key, label, _ in CONTEXT_CHOICES),
-                "task_text": TASK_TEXT,
-                "query": QUERY,
-                "selected_choice": "standard",
-            }
-            | (values or {}),
-            status_code=status_code,
-        )
+        try:
+            return templates.TemplateResponse(
+                request=request,
+                name=template,
+                context={
+                    "title": active_settings.title,
+                    "banner": active_settings.reference_banner,
+                    "environment": active_settings.environment,
+                    "choices": tuple((key, label) for key, label, _ in CONTEXT_CHOICES),
+                    "task_text": TASK_TEXT,
+                    "query": QUERY,
+                    "selected_choice": "standard",
+                }
+                | (values or {}),
+                status_code=status_code,
+            )
+        except Exception:
+            return _unavailable_response()
 
     def execute(
         request: Request, choice: str, context: SyntheticRequestContext
     ) -> HTMLResponse:
-        with open_preview_run() as (service, store):
-            outcome = service.run(context=context, task_text=TASK_TEXT, query=QUERY)
-            record = store.get(outcome.run_id)
-            if record is None:
-                return _unavailable_response()
+        with open_preview_run(
+            active_settings.preview_database,
+            context_choice=choice,
+            corpus_root=active_settings.preview_corpus_root,
+        ) as (service, store):
+            outcome, view = RunReviewService(store, store).execute(
+                service, context=context, task_text=TASK_TEXT, query=QUERY
+            )
             return render(
                 request,
-                values=_run_values(outcome, record) | {"selected_choice": choice},
-                status_code=500 if outcome.status is RunStatus.FAILED else 200,
+                values=_run_values(outcome, view.run)
+                | _review_values(view)
+                | {"selected_choice": choice},
+                status_code=500
+                if outcome.status is RunStatus.FAILED or view.evaluation is None
+                else 200,
             )
 
     @application.get("/", response_class=HTMLResponse)
@@ -172,7 +258,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def submit(request: Request) -> HTMLResponse:
         try:
             try:
-                choice = await _context_choice(request)
+                choice = await _form_choice(
+                    request, "context_choice", {key for key, _, _ in CONTEXT_CHOICES}
+                )
             except ValueError:
                 return render(
                     request,
@@ -187,6 +275,111 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 value for key, _label, value in CONTEXT_CHOICES if key == choice
             )
             return await run_in_threadpool(execute, request, choice, context)
+        except Exception:
+            return _unavailable_response()
+
+    @application.get("/runs", response_class=HTMLResponse)
+    def history(request: Request) -> HTMLResponse:
+        try:
+            if request.query_params:
+                return render(
+                    request,
+                    values={"form_error": "History takes no query fields."},
+                    status_code=400,
+                )
+            rows: tuple[tuple[object, ...], ...] = ()
+            if active_settings.preview_database.exists():
+                with closing(
+                    SQLiteProvenanceStore(active_settings.preview_database)
+                ) as store:
+                    views = RunReviewService(store, store).recent()
+                    rows = tuple(
+                        (
+                            view.run.run_id.value,
+                            view.run.completed_at.isoformat(),
+                            view.run.status.value,
+                            view.run.permission.state.value
+                            if view.run.permission
+                            else "Unavailable",
+                            view.evaluation.gate_status.value
+                            if view.evaluation
+                            else "Unavailable",
+                            view.review_state,
+                        )
+                        for view in views
+                    )
+            return render(
+                request, template="history.html", values={"history_rows": rows}
+            )
+        except Exception:
+            return _unavailable_response()
+
+    @application.get("/runs/{run_id}", response_class=HTMLResponse)
+    def detail(request: Request, run_id: str) -> HTMLResponse:
+        try:
+            try:
+                identity = _web_run_id(run_id)
+            except ValueError:
+                return render(
+                    request,
+                    values={"form_error": "Invalid run identifier."},
+                    status_code=400,
+                )
+            if not active_settings.preview_database.exists():
+                raise RunNotFound
+            with closing(
+                SQLiteProvenanceStore(active_settings.preview_database)
+            ) as store:
+                view = RunReviewService(store, store).get(identity)
+            return render(
+                request,
+                values=_run_values(None, view.run)
+                | _review_values(view)
+                | {"reopened": True},
+            )
+        except RunNotFound:
+            return render(
+                request, values={"form_error": "Run not found."}, status_code=404
+            )
+        except Exception:
+            return _unavailable_response()
+
+    def record_decision(run_id: RunId, decision: ReviewDecision) -> None:
+        if not active_settings.preview_database.exists():
+            raise RunNotFound
+        with closing(SQLiteProvenanceStore(active_settings.preview_database)) as store:
+            RunReviewService(store, store).decide(run_id, decision)
+
+    @application.post("/runs/{run_id}/review", response_class=HTMLResponse)
+    async def review(request: Request, run_id: str) -> Response:
+        try:
+            try:
+                identity = _web_run_id(run_id)
+                decision = ReviewDecision(
+                    await _form_choice(
+                        request, "decision", {item.value for item in ReviewDecision}
+                    )
+                )
+            except ValueError:
+                return render(
+                    request,
+                    values={"form_error": "Invalid review request."},
+                    status_code=400,
+                )
+            await run_in_threadpool(record_decision, identity, decision)
+            return RedirectResponse(url=f"/runs/{identity.value}", status_code=303)
+        except RunNotFound:
+            return render(
+                request, values={"form_error": "Run not found."}, status_code=404
+            )
+        except ReviewConflict:
+            return render(
+                request,
+                values={
+                    "form_error": "Human decision is unavailable or already recorded."
+                },
+                status_code=409,
+            )
         except Exception:
             return _unavailable_response()
 

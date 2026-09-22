@@ -10,6 +10,16 @@
       "origin": "Repository-authored synthetic fixture; no external source.",
       "permitted_use_basis": "Repository-authored synthetic content.",
       "license_ref": "fixture:synthetic-corpus"
+    },
+    {
+      "id": "corpus.synthetic-injection.001",
+      "version": "1.0.0",
+      "path": "fixtures/corpus/synthetic_injection_v1.json",
+      "content_hash": "sha256:303b6c4623a2759f3e640b5d2464f8eea9b6d2fcdbbdae4476ce3862be5460a8",
+      "synthetic": true,
+      "origin": "Repository-authored synthetic fixture; no external source.",
+      "permitted_use_basis": "Repository-authored synthetic content.",
+      "license_ref": "fixture:synthetic-corpus"
     }
   ]
 }
