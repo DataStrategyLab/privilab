@@ -346,7 +346,7 @@ def test_codex_configuration_matches_approved_local_controls() -> None:
     assert "model" not in config
     assert "model_reasoning_effort" not in config
     assert config == {
-        "review_model": "gpt-5.6-sol",
+        "review_model": "gpt-6-astra",
         "approval_policy": "on-request",
         "sandbox_mode": "workspace-write",
         "web_search": "disabled",
