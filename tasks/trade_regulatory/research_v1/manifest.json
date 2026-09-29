@@ -1,0 +1,43 @@
+{
+  "schema_version": "1",
+  "task_pack_id": "trade-regulatory-research",
+  "task_pack_version": "1.0.0",
+  "tasks": [
+    {
+      "id": "trade-regulatory.grounded-happy-path",
+      "version": "1.0.0",
+      "path": "tasks/grounded-happy-path-v1.json"
+    },
+    {
+      "id": "trade-regulatory.insufficient-source",
+      "version": "1.0.0",
+      "path": "tasks/insufficient-source-v1.json"
+    },
+    {
+      "id": "trade-regulatory.permission-block",
+      "version": "1.0.0",
+      "path": "tasks/permission-block-v1.json"
+    },
+    {
+      "id": "trade-regulatory.critical-eval-failure",
+      "version": "1.0.0",
+      "path": "tasks/critical-eval-failure-v1.json"
+    },
+    {
+      "id": "trade-regulatory.citation-grounding-challenge",
+      "version": "1.0.0",
+      "path": "tasks/citation-grounding-challenge-v1.json"
+    },
+    {
+      "id": "trade-regulatory.malicious-source-injection",
+      "version": "1.0.0",
+      "path": "tasks/malicious-source-injection-v1.json"
+    }
+  ],
+  "schema": "schema/task.schema.json",
+  "substantive_rubric": "rubrics/substantive-review-v1.json",
+  "documentation": [
+    "README.md"
+  ],
+  "golden_cases": "evals/golden/trade_regulatory_v1/cases.json"
+}

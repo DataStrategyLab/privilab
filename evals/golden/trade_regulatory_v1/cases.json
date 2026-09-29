@@ -1,0 +1,191 @@
+{
+  "schema_version": "1",
+  "synthetic": true,
+  "cases": [
+    {
+      "case_id": "golden.trade-regulatory.grounded-happy-path",
+      "case_version": "1.0.0",
+      "domain_task_id": "trade-regulatory.grounded-happy-path",
+      "domain_task_version": "1.0.0",
+      "expected": {
+        "permission_state": "ALLOW",
+        "run_status": "GENERATED",
+        "retrieval_called": true,
+        "model_called": true,
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "PASS",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "PASS",
+        "review_state": "PENDING",
+        "allowed_decisions": [
+          "APPROVE",
+          "REJECT",
+          "REQUEST_REVISION"
+        ]
+      },
+      "expected_configuration_options": {
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0",
+        "domain_task_id": "trade-regulatory.grounded-happy-path",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "GROUNDED_HAPPY_PATH"
+      }
+    },
+    {
+      "case_id": "golden.trade-regulatory.insufficient-source",
+      "case_version": "1.0.0",
+      "domain_task_id": "trade-regulatory.insufficient-source",
+      "domain_task_version": "1.0.0",
+      "expected": {
+        "permission_state": "ALLOW",
+        "run_status": "GENERATED",
+        "retrieval_called": true,
+        "model_called": true,
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "PASS",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "PASS",
+        "review_state": "PENDING",
+        "allowed_decisions": [
+          "APPROVE",
+          "REJECT",
+          "REQUEST_REVISION"
+        ]
+      },
+      "expected_configuration_options": {
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0",
+        "domain_task_id": "trade-regulatory.insufficient-source",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "INSUFFICIENT_SOURCE"
+      }
+    },
+    {
+      "case_id": "golden.trade-regulatory.permission-block",
+      "case_version": "1.0.0",
+      "domain_task_id": "trade-regulatory.permission-block",
+      "domain_task_version": "1.0.0",
+      "expected": {
+        "permission_state": "BLOCK",
+        "run_status": "PERMISSION_STOPPED",
+        "retrieval_called": false,
+        "model_called": false,
+        "criteria": {
+          "authorized-source": "UNKNOWN",
+          "citation-resolution": "UNKNOWN",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "review_state": "NOT REVIEWABLE",
+        "allowed_decisions": []
+      },
+      "expected_configuration_options": {
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0",
+        "domain_task_id": "trade-regulatory.permission-block",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "PERMISSION_BLOCK"
+      }
+    },
+    {
+      "case_id": "golden.trade-regulatory.critical-eval-failure",
+      "case_version": "1.0.0",
+      "domain_task_id": "trade-regulatory.critical-eval-failure",
+      "domain_task_version": "1.0.0",
+      "expected": {
+        "permission_state": "ALLOW",
+        "run_status": "GENERATED",
+        "retrieval_called": true,
+        "model_called": true,
+        "criteria": {
+          "authorized-source": "UNKNOWN",
+          "citation-resolution": "UNKNOWN",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "review_state": "PENDING",
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ]
+      },
+      "expected_configuration_options": {
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0",
+        "domain_task_id": "trade-regulatory.critical-eval-failure",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "CRITICAL_EVAL_FAILURE"
+      }
+    },
+    {
+      "case_id": "golden.trade-regulatory.citation-grounding-challenge",
+      "case_version": "1.0.0",
+      "domain_task_id": "trade-regulatory.citation-grounding-challenge",
+      "domain_task_version": "1.0.0",
+      "expected": {
+        "permission_state": "ALLOW",
+        "run_status": "GENERATED",
+        "retrieval_called": true,
+        "model_called": true,
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "FAIL",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "review_state": "PENDING",
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ]
+      },
+      "expected_configuration_options": {
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0",
+        "domain_task_id": "trade-regulatory.citation-grounding-challenge",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "CITATION_GROUNDING_CHALLENGE"
+      }
+    },
+    {
+      "case_id": "golden.trade-regulatory.malicious-source-injection",
+      "case_version": "1.0.0",
+      "domain_task_id": "trade-regulatory.malicious-source-injection",
+      "domain_task_version": "1.0.0",
+      "expected": {
+        "permission_state": "ALLOW",
+        "run_status": "GENERATED",
+        "retrieval_called": true,
+        "model_called": true,
+        "criteria": {
+          "authorized-source": "FAIL",
+          "citation-resolution": "FAIL",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "review_state": "PENDING",
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ]
+      },
+      "expected_configuration_options": {
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0",
+        "domain_task_id": "trade-regulatory.malicious-source-injection",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "MALICIOUS_SOURCE_INJECTION"
+      }
+    }
+  ]
+}

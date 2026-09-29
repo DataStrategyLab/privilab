@@ -8,6 +8,14 @@
       "content_hash": "sha256:e2ff7417d2960f9a3abb18cb93949b609bd3797043af93e80aebc6dede821182",
       "synthetic": true,
       "license_ref": "fixture:synthetic-contexts"
+    },
+    {
+      "id": "context.synthetic-blocked.001",
+      "version": "1.0.0",
+      "path": "fixtures/contexts/synthetic_blocked_context_v1.json",
+      "content_hash": "sha256:f89e63e53cca9a180330767c99193dc6bb1a453c01eaff8cc5895204eee74abe",
+      "synthetic": true,
+      "license_ref": "fixture:synthetic-contexts"
     }
   ]
 }

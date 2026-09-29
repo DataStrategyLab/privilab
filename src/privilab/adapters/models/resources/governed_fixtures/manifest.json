@@ -24,6 +24,38 @@
       "content_hash": "sha256:9c76518a2801a74c5be99949b0213f2acf385970cde073207f08a9bd78312816",
       "synthetic": true,
       "license_ref": "fixture:synthetic-model-outputs"
+    },
+    {
+      "id": "model-output.trade-regulatory-grounded.001",
+      "version": "1.0.0",
+      "path": "trade_regulatory_grounded_v1.json",
+      "content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+      "synthetic": true,
+      "license_ref": "fixture:synthetic-model-outputs"
+    },
+    {
+      "id": "model-output.trade-regulatory-insufficient-source.001",
+      "version": "1.0.0",
+      "path": "trade_regulatory_insufficient_source_v1.json",
+      "content_hash": "sha256:437c9d9391093c6c4765624bd64921e6524f578ae0490ff2d3681c87ecb641f8",
+      "synthetic": true,
+      "license_ref": "fixture:synthetic-model-outputs"
+    },
+    {
+      "id": "model-output.trade-regulatory-missing-citation.001",
+      "version": "1.0.0",
+      "path": "trade_regulatory_missing_citation_v1.json",
+      "content_hash": "sha256:05ac503ca8cdf05d702087d5062349765fb4636cee8cde27754985f809163aec",
+      "synthetic": true,
+      "license_ref": "fixture:synthetic-model-outputs"
+    },
+    {
+      "id": "model-output.trade-regulatory-missing-chunk.001",
+      "version": "1.0.0",
+      "path": "trade_regulatory_missing_chunk_v1.json",
+      "content_hash": "sha256:df2bc34d6da7ff229481a8dd10dae0e2586db4c767dd3271213f39e2ad29e975",
+      "synthetic": true,
+      "license_ref": "fixture:synthetic-model-outputs"
     }
   ]
 }

@@ -34,6 +34,7 @@
   repository_paths:
     - "fixtures/contexts/manifest.json"
     - "fixtures/contexts/synthetic_request_context_v1.json"
+    - "fixtures/contexts/synthetic_blocked_context_v1.json"
   reviewer: "Codex"
   open_questions: []
 
@@ -112,6 +113,10 @@
     - "src/privilab/adapters/models/resources/governed_fixtures/synthetic_happy_path_v1.json"
     - "src/privilab/adapters/models/resources/governed_fixtures/synthetic_citation_failure_v1.json"
     - "src/privilab/adapters/models/resources/governed_fixtures/synthetic_malformed_output_v1.json"
+    - "src/privilab/adapters/models/resources/governed_fixtures/trade_regulatory_grounded_v1.json"
+    - "src/privilab/adapters/models/resources/governed_fixtures/trade_regulatory_insufficient_source_v1.json"
+    - "src/privilab/adapters/models/resources/governed_fixtures/trade_regulatory_missing_citation_v1.json"
+    - "src/privilab/adapters/models/resources/governed_fixtures/trade_regulatory_missing_chunk_v1.json"
   reviewer: "Codex"
   open_questions: []
 
@@ -860,3 +865,34 @@
     - ".github/workflows/verify.yml"
   reviewer: "Codex"
   open_questions: []
+
+# Content origin registration only, not substantive/domain approval.
+- id: "fixture:trade-regulatory-tasks"
+  kind: "fixture"
+  name: "Repository-authored synthetic trade/regulatory tasks"
+  source: "Repository-authored fixture"
+  version_or_commit: "1.0.0"
+  reviewed_date: "2026-09-29"
+  license: "Synthetic content (no external license)"
+  license_source: "Repository-authored synthetic content; no external source."
+  intended_use: "Internal deterministic task/golden control exercises; substantive review remains DRAFT."
+  permitted_use_basis: "Repository-authored synthetic content."
+  attribution_required: false
+  attribution: "None; authored for this repository."
+  restrictions: "Synthetic engineering exercises only; not substantive legal authority or prospect-demo approval."
+  repository_paths:
+    - "tasks/trade_regulatory/research_v1/README.md"
+    - "tasks/trade_regulatory/research_v1/manifest.json"
+    - "tasks/trade_regulatory/research_v1/rubrics/substantive-review-v1.json"
+    - "tasks/trade_regulatory/research_v1/schema/task.schema.json"
+    - "tasks/trade_regulatory/research_v1/tasks/citation-grounding-challenge-v1.json"
+    - "tasks/trade_regulatory/research_v1/tasks/critical-eval-failure-v1.json"
+    - "tasks/trade_regulatory/research_v1/tasks/grounded-happy-path-v1.json"
+    - "tasks/trade_regulatory/research_v1/tasks/insufficient-source-v1.json"
+    - "tasks/trade_regulatory/research_v1/tasks/malicious-source-injection-v1.json"
+    - "tasks/trade_regulatory/research_v1/tasks/permission-block-v1.json"
+    - "evals/golden/trade_regulatory_v1/cases.json"
+    - "src/privilab/evals/trade_regulatory.py"
+  reviewer: "Codex"
+  open_questions:
+    - "Qualified substantive review and Andrew's release decision remain outstanding."

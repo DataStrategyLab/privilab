@@ -11,12 +11,20 @@ from pathlib import Path
 
 _RESOURCE_PREFIX = "privilab/adapters/models/resources/governed_fixtures/"
 _RESOURCE_FILES = {
+    f"{_RESOURCE_PREFIX}trade_regulatory_grounded_v1.json",
+    f"{_RESOURCE_PREFIX}trade_regulatory_insufficient_source_v1.json",
+    f"{_RESOURCE_PREFIX}trade_regulatory_missing_citation_v1.json",
+    f"{_RESOURCE_PREFIX}trade_regulatory_missing_chunk_v1.json",
     f"{_RESOURCE_PREFIX}manifest.json",
     f"{_RESOURCE_PREFIX}synthetic_citation_failure_v1.json",
     f"{_RESOURCE_PREFIX}synthetic_happy_path_v1.json",
     f"{_RESOURCE_PREFIX}synthetic_malformed_output_v1.json",
 }
 _FIXTURE_IDS = (
+    "model-output.trade-regulatory-grounded.001",
+    "model-output.trade-regulatory-insufficient-source.001",
+    "model-output.trade-regulatory-missing-citation.001",
+    "model-output.trade-regulatory-missing-chunk.001",
     "model-output.synthetic-happy-path.001",
     "model-output.synthetic-citation-failure.001",
     "model-output.synthetic-malformed.001",

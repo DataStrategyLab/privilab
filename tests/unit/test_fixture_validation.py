@@ -282,6 +282,19 @@ def model_output_registry() -> dict[str, dict[str, object]]:
         **test_registry["fixture:synthetic-model-outputs"],
         "repository_paths": [
             (GOVERNED_FIXTURES_RELATIVE / "manifest.json").as_posix(),
+            (
+                GOVERNED_FIXTURES_RELATIVE / "trade_regulatory_grounded_v1.json"
+            ).as_posix(),
+            (
+                GOVERNED_FIXTURES_RELATIVE
+                / "trade_regulatory_insufficient_source_v1.json"
+            ).as_posix(),
+            (
+                GOVERNED_FIXTURES_RELATIVE / "trade_regulatory_missing_citation_v1.json"
+            ).as_posix(),
+            (
+                GOVERNED_FIXTURES_RELATIVE / "trade_regulatory_missing_chunk_v1.json"
+            ).as_posix(),
             (GOVERNED_FIXTURES_RELATIVE / "synthetic_happy_path_v1.json").as_posix(),
             (
                 GOVERNED_FIXTURES_RELATIVE / "synthetic_citation_failure_v1.json"

@@ -33,6 +33,26 @@ FIXTURE_DOCUMENTATION_PATHS = {
     Path("fixtures/permissions/README.md"),
 }
 MODEL_OUTPUT_FIXTURES = {
+    "model-output.trade-regulatory-grounded.001": (
+        "1.0.0",
+        "trade_regulatory_grounded_v1.json",
+        "trade-regulatory-grounded",
+    ),
+    "model-output.trade-regulatory-insufficient-source.001": (
+        "1.0.0",
+        "trade_regulatory_insufficient_source_v1.json",
+        "trade-regulatory-insufficient-source",
+    ),
+    "model-output.trade-regulatory-missing-citation.001": (
+        "1.0.0",
+        "trade_regulatory_missing_citation_v1.json",
+        "trade-regulatory-missing-citation",
+    ),
+    "model-output.trade-regulatory-missing-chunk.001": (
+        "1.0.0",
+        "trade_regulatory_missing_chunk_v1.json",
+        "trade-regulatory-missing-chunk",
+    ),
     "model-output.synthetic-happy-path.001": (
         "1.0.0",
         "synthetic_happy_path_v1.json",
@@ -449,6 +469,23 @@ def validate_model_output_fixture(
             raise ValueError(
                 f"{fixture_path}: invalid structured model-output fixture"
             ) from error
+        if scenario.startswith("trade-regulatory-"):
+            expected_citations = (
+                ()
+                if scenario == "trade-regulatory-missing-citation"
+                else (
+                    CitationReference(
+                        "synthetic-trade-notice-001",
+                        "synthetic-missing-chunk-001"
+                        if scenario == "trade-regulatory-missing-chunk"
+                        else "synthetic-trade-notice-chunk-001",
+                    ),
+                )
+            )
+            if result.citations != expected_citations:
+                raise ValueError(
+                    "DSL-117 fixture citations do not match approved scenario"
+                )
         if scenario == "happy-path" and result.citations != (
             CitationReference("synthetic-source-001", "synthetic-chunk-001"),
             CitationReference("synthetic-source-002", "synthetic-chunk-002"),
