@@ -169,6 +169,7 @@ The current implementation includes foundational components for the controlled w
 - fail-closed permission behavior;
 - deterministic model-provider interfaces;
 - `FixtureModelProvider` for safe model-independent development;
+- approved `OpenAIProvider` for `gpt-5.6-terra`, verified with offline SDK tests;
 - stable source and chunk identifiers;
 - synthetic request, permission, corpus, and model-output fixtures;
 - source and license metadata validation;
@@ -176,7 +177,7 @@ The current implementation includes foundational components for the controlled w
 - reproducible offline verification;
 - FastAPI / Jinja preview infrastructure.
 
-Development intentionally begins with deterministic fixtures and controlled local behavior before live model access is introduced.
+Development began with deterministic fixtures and controlled local behavior before introducing the approved OpenAI adapter. The preview and CI remain fixture-based; live smoke execution belongs to DSL-116.
 
 This allows security boundaries, retrieval behavior, tests, and evaluation contracts to be exercised without requiring production credentials or sensitive data.
 
@@ -396,7 +397,7 @@ The current `FixtureModelProvider` enables the system to develop and test model-
 
 This is intentional.
 
-Before introducing live models, PriviLAB aims to prove:
+The fixture path exercises:
 
 ```text
 permissions
@@ -410,11 +411,42 @@ evaluation interfaces
 
 without making network access or model behavior a prerequisite.
 
-### Frontier models
+### Approved OpenAI provider
 
-Managed-model integrations are expected to plug into the same provider boundary rather than redefine the application architecture.
+`OpenAIProvider` uses the official OpenAI Python SDK and Responses API for exactly
+`gpt-5.6-terra`. `RunService.from_openai(...)` constructs the provider and governed
+configuration internally, preserving permission evaluation and scoped retrieval
+before model execution. The factory accepts an `OpenAIProviderConfig` from
+`privilab.adapters.models.openai`; it does not accept arbitrary provider identities,
+credentials, or alternate endpoints. Fixture preview behavior remains unchanged.
 
-Model and provider versions should become part of each run's provenance.
+Each request explicitly sets `store=False`, `stream=False`, `background=False`,
+`tools=[]`, `tool_choice="none"`, and `truncation="disabled"`. Only the task and
+already-authorized chunks enter model input alongside fixed instructions and the
+research-result schema. `store=False` is request configuration, not a Zero Data
+Retention, privacy, confidentiality, privilege, compliance, or security guarantee.
+
+Credentials come from `OPENAI_API_KEY` only when execution begins. The destination
+is fixed to `https://api.openai.com/v1`; `OPENAI_BASE_URL` cannot redirect it.
+The default SDK transport timeout is 30 seconds (allowed: 1–120), with SDK retries
+disabled. Application retries are limited to two (allowed: 0–2), using 0.5/1-second
+backoff and a configurable maximum delay of five seconds (allowed: 1–5). Valid
+server retry delays are minimums; delays above the bound fail safely. These are
+transport timeouts and bounded retry settings, not a total wall-clock deadline.
+Billing, credit, spend/usage-limit, and semantic output failures are not retried.
+
+`generate(request)` still returns `ResearchResult`. The adapter-specific
+`generate_with_usage(request)` returns an immutable `OpenAIGeneration` pairing
+that result with provider-reported token counts, including cache reads, cache
+writes, and reasoning. Missing counts remain `None`. SDK wire usage is validated
+before SDK numeric coercion; raw payloads are not retained or persisted. There is
+no mutable last-call state. `RunOutcome` and provenance schemas are unchanged.
+
+Existing provenance records provider/adapter identity, the configured model alias,
+SDK/request/schema versions, and timeout/retry settings. The alias is not a pinned
+dated model snapshot. DSL-116 owns live smoke execution and usage, latency,
+pricing, and cost integration/persistence. DSL-115 tests require neither a live
+OpenAI call nor API credentials; no live-execution claim is made here.
 
 ### Open-weight models and Fireworks AI
 
@@ -609,7 +641,6 @@ Minimum viable provenance
 ────────────────────────────
 Future extension points
 ────────────────────────────
-OpenAI provider
 Fireworks / open-weight provider
 workflow-specific fine-tuning
 expanded legal eval packs
@@ -731,7 +762,7 @@ PriviLAB is DSL's reference implementation for exploring a simple idea:
 | **Retrieval** | SQLite + FTS5 |
 | **Verification** | Reproducible `make ci` contract |
 | **Data posture** | Public / synthetic / anonymized / redacted / properly licensed materials only |
-| **Current model path** | Deterministic fixture provider |
+| **Current model path** | Fixture preview; approved OpenAI adapter verified offline |
 | **Planned model paths** | Managed and open-weight providers following explicit architecture and release gates |
 
 ---

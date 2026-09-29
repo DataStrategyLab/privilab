@@ -696,7 +696,6 @@ def test_bootstrap_dependency_set_excludes_out_of_scope_components() -> None:
         "detect-secrets",
         "httpx",
         "langchain",
-        "openai",
         "pytest-cov",
         "sqlalchemy",
     ):

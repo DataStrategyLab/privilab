@@ -722,6 +722,127 @@
     - ".github/workflows/verify.yml"
   reviewer: "Codex"
   open_questions: []
+
+- id: "pypi:openai"
+  kind: "dependency"
+  name: "openai"
+  source: "https://pypi.org/project/openai/3.19.2/"
+  version_or_commit: "3.19.2"
+  reviewed_date: "2026-09-28"
+  license: "Apache-2.0 AND BSD-3-Clause"
+  license_source: "Reviewed bundled licenses/LICENSE and openai/_vendor/httpx_aiohttp/LICENSE in the openai 3.19.2 distribution published at the source above."
+  intended_use: "Approved Responses API adapter; Apache-2.0 SDK includes BSD-3-Clause vendored httpx_aiohttp code."
+  permitted_use_basis: "Use and redistribution under Apache-2.0 AND BSD-3-Clause; preserve bundled license terms and notices."
+  attribution_required: true
+  attribution: "Preserve upstream copyright, license, and applicable NOTICE files when redistributing."
+  restrictions: "Preserve applicable attribution and disclaimers; BSD components prohibit implied endorsement."
+  repository_paths: ["pyproject.toml","uv.lock","src/privilab/adapters/models/openai.py"]
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:httpx2"
+  kind: "dependency"
+  name: "httpx2"
+  source: "https://pypi.org/project/httpx2/2.13.1/"
+  version_or_commit: "2.13.1"
+  reviewed_date: "2026-09-28"
+  license: "BSD-3-Clause"
+  license_source: "Reviewed bundled licenses/LICENSE.md in the httpx2 2.13.1 distribution published at the source above."
+  intended_use: "Mandatory OpenAI SDK HTTP client dependency."
+  permitted_use_basis: "Use and redistribution under BSD-3-Clause; preserve bundled license terms and notices."
+  attribution_required: true
+  attribution: "Preserve upstream copyright, license, and applicable NOTICE files when redistributing."
+  restrictions: "Preserve applicable attribution and disclaimers; BSD components prohibit implied endorsement."
+  repository_paths: ["uv.lock"]
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:httpcore2"
+  kind: "dependency"
+  name: "httpcore2"
+  source: "https://pypi.org/project/httpcore2/2.13.1/"
+  version_or_commit: "2.13.1"
+  reviewed_date: "2026-09-28"
+  license: "BSD-3-Clause"
+  license_source: "Reviewed bundled licenses/LICENSE.md in the httpcore2 2.13.1 distribution published at the source above."
+  intended_use: "Mandatory native HTTP transport dependency of httpx2."
+  permitted_use_basis: "Use and redistribution under BSD-3-Clause; preserve bundled license terms and notices."
+  attribution_required: true
+  attribution: "Preserve upstream copyright, license, and applicable NOTICE files when redistributing."
+  restrictions: "Preserve applicable attribution and disclaimers; BSD components prohibit implied endorsement."
+  repository_paths: ["uv.lock"]
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:httpx2-jsfetch"
+  kind: "dependency"
+  name: "httpx2-jsfetch"
+  source: "https://pypi.org/project/httpx2-jsfetch/1.0/"
+  version_or_commit: "1.0"
+  reviewed_date: "2026-09-28"
+  license: "BSD-3-Clause"
+  license_source: "Reviewed bundled licenses/LICENSE.md in the httpx2-jsfetch 1.0 distribution published at the source above."
+  intended_use: "Mandatory platform-conditional httpx2 dependency for Emscripten; registered for the universal lockfile, not installed or enabled in the supported macOS/Linux runtime."
+  permitted_use_basis: "Use and redistribution under BSD-3-Clause; preserve bundled license terms and notices."
+  attribution_required: true
+  attribution: "Preserve upstream copyright, license, and applicable NOTICE files when redistributing."
+  restrictions: "Preserve applicable attribution and disclaimers; BSD components prohibit implied endorsement."
+  repository_paths: ["uv.lock"]
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:jiter"
+  kind: "dependency"
+  name: "jiter"
+  source: "https://pypi.org/project/jiter/0.17.0/"
+  version_or_commit: "0.17.0"
+  reviewed_date: "2026-09-28"
+  license: "MIT"
+  license_source: "Reviewed bundled licenses/LICENSE in the jiter 0.17.0 distribution published at the source above."
+  intended_use: "Mandatory OpenAI SDK JSON parsing dependency."
+  permitted_use_basis: "Use and redistribution under MIT; preserve bundled license terms and notices."
+  attribution_required: true
+  attribution: "Preserve upstream copyright, license, and applicable NOTICE files when redistributing."
+  restrictions: "Preserve applicable attribution and disclaimers; BSD components prohibit implied endorsement."
+  repository_paths: ["uv.lock"]
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:sniffio"
+  kind: "dependency"
+  name: "sniffio"
+  source: "https://pypi.org/project/sniffio/1.3.1/"
+  version_or_commit: "1.3.1"
+  reviewed_date: "2026-09-28"
+  license: "MIT OR Apache-2.0"
+  license_source: "Reviewed bundled LICENSE, LICENSE.MIT, and LICENSE.APACHE2 in the sniffio 1.3.1 distribution published at the source above."
+  intended_use: "Mandatory OpenAI SDK asynchronous-library detection dependency."
+  permitted_use_basis: "Use and redistribution under MIT OR Apache-2.0; preserve bundled license terms and notices."
+  attribution_required: true
+  attribution: "Preserve upstream copyright, license, and applicable NOTICE files when redistributing."
+  restrictions: "Preserve applicable attribution and disclaimers; BSD components prohibit implied endorsement."
+  repository_paths: ["uv.lock"]
+  reviewer: "Codex"
+  open_questions: []
+
+- id: "pypi:truststore"
+  kind: "dependency"
+  name: "truststore"
+  source: "https://pypi.org/project/truststore/0.10.4/"
+  version_or_commit: "0.10.4"
+  reviewed_date: "2026-09-28"
+  license: "MIT"
+  license_source: "Reviewed bundled licenses/LICENSE in the truststore 0.10.4 distribution published at the source above."
+  intended_use: "Mandatory native system-certificate dependency of the SDK HTTP transport."
+  permitted_use_basis: "Use and redistribution under MIT; preserve bundled license terms and notices."
+  attribution_required: true
+  attribution: "Preserve upstream copyright, license, and applicable NOTICE files when redistributing."
+  restrictions: "Preserve applicable attribution and disclaimers; BSD components prohibit implied endorsement."
+  repository_paths: ["uv.lock"]
+  reviewer: "Codex"
+  open_questions: []
+
+
 - id: "action:setup-python"
   kind: "github-action"
   name: "actions/setup-python"
