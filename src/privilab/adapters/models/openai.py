@@ -9,7 +9,7 @@ import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import UTC
+from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from typing import Protocol, cast
 
@@ -232,6 +232,14 @@ def _usage(value: object) -> OpenAIUsage | None:
     )
 
 
+def _validate_reasoning_entries(value: object, discriminator: str) -> None:
+    if not isinstance(value, list) or any(
+        not isinstance(entry, dict) or entry.get("type") != discriminator
+        for entry in value
+    ):
+        raise ValueError("incompatible reasoning entries")
+
+
 def _validate_output_discriminators(output: object) -> None:
     # SDK construction can infer classes or supply defaults for malformed tags.
     # Require the original wire tags before accepting those SDK objects.
@@ -241,6 +249,10 @@ def _validate_output_discriminators(output: object) -> None:
         if not isinstance(item, dict):
             raise ValueError("incompatible output item")
         if item.get("type") == "reasoning":
+            _validate_reasoning_entries(item.get("summary"), "summary_text")
+            content = item.get("content")
+            if content is not None:
+                _validate_reasoning_entries(content, "reasoning_text")
             continue
         if item.get("type") != "message":
             raise ValueError("unexpected output item")
@@ -312,6 +324,39 @@ def _transient(error: APIConnectionError | APIStatusError) -> bool:
     return error.status_code in (408, 409, 500, 502, 503, 504)
 
 
+def _rfc850_date(header: str, current: datetime) -> datetime | None:
+    match = re.fullmatch(
+        r"(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), "
+        r"([0-9]{2})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-([0-9]{2}) "
+        r"([0-9]{2}):([0-9]{2}):([0-9]{2}) GMT",
+        header,
+    )
+    if match is None:
+        return None
+    day_text, month_text, short_year, hour_text, minute_text, second_text = (
+        match.groups()
+    )
+    months = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
+    month = months.index(month_text) + 1
+    day, hour, minute, second = map(
+        int, (day_text, hour_text, minute_text, second_text)
+    )
+    # Select the latest matching year no more than 50 calendar years ahead.
+    # Compare calendar components before constructing a possibly non-leap date.
+    year = (current.year + 50) // 100 * 100 + int(short_year)
+    if (year, month, day, hour, minute, second, 0) > (
+        current.year + 50,
+        current.month,
+        current.day,
+        current.hour,
+        current.minute,
+        current.second,
+        current.microsecond,
+    ):
+        year -= 100
+    return datetime(year, month, day, hour, minute, second, tzinfo=UTC)
+
+
 def _server_delay(error: APIStatusError, now: Callable[[], float]) -> float | None:
     header = error.response.headers.get("retry-after")
     if header is None:
@@ -320,7 +365,10 @@ def _server_delay(error: APIStatusError, now: Callable[[], float]) -> float | No
         delay = float(header)
     except ValueError:
         try:
-            date = parsedate_to_datetime(header)
+            current_time = now()
+            date = _rfc850_date(header, datetime.fromtimestamp(current_time, UTC))
+            if date is None:
+                date = parsedate_to_datetime(header)
             if date.utcoffset() is None:
                 # Only the legacy asctime HTTP-date omits its UTC designation.
                 # Other naive values accepted by the email parser stay invalid.
@@ -335,7 +383,7 @@ def _server_delay(error: APIStatusError, now: Callable[[], float]) -> float | No
                 ):
                     return None
                 date = date.replace(tzinfo=UTC)
-            delay = max(0.0, date.timestamp() - now())
+            delay = max(0.0, date.timestamp() - current_time)
         except (TypeError, ValueError, OverflowError):
             return None
     # Positive infinity also exceeds the configured bound, never retries early.

@@ -189,6 +189,24 @@ def fake_sdk(
             del content[0]["type"]
         if failure == "unknown-type":
             content[0]["type"] = "synthetic_unknown_type"
+        output: list[dict[str, Any]] = [
+            {
+                "id": "answer",
+                "type": "message",
+                "role": "assistant",
+                "status": "completed",
+                "content": content,
+            }
+        ]
+        if failure in ("reasoning-summary", "reasoning-content"):
+            reasoning: dict[str, Any] = {
+                "id": "reasoning",
+                "type": "reasoning",
+                "summary": [],
+            }
+            field = "summary" if failure == "reasoning-summary" else "content"
+            reasoning[field] = [{"text": "synthetic-private-reasoning"}]
+            output.insert(0, reasoning)
         return httpx2.Response(
             200,
             json={
@@ -199,15 +217,7 @@ def fake_sdk(
                 "status": "incomplete" if failure == "incomplete" else "completed",
                 "error": None,
                 "incomplete_details": None,
-                "output": [
-                    {
-                        "id": "answer",
-                        "type": "message",
-                        "role": "assistant",
-                        "status": "completed",
-                        "content": content,
-                    }
-                ],
+                "output": output,
                 "usage": {
                     "input_tokens": 13456789,
                     "output_tokens": 2,
@@ -333,6 +343,8 @@ def test_permission_stops_before_retrieval_credentials_or_model(
         "incomplete",
         "missing-type",
         "unknown-type",
+        "reasoning-summary",
+        "reasoning-content",
     ],
 )
 def test_provider_failures_reach_existing_model_boundary(

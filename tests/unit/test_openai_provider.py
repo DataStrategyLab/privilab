@@ -13,8 +13,13 @@ from typing import Any
 
 import httpx2
 import pytest
-from openai import OpenAI
-from openai.types.responses import ResponseOutputMessage, ResponseOutputText
+from openai import APIStatusError, OpenAI
+from openai.types.responses import (
+    ResponseOutputMessage,
+    ResponseOutputText,
+    ResponseReasoningItem,
+)
+from openai.types.responses.response_reasoning_item import Content, Summary
 
 from privilab.adapters.models import openai as adapter
 from privilab.adapters.models.openai import (
@@ -253,6 +258,113 @@ def test_sdk_class_does_not_validate_wire_discriminator(tag: str) -> None:
     assert all(client.is_closed() for client in api.clients)
 
 
+@pytest.mark.parametrize("field", ["summary", "content"])
+@pytest.mark.parametrize(
+    "tag", ["expected", "missing", "null", "unknown", "incompatible"]
+)
+def test_nested_reasoning_wire_discriminators(field: str, tag: str) -> None:
+    body = response_body()
+    expected = "summary_text" if field == "summary" else "reasoning_text"
+    entry: dict[str, Any] = {"type": expected, "text": "Synthetic reasoning."}
+    if tag == "missing":
+        del entry["type"]
+    elif tag != "expected":
+        entry["type"] = {
+            "null": None,
+            "unknown": "synthetic_unknown_type",
+            "incompatible": "output_text",
+        }[tag]
+    body["output"][0][field] = [
+        {"type": expected, "text": "Valid preceding reasoning entry."},
+        entry,
+    ]
+    api = ScriptedAPI([httpx2.Response(200, json=body)])
+    if tag == "expected":
+        assert api.provider().generate(request()).answer_text == "Synthetic answer."
+    else:
+        with pytest.raises(MalformedModelOutputError) as caught:
+            api.provider().generate(request())
+        assert caught.value.__cause__ is caught.value.__context__ is None
+        assert "Synthetic reasoning." not in str(caught.value)
+    assert len(api.requests) == 1 and api.delays == []
+    assert api.clients[0].is_closed()
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "valid"),
+    [
+        ("summary", "absent", False),
+        ("summary", None, False),
+        ("summary", {}, False),
+        ("summary", "not-a-list", False),
+        ("summary", [None], False),
+        ("summary", ["not-a-dict"], False),
+        ("summary", [], True),
+        ("content", "absent", True),
+        ("content", None, True),
+        ("content", {}, False),
+        ("content", "not-a-list", False),
+        ("content", [None], False),
+        ("content", ["not-a-dict"], False),
+        ("content", [], True),
+    ],
+)
+def test_nested_reasoning_container_shapes(field: str, value: Any, valid: bool) -> None:
+    body = response_body()
+    if value == "absent":
+        body["output"][0].pop(field, None)
+    else:
+        body["output"][0][field] = value
+    api = ScriptedAPI([httpx2.Response(200, json=body)])
+    if valid:
+        assert api.provider().generate(request()).answer_text == "Synthetic answer."
+    else:
+        with pytest.raises(MalformedModelOutputError):
+            api.provider().generate(request())
+    assert len(api.requests) == 1 and api.delays == []
+    assert api.clients[0].is_closed()
+
+
+@pytest.mark.parametrize("field", ["summary", "content"])
+@pytest.mark.parametrize("tag", ["missing", "synthetic_unknown_type"])
+def test_nested_reasoning_is_validated_before_sdk_parse(
+    field: str, tag: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    body = response_body()
+    entry = {"text": "Synthetic reasoning."}
+    if tag != "missing":
+        entry["type"] = tag
+    body["output"][0][field] = [entry]
+    api = ScriptedAPI([httpx2.Response(200, json=body) for _ in range(2)])
+    config = OpenAIProviderConfig()
+    with api.client(config) as client:
+        raw = client.responses.with_raw_response.create(
+            **adapter._parameters(request(), config)
+        )
+    parsed = raw.parse()
+    reasoning = parsed.output[0]
+    assert isinstance(reasoning, ResponseReasoningItem)
+    if field == "summary":
+        assert isinstance(reasoning.summary[0], Summary)
+    else:
+        assert reasoning.content is not None
+        assert isinstance(reasoning.content[0], Content)
+
+    parse_calls: list[bool] = []
+    original_parse = type(raw).parse
+
+    def observe_parse(self: Any, *args: Any, **kwargs: Any) -> Any:
+        parse_calls.append(True)
+        return original_parse(self, *args, **kwargs)
+
+    monkeypatch.setattr(type(raw), "parse", observe_parse)
+    with pytest.raises(MalformedModelOutputError):
+        api.provider().generate(request())
+    assert parse_calls == []
+    assert len(api.requests) == 2 and api.delays == []
+    assert all(client.is_closed() for client in api.clients)
+
+
 @pytest.mark.parametrize(
     "change",
     [
@@ -437,6 +549,9 @@ def test_exhaustion_is_bounded_and_sanitized(budget: int, failure: str) -> None:
         (format_datetime(datetime.fromtimestamp(1_799_999_999, UTC), usegmt=True), 0.5),
         ("Friday, 15-Jan-27 08:00:04 GMT", 4),
         ("Friday, 15-Jan-27 07:59:59 GMT", 0.5),
+        ("Friday, 32-Jan-72 08:00:04 GMT", 0.5),
+        ("Friday, 15-XYZ-72 08:00:04 GMT", 0.5),
+        ("Friday, 15-Jan-72 08:00:04", 0.5),
     ],
 )
 def test_retry_after_is_a_minimum(header: str, expected: float) -> None:
@@ -492,6 +607,73 @@ def test_asctime_retry_after_uses_utc_and_respects_delay_bound(
         assert provider.generate(request()).answer_text == "Synthetic answer."
         assert len(api.requests) == 2
         assert api.delays == [max(0.5, server_delay)]
+    assert api.clients[0].is_closed()
+
+
+@pytest.mark.parametrize(
+    ("current_year", "short_year", "second_offset", "expected_year"),
+    [
+        (2026, 72, 0, 2072),
+        (2026, 77, 0, 1977),
+        (2026, 76, -1, 2076),
+        (2026, 76, 0, 2076),
+        (2026, 76, 1, 1976),
+        (2026, 26, 0, 2026),
+        (2026, 26, 4, 2026),
+        (2026, 25, 0, 2025),
+        (1999, 0, 0, 2000),
+        (2099, 0, 0, 2100),
+        (2080, 29, 0, 2129),
+        (2080, 31, 0, 2031),
+    ],
+)
+def test_rfc850_year_rollover_uses_injected_utc_clock(
+    current_year: int, short_year: int, second_offset: int, expected_year: int
+) -> None:
+    current = datetime(current_year, 1, 15, 8, 0, 4, tzinfo=UTC)
+    expected = datetime(expected_year, 1, 15, 8, 0, 4 + second_offset, tzinfo=UTC)
+    weekdays = (
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    )
+    header = (
+        f"{weekdays[expected.weekday()]}, 15-Jan-{short_year:02d} "
+        f"08:00:{4 + second_offset:02d} GMT"
+    )
+    now = current.timestamp()
+    error = APIStatusError(
+        "Synthetic transient error",
+        response=httpx2.Response(
+            503,
+            headers={"Retry-After": header},
+            request=httpx2.Request("POST", "https://api.openai.com/v1/responses"),
+        ),
+        body=None,
+    )
+    delay = max(0.0, expected.timestamp() - now)
+    assert adapter._rfc850_date(header, current) == expected
+    assert adapter._server_delay(error, lambda: now) == delay
+    api = ScriptedAPI(
+        [httpx2.Response(503, headers={"Retry-After": header}), success()]
+    )
+    provider = OpenAIProvider(
+        OpenAIProviderConfig(max_retry_delay_seconds=5),
+        _client_factory=api.client,
+        _sleep=api.delays.append,
+        _clock=lambda: now,
+    )
+    if delay > 5:
+        with pytest.raises(OpenAIProviderError):
+            provider.generate(request())
+        assert api.delays == [] and len(api.requests) == 1
+    else:
+        assert provider.generate(request()).answer_text == "Synthetic answer."
+        assert api.delays == [max(0.5, delay)] and len(api.requests) == 2
     assert api.clients[0].is_closed()
 
 
