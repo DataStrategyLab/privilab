@@ -55,7 +55,6 @@ def test_sensitive_and_generated_state_is_excluded_from_docker_context() -> None
         "dist",
         "docs",
         "evals",
-        "fixtures",
         "licenses",
         "scripts",
         "tasks",
@@ -136,5 +135,24 @@ def test_sensitive_and_generated_state_is_excluded_from_docker_context() -> None
             f"sensitive/generated path would enter Docker context: {path}"
         )
 
+    assert {path for path in allowed if path.startswith("fixtures")} == {
+        "fixtures/",
+        "fixtures/corpus/",
+        "fixtures/corpus/**",
+    }
+    for name in (
+        "manifest.json",
+        "synthetic_injection_v1.json",
+        "synthetic_trade_notice_v1.json",
+    ):
+        assert is_included(f"fixtures/corpus/{name}")
+    for name in (
+        "permissions/policy.json",
+        "contexts/context.json",
+        "model_outputs/answer.json",
+    ):
+        assert not is_included(f"fixtures/{name}")
+    for path in protected_examples:
+        assert not is_included(path.replace("src/privilab", "fixtures/corpus"))
     assert is_included("src/privilab/evals/__init__.py")
     assert not is_included("evals/golden/example.json")

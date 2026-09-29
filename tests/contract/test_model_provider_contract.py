@@ -9,6 +9,7 @@ from privilab.application.model_provider import (
 from privilab.domain.research import ResearchResult
 
 ROOT = Path(__file__).parents[2]
+MODEL_OUTPUTS = ROOT / "src/privilab/adapters/models/resources/governed_fixtures"
 
 
 def exercise_provider_contract(
@@ -21,9 +22,7 @@ def exercise_provider_contract(
 
 def test_fixture_provider_conforms_to_model_provider_contract() -> None:
     provider = FixtureModelProvider(
-        (ROOT / "fixtures/model_outputs/synthetic_happy_path_v1.json").read_text(
-            encoding="utf-8"
-        )
+        (MODEL_OUTPUTS / "synthetic_happy_path_v1.json").read_text(encoding="utf-8")
     )
     request = ModelRequest(
         task_text="Summarize the supplied synthetic source chunks.",

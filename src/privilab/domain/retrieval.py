@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 _SQLITE_INTEGER_MAX = 2**63 - 1
 
@@ -167,10 +167,12 @@ class RetrievalSource:
     title: str
     chunks: tuple[RetrievalChunk, ...]
     entitlements: tuple[SourceEntitlement, ...] = ()
+    source_version: str = field(kw_only=True)
 
     def __post_init__(self) -> None:
         if not isinstance(self.source_id, SourceId):
             raise TypeError("source_id must be a SourceId")
+        _validate_identifier(self.source_version, "source version")
         _validate_text(self.title, "source title")
         if not isinstance(self.chunks, tuple) or any(
             not isinstance(chunk, RetrievalChunk) for chunk in self.chunks
@@ -204,12 +206,14 @@ class RetrievedChunk:
     ordinal: int
     title: str
     text: str
+    source_version: str = field(kw_only=True)
 
     def __post_init__(self) -> None:
         if not isinstance(self.source_id, SourceId):
             raise TypeError("source_id must be a SourceId")
         if not isinstance(self.chunk_id, ChunkId):
             raise TypeError("chunk_id must be a ChunkId")
+        _validate_identifier(self.source_version, "source version")
         if (
             type(self.ordinal) is not int
             or not 0 <= self.ordinal <= _SQLITE_INTEGER_MAX

@@ -3,24 +3,137 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title }} — bootstrap placeholder</title>
+    <title>{{ title }} — fixture preview</title>
     <style>
       :root { color-scheme: light; font-family: system-ui, sans-serif; }
-      body { max-width: 44rem; margin: 10vh auto; padding: 0 1.5rem; line-height: 1.5; }
+      body { max-width: 68rem; margin: 2rem auto; padding: 0 1.5rem; line-height: 1.5; color: #17252d; }
       .notice { border-left: 0.3rem solid #a34b00; padding: 0.75rem 1rem; background: #fff4e8; }
       code { background: #f1f3f5; padding: 0.1rem 0.25rem; }
+      section, details { margin-top: 2rem; }
+      label, dt { font-weight: 600; }
+      select, button { font: inherit; padding: 0.6rem; margin: 0.5rem 0; max-width: 100%; }
+      select { display: block; }
+      button { cursor: pointer; }
+      :focus-visible { outline: 3px solid #146d9a; outline-offset: 3px; }
+      .stop, .error { border-left: 0.3rem solid #a32121; padding: 0.75rem 1rem; background: #fff0f0; }
+      .answer { white-space: pre-wrap; overflow-wrap: anywhere; }
+      .table-scroll { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; text-align: left; }
+      th, td { padding: 0.65rem; border-bottom: 1px solid #cad1d5; }
+      td, dd { overflow-wrap: anywhere; }
+      dd { margin: 0.2rem 0 0.8rem; }
+      summary { cursor: pointer; font-weight: 600; }
     </style>
   </head>
   <body>
     <main>
       <p class="notice"><strong>{{ banner }}</strong></p>
-      <h1>{{ title }} P0 bootstrap placeholder</h1>
-      <p>
-        The approved repository and verification contract are running locally.
-        No research, permission, retrieval, evaluation, provenance, database,
-        or model behavior is implemented by DSL-105.
-      </p>
+      <h1>{{ title }} fixture preview</h1>
+      <p>Simulated context controls and a fixed synthetic fixture answer.</p>
       <p>Environment: <code>{{ environment }}</code></p>
+
+      <p><a href="/runs">Recent run history</a></p>
+      {% if not reopened %}
+      <section aria-labelledby="new-run-heading">
+        <h2 id="new-run-heading">New fixture run</h2>
+        <dl>
+          <dt>Fixed synthetic task</dt><dd>{{ task_text }}</dd>
+          <dt>Fixed retrieval query</dt><dd><code>{{ query }}</code></dd>
+        </dl>
+        {% if form_error %}<p class="error" role="alert">{{ form_error }}</p>{% endif %}
+        <form method="post" action="/runs">
+          <label for="context-choice">Synthetic context scenario</label>
+          <select id="context-choice" name="context_choice" required>
+            {% for key, label in choices %}
+            <option value="{{ key }}"{% if key == selected_choice %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit">Run synthetic fixture</button>
+        </form>
+      </section>
+
+      {% endif %}
+
+      {% if run_status %}
+      <section id="permission-result" aria-labelledby="permission-heading">
+        <h2 id="permission-heading">Current run</h2>
+        <p>Terminal status: <strong>{{ run_status }}</strong></p>
+        <p>Permission: <strong>{{ permission_state or 'No completed decision' }}</strong></p>
+        {% if run_status == 'PERMISSION_STOPPED' %}
+        <div class="stop">
+          <p><strong>{{ permission_state }} — {% if stop_reason == 'UNRESOLVED_CONDITIONS' %}unresolved conditions; {% endif %}protected progression stopped</strong></p>
+          <p>Stop reason: <code>{{ stop_reason }}</code></p>
+          {% if conditions %}
+          <p>Unresolved condition identifiers:</p>
+          <ul>{% for condition in conditions %}<li><code>{{ condition }}</code></li>{% endfor %}</ul>
+          {% endif %}
+        </div>
+        {% elif run_status == 'FAILED' %}
+        <p class="error" role="alert">Run failed during {{ failure_stage }}. No fixture result is available.</p>
+        {% endif %}
+        <p>Retrieval: {{ 'called' if retrieval_called else 'not executed' }}.</p>
+        <p>Model: {{ 'called' if model_called else 'not executed' }}.</p>
+      </section>
+
+      {% if source_rows %}
+      <section id="authorized-sources" aria-labelledby="sources-heading">
+        <h2 id="sources-heading">Authorized source/chunk metadata</h2>
+        <div class="table-scroll">
+          <table>
+            <caption>Current-run provenance in retrieval order. Ordinal and position are zero-based.</caption>
+            <thead><tr><th scope="col">Source ID</th><th scope="col">Version</th><th scope="col">Chunk ID</th><th scope="col">Ordinal</th><th scope="col">Retrieval position</th></tr></thead>
+            <tbody>
+              {% for source_id, version, chunk_id, ordinal, position in source_rows %}
+              <tr><td>{{ source_id }}</td><td>{{ version }}</td><td>{{ chunk_id }}</td><td>{{ ordinal }}</td><td>{{ position }}</td></tr>
+              {% else %}
+              <tr><td colspan="5">No retrieved source metadata recorded.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      {% endif %}
+      {% if answer %}
+      <section id="research-result" aria-labelledby="result-heading">
+        <h2 id="result-heading">Fixture research draft</h2>
+        <p><strong>Presented for reviewer consideration.</strong></p>
+        <p class="answer">{{ answer }}</p>
+      </section>
+      {% endif %}
+
+      {% if reopened %}<p>Reopened metadata only. Generated answer text is not retained.</p>{% endif %}
+      {% if injection_fixture %}<p>Retrieved metadata includes an untrusted synthetic injection fixture. Source text is not displayed.</p>{% endif %}
+      <section id="evaluation">
+        <h2>Deterministic evaluation</h2>
+        {% if gate_status %}
+        <p>Critical gate: <strong>{{ gate_status }}</strong></p>
+        <p>The automated gate is separate from the human decision.</p>
+        <dl>{% for label, value in evaluation_detail %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Criterion / version</th><th>Evaluator / version</th><th>Criticality</th><th>Status</th><th>Evidence</th></tr></thead>
+          <tbody>{% for id, version, evaluator, evaluator_version, criticality, status, reasons, sources, citations in criteria %}
+          <tr><td>{{ id }} / {{ version }}</td><td>{{ evaluator }} / {{ evaluator_version }}</td><td>{{ criticality }}</td><td>{{ status }}</td><td>{{ reasons }}; sources: {{ sources }}; citations: {{ citations }}</td></tr>
+          {% endfor %}</tbody>
+        </table></div>
+        {% if gate_blocks %}<ul>{% for reason, id, version in gate_blocks %}<li>{{ reason }}{% if id %}: {{ id }} / {{ version }}{% endif %}</li>{% endfor %}</ul>{% endif %}
+        {% else %}<p class="error">Evaluation unavailable or incomplete.</p>{% endif %}
+      </section>
+      <section id="human-review">
+        <h2>Human decision</h2>
+        <p>State: <strong>{{ review_state }}</strong></p>
+        <p>Local demo reviewer identity: <code>synthetic-local-reviewer</code>. This is not authenticated attribution or release authority.</p>
+        <dl>{% for label, value in review_detail %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
+        <form method="post" action="/runs/{{ run_id }}/review">
+          {% for decision, enabled in decisions %}<button name="decision" value="{{ decision }}" type="submit"{% if not enabled %} disabled{% endif %}>{{ decision }}</button>{% endfor %}
+        </form>
+        <p>A decision is final for this run. Another execution creates an independent run.</p>
+      </section>
+      <details id="run-detail">
+        <summary>Basic current-run detail</summary>
+        <dl>{% for label, value in run_detail %}<dt>{{ label }}</dt><dd>{{ value if value is not none else 'Not available' }}</dd>{% endfor %}</dl>
+      </details>
+      <p><a href="/">Return to the new-run form</a></p>
+      {% endif %}
     </main>
   </body>
 </html>

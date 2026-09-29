@@ -105,6 +105,7 @@ def protected_source(
             ),
         ),
         (SourceEntitlement(source_id, *entitlement),),
+        source_version="1.0.0",
     )
 
 

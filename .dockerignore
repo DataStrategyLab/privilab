@@ -1,4 +1,4 @@
-# Send only the files required to construct the local placeholder image.
+# Send only the files required to construct the local fixture-preview image.
 **
 !Dockerfile
 !.dockerignore
@@ -7,6 +7,9 @@
 !uv.lock
 !src/
 !src/**
+!fixtures/
+!fixtures/corpus/
+!fixtures/corpus/**
 
 # Keep generated, sensitive, and local-only state out at every depth.
 **/.env*

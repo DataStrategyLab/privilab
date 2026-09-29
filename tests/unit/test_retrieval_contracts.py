@@ -17,6 +17,7 @@ from privilab.domain import (
     MatterContext,
     RetrievalChunk,
     RetrievalSource,
+    RetrievedChunk,
     Role,
     SourceEntitlement,
     SourceId,
@@ -187,7 +188,13 @@ def test_source_requires_exact_complete_entitlement_and_stable_chunks() -> None:
         source_id, "user-a", "role-a", "client-a", "matter-a", "workflow-a"
     )
 
-    source = RetrievalSource(source_id, "Synthetic source", (chunk,), (entitlement,))
+    source = RetrievalSource(
+        source_id,
+        "Synthetic source",
+        (chunk,),
+        (entitlement,),
+        source_version="1.0.0",
+    )
 
     assert source.chunks[0].chunk_id == ChunkId("chunk-a")
     with pytest.raises(ValueError, match="every entitlement must belong"):
@@ -205,6 +212,7 @@ def test_source_requires_exact_complete_entitlement_and_stable_chunks() -> None:
                     "workflow-a",
                 ),
             ),
+            source_version="1.0.0",
         )
 
 
@@ -214,7 +222,12 @@ def test_source_and_chunk_text_allow_surrounding_whitespace() -> None:
         ChunkId("chunk-a"), source_id, 0, "\n  synthetic text with padding  \t"
     )
 
-    source = RetrievalSource(source_id, "  Synthetic source  ", (chunk,))
+    source = RetrievalSource(
+        source_id,
+        "  Synthetic source  ",
+        (chunk,),
+        source_version="1.0.0",
+    )
 
     assert source.title == "  Synthetic source  "
     assert source.chunks[0].text == "\n  synthetic text with padding  \t"
@@ -226,7 +239,7 @@ def test_source_and_chunk_text_reject_only_whitespace(text: str) -> None:
     with pytest.raises(ValueError, match="non-whitespace"):
         RetrievalChunk(ChunkId("chunk-a"), source_id, 0, text)
     with pytest.raises(ValueError, match="non-whitespace"):
-        RetrievalSource(source_id, text, ())
+        RetrievalSource(source_id, text, (), source_version="1.0.0")
 
 
 def test_source_and_chunk_text_reject_nul_characters() -> None:
@@ -234,7 +247,32 @@ def test_source_and_chunk_text_reject_nul_characters() -> None:
     with pytest.raises(ValueError, match="NUL"):
         RetrievalChunk(ChunkId("chunk-a"), source_id, 0, "synthetic\x00text")
     with pytest.raises(ValueError, match="NUL"):
-        RetrievalSource(source_id, "Synthetic\x00source", ())
+        RetrievalSource(
+            source_id,
+            "Synthetic\x00source",
+            (),
+            source_version="1.0.0",
+        )
+
+
+@pytest.mark.parametrize("source_version", ["", "  ", " version", "version "])
+def test_source_version_must_be_a_stable_identifier(source_version: str) -> None:
+    with pytest.raises(ValueError, match="source version"):
+        RetrievalSource(
+            SourceId("source-a"),
+            "Synthetic source",
+            (),
+            source_version=source_version,
+        )
+    with pytest.raises(ValueError, match="source version"):
+        RetrievedChunk(
+            SourceId("source-a"),
+            ChunkId("chunk-a"),
+            0,
+            "Synthetic source",
+            "Synthetic text",
+            source_version=source_version,
+        )
 
 
 def test_retrieval_provider_contract_requires_scope_and_keyword_limit() -> None:

@@ -343,10 +343,10 @@ def test_bootstrap_scripts_are_executable() -> None:
 
 def test_codex_configuration_matches_approved_local_controls() -> None:
     config = tomllib.loads((ROOT / ".codex/config.toml").read_text(encoding="utf-8"))
+    assert "model" not in config
+    assert "model_reasoning_effort" not in config
     assert config == {
-        "model": "gpt-5.6-terra",
-        "model_reasoning_effort": "medium",
-        "review_model": "gpt-5.6-sol",
+        "review_model": "gpt-6-astra",
         "approval_policy": "on-request",
         "sandbox_mode": "workspace-write",
         "web_search": "disabled",
@@ -552,6 +552,9 @@ def test_docker_context_is_default_deny_and_minimal() -> None:
         "!uv.lock",
         "!src/",
         "!src/**",
+        "!fixtures/",
+        "!fixtures/corpus/",
+        "!fixtures/corpus/**",
     }
     assert {
         "**/.env*",
@@ -615,7 +618,16 @@ def test_docker_context_is_default_deny_and_minimal() -> None:
         if line.startswith("COPY ") and not line.startswith("COPY --from=")
         for source in line.split()[1:-1]
     }
-    assert local_copy_sources == {"pyproject.toml", "uv.lock", "README.md", "src"}
+    assert local_copy_sources == {
+        "pyproject.toml",
+        "uv.lock",
+        "README.md",
+        "src",
+        "fixtures/corpus",
+    }
+    assert "COPY fixtures/corpus ./fixtures/corpus" in dockerfile
+    assert "PRIVILAB_PREVIEW_CORPUS_ROOT=/app/fixtures/corpus" in dockerfile
+    assert "PRIVILAB_PREVIEW_DB=/app/.local/preview/provenance.sqlite3" in dockerfile
 
 
 def test_linear_mcp_exception_and_adr_filename_are_exact() -> None:
@@ -691,8 +703,7 @@ def test_bootstrap_dependency_set_excludes_out_of_scope_components() -> None:
         assert forbidden not in declared
 
 
-def test_smoke_placeholder_is_not_product_evidence() -> None:
+def test_smoke_harness_is_executed_by_ci() -> None:
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
-    assert "NOT APPLICABLE / SKIPPED" in makefile
-    assert "not PASS" in makefile
-    assert "not product-eval evidence" in makefile
+    assert '"$(PYTHON)" -m privilab.evals.smoke' in makefile
+    assert "NOT APPLICABLE / SKIPPED" not in makefile

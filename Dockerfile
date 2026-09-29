@@ -8,7 +8,9 @@ ENV PATH="/app/.venv/bin:$PATH" \
     UV_LINK_MODE=copy \
     UV_NO_CACHE=1 \
     UV_NO_DEV=1 \
-    UV_PYTHON_DOWNLOADS=never
+    UV_PYTHON_DOWNLOADS=never \
+    PRIVILAB_PREVIEW_CORPUS_ROOT=/app/fixtures/corpus \
+    PRIVILAB_PREVIEW_DB=/app/.local/preview/provenance.sqlite3
 
 WORKDIR /app
 
@@ -16,6 +18,7 @@ COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-install-project --no-editable
 
 COPY src ./src
+COPY fixtures/corpus ./fixtures/corpus
 RUN uv sync --frozen --no-dev --no-editable
 
 EXPOSE 8000
