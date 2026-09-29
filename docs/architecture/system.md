@@ -30,9 +30,14 @@ context. `BLOCK`, `UNKNOWN`, and unresolved `CONDITIONAL` outcomes fail closed.
 
 ## Provider sequence
 
-FixtureModelProvider must be completed and accepted before OpenAIProvider work.
-Live GPT work is blocked until P0-10 is accepted. No runtime autonomous-agent
-framework, model-controlled tools, or runtime MCP are approved.
+DSL-114 completed and accepted the fixture-first prerequisite. DSL-115 implements
+the ADR-003-approved OpenAIProvider for `gpt-5.6-terra` through the Responses API
+and the sanctioned `RunService.from_openai` factory. It preserves the existing
+provider, permission, retrieval, evaluation, review, and provenance contracts.
+An adapter-specific immutable result/usage pair supplies the DSL-116 handoff;
+DSL-115 adds no usage, latency, pricing, or cost persistence. Live smoke execution
+belongs to DSL-116. Preview and CI remain offline and fixture-based. No runtime
+autonomous-agent framework, model-controlled tools, or runtime MCP are approved.
 
 ## Execution environments
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from privilab.application.model_provider import (
@@ -41,6 +42,9 @@ from privilab.domain import (
     RetrievedChunk,
     SyntheticRequestContext,
 )
+
+if TYPE_CHECKING:
+    from privilab.adapters.models.openai import OpenAIProviderConfig
 
 
 def _new_run_id() -> RunId:
@@ -211,6 +215,52 @@ class RunService:
             policy=policy,
             retrieval_provider=retrieval_provider,
             model_provider=governed_fixture.provider,
+            provenance_store=provenance_store,
+            configuration=configuration,
+            run_id_factory=run_id_factory,
+            clock=clock,
+            _authorized=_RUN_SERVICE_CONSTRUCTION_AUTHORITY,
+        )
+
+    @classmethod
+    def from_openai(
+        cls,
+        *,
+        policy: PermissionPolicy,
+        retrieval_provider: RetrievalProvider,
+        provenance_store: ProvenanceStore,
+        configuration_id: str,
+        configuration_version: str,
+        retrieval_provider_id: str,
+        retrieval_provider_version: str,
+        provider_config: OpenAIProviderConfig | None = None,
+        retrieval_limit: int = 10,
+        run_id_factory: Callable[[], RunId] = _new_run_id,
+        clock: Callable[[], datetime] = _utc_now,
+    ) -> RunService:
+        """Compose the approved OpenAI path without credentials or model execution."""
+        from privilab.adapters.models.openai import OpenAIProvider, OpenAIProviderConfig
+
+        settings = (
+            OpenAIProviderConfig() if provider_config is None else provider_config
+        )
+        provider = OpenAIProvider(settings)
+        configuration = RunConfiguration(
+            configuration_id=configuration_id,
+            configuration_version=configuration_version,
+            provider_id="openai-provider",
+            provider_version="1",
+            model_id=settings.model,
+            model_version="alias:gpt-5.6-terra",
+            retrieval_provider_id=retrieval_provider_id,
+            retrieval_provider_version=retrieval_provider_version,
+            retrieval_limit=retrieval_limit,
+            options=settings.configuration_options(),
+        )
+        return cls(
+            policy=policy,
+            retrieval_provider=retrieval_provider,
+            model_provider=provider,
             provenance_store=provenance_store,
             configuration=configuration,
             run_id_factory=run_id_factory,

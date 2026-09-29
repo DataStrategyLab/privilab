@@ -11,7 +11,16 @@ def test_runtime_dependencies_exclude_prohibited_integrations() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())
     dependencies = " ".join(project["project"]["dependencies"]).lower()
 
-    for prohibited in ("openai", "mcp", "langchain", "autogen", "sqlalchemy"):
+    assert "openai>=3.19.2,<4" in project["project"]["dependencies"]
+    assert "openai[" not in dependencies
+    for prohibited in (
+        "mcp",
+        "langchain",
+        "autogen",
+        "sqlalchemy",
+        "anthropic",
+        "litellm",
+    ):
         assert prohibited not in dependencies
 
 
@@ -26,7 +35,7 @@ def test_live_eval_workflow_fails_closed() -> None:
     workflow = (ROOT / ".github/workflows/live-eval.yml").read_text()
 
     assert "workflow_dispatch" in workflow
-    assert "blocked until P0-10" in workflow
+    assert "blocked pending DSL-116" in workflow
     assert "exit 1" in workflow
     assert "secrets." not in workflow
 
