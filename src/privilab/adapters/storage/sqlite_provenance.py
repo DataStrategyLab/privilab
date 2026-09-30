@@ -32,6 +32,14 @@ from privilab.application.run_review import (
     ReviewConflict,
     ReviewDecision,
 )
+from privilab.application.telemetry import (
+    TOKEN_FIELDS,
+    CostStatus,
+    CostUnavailableReason,
+    ModelTelemetry,
+    ModelUsage,
+    PricingSnapshot,
+)
 from privilab.domain import PermissionState
 from privilab.evals import (
     CriterionCriticality,
@@ -212,6 +220,65 @@ CREATE TABLE IF NOT EXISTS model_executions (
     model_id TEXT NOT NULL,
     model_version TEXT NOT NULL,
     model_content_hash TEXT
+) WITHOUT ROWID;
+
+CREATE TABLE IF NOT EXISTS model_telemetry (
+    run_id TEXT PRIMARY KEY REFERENCES model_executions(run_id),
+    latency_ns INTEGER NOT NULL CHECK (
+        typeof(latency_ns) = 'integer' AND latency_ns >= 0
+    ),
+    latency_scope TEXT NOT NULL CHECK (
+        latency_scope = 'provider-execution-inclusive-of-retries-v1'
+    ),
+    usage_present INTEGER NOT NULL CHECK (
+        typeof(usage_present) = 'integer' AND usage_present IN (0, 1)
+    ),
+    input_tokens INTEGER CHECK (input_tokens IS NULL OR (
+        typeof(input_tokens) = 'integer' AND input_tokens >= 0
+    )),
+    output_tokens INTEGER CHECK (output_tokens IS NULL OR (
+        typeof(output_tokens) = 'integer' AND output_tokens >= 0
+    )),
+    total_tokens INTEGER CHECK (total_tokens IS NULL OR (
+        typeof(total_tokens) = 'integer' AND total_tokens >= 0
+    )),
+    cached_input_tokens INTEGER CHECK (cached_input_tokens IS NULL OR (
+        typeof(cached_input_tokens) = 'integer' AND cached_input_tokens >= 0
+    )),
+    cache_write_tokens INTEGER CHECK (cache_write_tokens IS NULL OR (
+        typeof(cache_write_tokens) = 'integer' AND cache_write_tokens >= 0
+    )),
+    reasoning_tokens INTEGER CHECK (reasoning_tokens IS NULL OR (
+        typeof(reasoning_tokens) = 'integer' AND reasoning_tokens >= 0
+    )),
+    cost_status TEXT NOT NULL CHECK (cost_status IN ('CALCULATED', 'NOT_CALCULATED')),
+    cost_amount_decimal TEXT CHECK (
+        cost_amount_decimal IS NULL OR typeof(cost_amount_decimal) = 'text'
+    ),
+    cost_unavailable_reason TEXT CHECK (
+        cost_unavailable_reason IS NULL OR cost_unavailable_reason IN (
+        'PRICING_EVIDENCE_MISSING', 'PRICING_EVIDENCE_INVALID',
+        'BILLING_MODE_UNCONFIRMED',
+        'PRICING_EVIDENCE_NOT_APPLICABLE', 'PRICING_RULE_UNSUPPORTED',
+        'USAGE_EVIDENCE_INSUFFICIENT', 'USAGE_EVIDENCE_INCONSISTENT'
+    )),
+    pricing_snapshot_json TEXT CHECK (pricing_snapshot_json IS NULL OR (
+        typeof(pricing_snapshot_json) = 'text' AND json_valid(pricing_snapshot_json)
+    )),
+    CHECK (usage_present = 1 OR (
+        input_tokens IS NULL AND output_tokens IS NULL AND total_tokens IS NULL
+        AND cached_input_tokens IS NULL AND cache_write_tokens IS NULL
+        AND reasoning_tokens IS NULL
+    )),
+    CHECK (
+        (cost_status = 'CALCULATED' AND cost_amount_decimal IS NOT NULL
+         AND cost_unavailable_reason IS NULL AND pricing_snapshot_json IS NOT NULL
+         AND usage_present = 1 AND input_tokens IS NOT NULL
+         AND output_tokens IS NOT NULL
+         AND cached_input_tokens IS NOT NULL AND cache_write_tokens IS NOT NULL)
+        OR (cost_status = 'NOT_CALCULATED' AND cost_amount_decimal IS NULL
+            AND cost_unavailable_reason IS NOT NULL)
+    )
 ) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS run_evaluations (
@@ -1194,7 +1261,7 @@ END;
 
 
 # Match the established append-only protections, including replacement attempts.
-for _evidence_table in ("run_evaluations", "human_reviews"):
+for _evidence_table in ("run_evaluations", "human_reviews", "model_telemetry"):
     for _operation in ("UPDATE", "DELETE"):
         _SCHEMA += f"""
 CREATE TRIGGER IF NOT EXISTS prevent_{_evidence_table}_{_operation.lower()}
@@ -1212,6 +1279,16 @@ BEGIN
 END;
 """
 _SCHEMA += """
+CREATE TRIGGER IF NOT EXISTS telemetry_requires_open_execution
+BEFORE INSERT ON model_telemetry
+WHEN NOT EXISTS (
+    SELECT 1 FROM runs JOIN model_executions USING (run_id)
+    WHERE runs.run_id = NEW.run_id AND runs.is_finalized = 0 AND runs.model_called = 1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'telemetry requires an open model execution');
+END;
+
 CREATE TRIGGER IF NOT EXISTS evaluation_requires_finalized_run
 BEFORE INSERT ON run_evaluations
 WHEN NOT EXISTS (SELECT 1 FROM runs WHERE run_id = NEW.run_id AND is_finalized = 1)
@@ -1543,6 +1620,43 @@ def _read_options(payload: object, storage_class: str) -> tuple[tuple[str, str],
     return tuple(sorted(values.items()))
 
 
+def _read_model_telemetry(row: sqlite3.Row | None) -> ModelTelemetry | None:
+    if row is None:
+        return None
+    present = _read_flag(
+        row["usage_present"], row["usage_present_type"], "usage_present"
+    )
+    counts = {name: row[name] for name in TOKEN_FIELDS}
+    if not present and any(value is not None for value in counts.values()):
+        raise ValueError("stored missing usage contains counts")
+    usage = ModelUsage(**counts) if present else None
+    snapshot = None
+    payload = row["pricing_snapshot_json"]
+    if payload is not None:
+        if row["pricing_snapshot_json_type"] != "text" or not isinstance(
+            payload, bytes
+        ):
+            raise ValueError("stored pricing must be JSON text")
+        try:
+            text = payload.decode("utf-8", errors="strict")
+            snapshot = PricingSnapshot.from_json(text)
+        except (UnicodeError, TypeError, ValueError, RecursionError):
+            raise ValueError("stored pricing evidence is invalid") from None
+        if snapshot.canonical_json() != text:
+            raise ValueError("stored pricing evidence is not canonical")
+    return ModelTelemetry(
+        provider_latency_ns=row["latency_ns"],
+        latency_scope=row["latency_scope"],
+        usage=usage,
+        cost_status=CostStatus(row["cost_status"]),
+        cost_amount_decimal=row["cost_amount_decimal"],
+        cost_unavailable_reason=None
+        if row["cost_unavailable_reason"] is None
+        else CostUnavailableReason(row["cost_unavailable_reason"]),
+        pricing_snapshot=snapshot,
+    )
+
+
 class SQLiteProvenanceStore:
     """Persist each application-authored run once using relational constraints."""
 
@@ -1698,6 +1812,39 @@ class SQLiteProvenanceStore:
                         configuration.model_content_hash,
                     ),
                 )
+            telemetry = provenance.model_telemetry
+            if telemetry is not None:
+                self._connection.execute(
+                    """
+                    INSERT INTO model_telemetry (
+                        run_id, latency_ns, latency_scope, usage_present,
+                        input_tokens, output_tokens, total_tokens, cached_input_tokens,
+                        cache_write_tokens, reasoning_tokens, cost_status,
+                        cost_amount_decimal, cost_unavailable_reason,
+                        pricing_snapshot_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        provenance.run_id.value,
+                        telemetry.provider_latency_ns,
+                        telemetry.latency_scope,
+                        int(telemetry.usage is not None),
+                        *(
+                            None
+                            if telemetry.usage is None
+                            else getattr(telemetry.usage, name)
+                            for name in TOKEN_FIELDS
+                        ),
+                        telemetry.cost_status.value,
+                        telemetry.cost_amount_decimal,
+                        None
+                        if telemetry.cost_unavailable_reason is None
+                        else telemetry.cost_unavailable_reason.value,
+                        None
+                        if telemetry.pricing_snapshot is None
+                        else telemetry.pricing_snapshot.canonical_json(),
+                    ),
+                )
             finalized = self._connection.execute(
                 """
                 UPDATE runs SET is_finalized = 1
@@ -1775,6 +1922,17 @@ class SQLiteProvenanceStore:
             ).fetchall()
             model_execution = self._connection.execute(
                 "SELECT * FROM model_executions WHERE run_id = ?",
+                (run_id.value,),
+            ).fetchone()
+            telemetry_row = self._connection.execute(
+                "SELECT run_id, latency_ns, latency_scope, usage_present, "
+                "typeof(usage_present) AS usage_present_type, "
+                "input_tokens, output_tokens, total_tokens, cached_input_tokens, "
+                "cache_write_tokens, reasoning_tokens, "
+                "cost_status, cost_amount_decimal, cost_unavailable_reason, "
+                "CAST(pricing_snapshot_json AS BLOB) AS pricing_snapshot_json, "
+                "typeof(pricing_snapshot_json) AS pricing_snapshot_json_type "
+                "FROM model_telemetry WHERE run_id = ?",
                 (run_id.value,),
             ).fetchone()
             chunks_by_source: dict[str, list[ChunkProvenance]] = {
@@ -1863,6 +2021,7 @@ class SQLiteProvenanceStore:
             ),
             configuration=configuration,
             configuration_hash=run["configuration_hash"],
+            model_telemetry=_read_model_telemetry(telemetry_row),
             permission=permission,
             retrieval_called=retrieval_called,
             model_called=model_called,

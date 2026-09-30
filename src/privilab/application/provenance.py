@@ -11,6 +11,7 @@ from enum import StrEnum
 from typing import Protocol
 
 from privilab.application.permissions import PermissionPolicy
+from privilab.application.telemetry import ModelTelemetry
 from privilab.domain import PermissionResult, PermissionState, SyntheticRequestContext
 
 _CONFIGURATION_HASH = re.compile(r"sha256:[0-9a-f]{64}\Z")
@@ -347,6 +348,7 @@ class RunProvenance:
     sources: tuple[SourceProvenance, ...] = ()
     stop_reason: PermissionStopReason | None = None
     failure_stage: FailureStage | None = None
+    model_telemetry: ModelTelemetry | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.run_id, RunId):
@@ -389,6 +391,27 @@ class RunProvenance:
             raise TypeError("retrieval_called must be a boolean")
         if type(self.model_called) is not bool:
             raise TypeError("model_called must be a boolean")
+        if self.model_telemetry is not None:
+            if not isinstance(self.model_telemetry, ModelTelemetry):
+                raise TypeError("model_telemetry must be application-owned evidence")
+            if not self.model_called:
+                raise ValueError("model telemetry requires model execution")
+            self.model_telemetry.validate_execution(
+                self.configuration.provider_id,
+                self.configuration.model_id,
+                self.started_at,
+                self.completed_at,
+            )
+            snapshot = self.model_telemetry.pricing_snapshot
+            options = dict(self.configuration.options)
+            if (
+                options.get("pricing_snapshot_hash"),
+                options.get("pricing_snapshot_schema_version"),
+            ) != (
+                None if snapshot is None else snapshot.content_hash,
+                None if snapshot is None else snapshot.schema_version,
+            ):
+                raise ValueError("pricing snapshot does not match run configuration")
         if not isinstance(self.sources, tuple) or any(
             not isinstance(source, SourceProvenance) for source in self.sources
         ):

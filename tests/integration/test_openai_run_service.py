@@ -289,6 +289,11 @@ def test_governed_path_preserves_cross_context_isolation_and_identity(
             changed, policy()
         )
         assert len(retrieval.calls) == 2
+        assert record.model_telemetry is not None
+        assert record.model_telemetry.usage is not None
+        assert record.model_telemetry.usage.input_tokens == 13456789
+        assert record.model_telemetry.usage.cache_write_tokens is None
+        assert record.model_telemetry.cost_amount_decimal is None
     with closing(SQLiteProvenanceStore(path)) as reopened:
         assert reopened.get(first.run_id) == record
     with sqlite3.connect(path) as db:
@@ -299,9 +304,6 @@ def test_governed_path_preserves_cross_context_isolation_and_identity(
         "boundarytoken",
         "Synthetic answer.",
         "synthetic-raw-response",
-        "13456789",
-        "input_tokens",
-        "cache_write_tokens",
     ):
         assert excluded not in stored
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -34,6 +35,12 @@ from privilab.application.provenance import (
     governed_configuration_hash,
 )
 from privilab.application.retrieval import RetrievalProvider, access_scope_for
+from privilab.application.telemetry import (
+    ModelUsage,
+    PricingInput,
+    build_telemetry,
+    nonnegative_integer,
+)
 from privilab.domain import (
     ConditionId,
     PermissionResult,
@@ -56,6 +63,16 @@ def _utc_now() -> datetime:
 
 
 _RUN_SERVICE_CONSTRUCTION_AUTHORITY = object()
+_MISSING_PRICING = PricingInput()
+
+
+@dataclass(frozen=True, slots=True)
+class _ModelExecution:
+    """Private, invocation-local handoff inside application orchestration."""
+
+    result: ResearchResult | None
+    usage: ModelUsage | None
+    latency_ns: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,6 +168,8 @@ class RunService:
         run_id_factory: Callable[[], RunId] = _new_run_id,
         clock: Callable[[], datetime] = _utc_now,
         _authorized: object | None = None,
+        _execute_model: Callable[[ModelRequest], _ModelExecution] | None = None,
+        _pricing: PricingInput = _MISSING_PRICING,
     ) -> None:
         if _authorized is not _RUN_SERVICE_CONSTRUCTION_AUTHORITY:
             raise TypeError(
@@ -176,6 +195,8 @@ class RunService:
         )
         self._run_id_factory = run_id_factory
         self._clock = clock
+        self._execute_model = _execute_model
+        self._pricing = _pricing
 
     @classmethod
     def from_governed_fixture(
@@ -237,6 +258,10 @@ class RunService:
         retrieval_limit: int = 10,
         run_id_factory: Callable[[], RunId] = _new_run_id,
         clock: Callable[[], datetime] = _utc_now,
+        monotonic_ns: Callable[[], int] = time.monotonic_ns,
+        pricing: PricingInput = _MISSING_PRICING,
+        live_case_id: str | None = None,
+        live_case_version: str | None = None,
     ) -> RunService:
         """Compose the approved OpenAI path without credentials or model execution."""
         from privilab.adapters.models.openai import OpenAIProvider, OpenAIProviderConfig
@@ -245,6 +270,56 @@ class RunService:
             OpenAIProviderConfig() if provider_config is None else provider_config
         )
         provider = OpenAIProvider(settings)
+        if not isinstance(pricing, PricingInput):
+            raise TypeError("pricing must be an immutable PricingInput")
+        if not callable(monotonic_ns):
+            raise TypeError("monotonic_ns must be callable")
+        if (live_case_id is None) != (live_case_version is None):
+            raise ValueError("live case identity and version must be supplied together")
+        case_options: tuple[tuple[str, str], ...] = ()
+        # RunConfiguration validates all identity strings below.
+        if live_case_id is not None:
+            assert live_case_version is not None
+            case_options = (
+                ("live_case_id", live_case_id),
+                ("live_case_version", live_case_version),
+            )
+
+        def execute(request: ModelRequest) -> _ModelExecution:
+            generation = None
+            begin = monotonic_ns()
+            try:
+                generation = provider.generate_with_usage(request)
+            except Exception:
+                pass  # Existing MODEL failure semantics; retain no exception.
+            finally:
+                end = monotonic_ns()
+            nonnegative_integer(begin)
+            nonnegative_integer(end)
+            elapsed = end - begin
+            nonnegative_integer(elapsed)
+            if generation is None:
+                return _ModelExecution(None, None, elapsed)
+            reported = generation.usage
+            try:
+                usage = (
+                    None
+                    if reported is None
+                    else ModelUsage(
+                        input_tokens=reported.input_tokens,
+                        output_tokens=reported.output_tokens,
+                        total_tokens=reported.total_tokens,
+                        cached_input_tokens=reported.cached_input_tokens,
+                        cache_write_tokens=reported.cache_write_tokens,
+                        reasoning_tokens=reported.reasoning_tokens,
+                    )
+                )
+            except (TypeError, ValueError):
+                # Invalid/unpersistable usage fails the model stage, retaining
+                # the measured call interval without coercing any count.
+                return _ModelExecution(None, None, elapsed)
+            return _ModelExecution(generation.result, usage, elapsed)
+
         configuration = RunConfiguration(
             configuration_id=configuration_id,
             configuration_version=configuration_version,
@@ -255,7 +330,9 @@ class RunService:
             retrieval_provider_id=retrieval_provider_id,
             retrieval_provider_version=retrieval_provider_version,
             retrieval_limit=retrieval_limit,
-            options=settings.configuration_options(),
+            options=settings.configuration_options()
+            + pricing.configuration_options()
+            + case_options,
         )
         return cls(
             policy=policy,
@@ -266,6 +343,8 @@ class RunService:
             run_id_factory=run_id_factory,
             clock=clock,
             _authorized=_RUN_SERVICE_CONSTRUCTION_AUTHORITY,
+            _execute_model=execute,
+            _pricing=pricing,
         )
 
     @classmethod
@@ -335,6 +414,7 @@ class RunService:
             provenance = self._provenance(
                 run_id=run_id,
                 started_at=started_at,
+                completed_at=self._clock(),
                 status=RunStatus.PERMISSION_STOPPED,
                 context=context_provenance,
                 permission=permission,
@@ -414,9 +494,15 @@ class RunService:
             )
 
         model_called = False
+        execution: _ModelExecution | None = None
+        result: ResearchResult | None
         try:
             model_called = True
-            result = self._model_provider.generate(model_request)
+            if self._execute_model is None:
+                result = self._model_provider.generate(model_request)
+            else:
+                execution = self._execute_model(model_request)
+                result = execution.result
             if not isinstance(result, ResearchResult):
                 raise TypeError("model provider must return a ResearchResult")
         except Exception:
@@ -429,17 +515,20 @@ class RunService:
                 retrieval_called=True,
                 model_called=model_called,
                 sources=sources,
+                execution=execution,
             )
 
         provenance = self._provenance(
             run_id=run_id,
             started_at=started_at,
+            completed_at=self._clock(),
             status=RunStatus.GENERATED,
             context=context_provenance,
             permission=permission,
             retrieval_called=True,
             model_called=True,
             sources=sources,
+            execution=execution,
         )
         self._provenance_store.append(provenance)
         return RunOutcome(
@@ -460,6 +549,7 @@ class RunService:
         retrieval_called: bool,
         model_called: bool,
         sources: tuple[SourceProvenance, ...] = (),
+        execution: _ModelExecution | None = None,
     ) -> RunOutcome:
         permission = (
             None
@@ -469,6 +559,7 @@ class RunService:
         provenance = self._provenance(
             run_id=run_id,
             started_at=started_at,
+            completed_at=self._clock(),
             status=RunStatus.FAILED,
             context=context,
             permission=permission,
@@ -476,6 +567,7 @@ class RunService:
             model_called=model_called,
             sources=sources,
             failure_stage=failure_stage,
+            execution=execution,
         )
         self._provenance_store.append(provenance)
         return RunOutcome(
@@ -490,6 +582,7 @@ class RunService:
         *,
         run_id: RunId,
         started_at: datetime,
+        completed_at: datetime,
         status: RunStatus,
         context: ContextProvenance,
         permission: PermissionProvenance | None,
@@ -498,11 +591,12 @@ class RunService:
         sources: tuple[SourceProvenance, ...] = (),
         stop_reason: PermissionStopReason | None = None,
         failure_stage: FailureStage | None = None,
+        execution: _ModelExecution | None = None,
     ) -> RunProvenance:
         return RunProvenance(
             run_id=run_id,
             started_at=started_at,
-            completed_at=self._clock(),
+            completed_at=completed_at,
             status=status,
             context=context,
             configuration=self._configuration,
@@ -513,6 +607,17 @@ class RunService:
             sources=sources,
             stop_reason=stop_reason,
             failure_stage=failure_stage,
+            model_telemetry=None
+            if execution is None
+            else build_telemetry(
+                execution.usage,
+                execution.latency_ns,
+                self._pricing,
+                provider_id=self._configuration.provider_id,
+                model_id=self._configuration.model_id,
+                started_at=started_at,
+                completed_at=completed_at,
+            ),
         )
 
 
