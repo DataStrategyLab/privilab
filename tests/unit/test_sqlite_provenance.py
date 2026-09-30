@@ -214,15 +214,16 @@ def test_review03_expected_catalog_is_immutable_cached_and_closes_reference(
             for row in catalog.objects
         )
         assert {row[0] for row in catalog.objects} == {"table", "trigger"}
-        assert sum(row[0] == "table" for row in catalog.objects) == 8
+        assert sum(row[0] == "table" for row in catalog.objects) == 9
         assert isinstance(catalog.unique_indexes, tuple)
-        assert len(catalog.unique_indexes) == 9
+        assert len(catalog.unique_indexes) == 10
         assert tuple(
             (table, unique, origin, partial, tuple(c[2] for c in columns if c[5]))
             for table, unique, origin, partial, columns in catalog.unique_indexes
         ) == (
             ("human_reviews", 1, "pk", 0, ("run_id",)),
             ("model_executions", 1, "pk", 0, ("run_id",)),
+            ("model_telemetry", 1, "pk", 0, ("run_id",)),
             ("run_chunks", 1, "pk", 0, ("run_id", "chunk_id")),
             ("run_chunks", 1, "u", 0, ("run_id", "retrieval_position")),
             ("run_configurations", 1, "pk", 0, ("run_id",)),

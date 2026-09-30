@@ -177,7 +177,7 @@ The current implementation includes foundational components for the controlled w
 - reproducible offline verification;
 - FastAPI / Jinja preview infrastructure.
 
-Development began with deterministic fixtures and controlled local behavior before introducing the approved OpenAI adapter. The preview and CI remain fixture-based; live smoke execution belongs to DSL-116.
+Development began with deterministic fixtures and controlled local behavior before introducing the approved OpenAI adapter. The preview and CI remain fixture-based. DSL-116 adds separately gated local `make eval-live` execution with reconstructable usage, latency, and conditional cost evidence; see the [live smoke instructions](docs/architecture/live-eval.md).
 
 This allows security boundaries, retrieval behavior, tests, and evaluation contracts to be exercised without requiring production credentials or sensitive data.
 
