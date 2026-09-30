@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +14,9 @@ from privilab.application.trade_regulatory_tasks import (
     GOLDEN_PATH,
     PACK_PATH,
     SCENARIOS,
+    TASK_CHOICES,
     TASK_FIELDS,
+    VERSION,
     load_task_pack,
     parse_expected,
 )
@@ -37,6 +40,10 @@ def test_pack_inventory_and_schema() -> None:
     pack = load_task_pack(ROOT)
     assert len(pack.tasks) == len(pack.cases) == 6
     assert {t.scenario_class for t in pack.tasks} == set(SCENARIOS)
+    assert {(t.task_id, t.task_version, t.scenario_class) for t in pack.tasks} == {
+        (task_id, VERSION, scenario) for task_id, scenario in TASK_CHOICES
+    }
+    assert all(case.case_version == VERSION for case in pack.cases)
     schema = json.loads((ROOT / PACK_PATH / "schema/task.schema.json").read_text())
     assert set(schema["properties"]) == set(schema["required"]) == TASK_FIELDS
     assert schema["additionalProperties"] is False
@@ -45,6 +52,70 @@ def test_pack_inventory_and_schema() -> None:
         assert task.substantive_review.reviewer_id is None
         assert task.substantive_review.reviewed_at is None
         assert not task.prospect_demo_eligible
+
+
+def update_task_identity(
+    entry: dict[str, Any],
+    task: dict[str, Any],
+    case: dict[str, Any],
+    task_id: str,
+    version: str,
+) -> None:
+    """Keep ordinary task/manifest/golden cross-references consistent."""
+    entry.update(id=task_id, version=version)
+    task.update(task_id=task_id, task_version=version)
+    task["configuration_options"].update(
+        domain_task_id=task_id, domain_task_version=version
+    )
+    case.update(
+        case_id=f"golden.{task_id}",
+        domain_task_id=task_id,
+        domain_task_version=version,
+    )
+    case["expected_configuration_options"].update(
+        domain_task_id=task_id, domain_task_version=version
+    )
+
+
+@pytest.mark.parametrize(
+    "mutation", ["extra", "renamed", "version", "scenario-mismatch"]
+)
+def test_unsupported_task_inventory(repository: Path, mutation: str) -> None:
+    manifest_path = repository / PACK_PATH / "manifest.json"
+    golden_path = repository / GOLDEN_PATH
+    manifest = json.loads(manifest_path.read_text())
+    golden = json.loads(golden_path.read_text())
+    entry = manifest["tasks"][0]
+    task = json.loads((repository / PACK_PATH / entry["path"]).read_text())
+    case = next(c for c in golden["cases"] if c["domain_task_id"] == entry["id"])
+    task_id, version = entry["id"], entry["version"]
+    if mutation == "extra":
+        entry, case = deepcopy(entry), deepcopy(case)
+        entry["path"] = "tasks/additional-grounded-v1.json"
+        manifest["tasks"].append(entry)
+        golden["cases"].append(case)
+        task_id = "trade-regulatory.additional-grounded"
+    elif mutation == "renamed":
+        task_id = "trade-regulatory.renamed-grounded"
+    elif mutation == "version":
+        version = "2.0.0"
+    else:
+        # Swap supported IDs without changing either task's scenario-specific content.
+        other_entry = manifest["tasks"][1]
+        other_path = repository / PACK_PATH / other_entry["path"]
+        other_task = json.loads(other_path.read_text())
+        other_case = next(
+            c for c in golden["cases"] if c["domain_task_id"] == other_entry["id"]
+        )
+        task_id = other_entry["id"]
+        update_task_identity(other_entry, other_task, other_case, entry["id"], version)
+        rewrite(other_path, other_task)
+    update_task_identity(entry, task, case, task_id, version)
+    rewrite(repository / PACK_PATH / entry["path"], task)
+    rewrite(manifest_path, manifest)
+    rewrite(golden_path, golden)
+    with pytest.raises(ValueError, match="unsupported v1 task inventory"):
+        load_task_pack(repository)
 
 
 @pytest.mark.parametrize(
@@ -248,7 +319,6 @@ def test_canonical_references(repository: Path, manifest: str, mutation: str) ->
         "identity",
         "options",
         "gate",
-        "version",
         "extra",
     ],
 )
@@ -268,12 +338,28 @@ def test_golden_references(repository: Path, mutation: str) -> None:
         case["expected_configuration_options"]["scenario_class"] = "different"
     elif mutation == "gate":
         case["expected"]["gate"] = "BLOCK"
-    elif mutation == "version":
-        case["case_version"] = "v1"
     else:
         case["unexpected"] = True
     rewrite(path, raw)
     with pytest.raises(ValueError):
+        load_task_pack(repository)
+
+
+@pytest.mark.parametrize(
+    ("version", "error"),
+    [
+        ("v1", "malformed identity or version"),
+        ("2.0.0", "unsupported golden case version"),
+    ],
+)
+def test_invalid_golden_case_version(
+    repository: Path, version: str, error: str
+) -> None:
+    path = repository / GOLDEN_PATH
+    raw = json.loads(path.read_text())
+    raw["cases"][0]["case_version"] = version
+    rewrite(path, raw)
+    with pytest.raises(ValueError, match=error):
         load_task_pack(repository)
 
 

@@ -631,8 +631,12 @@ def load_task_pack(repository_root: Path) -> TaskPack:
         tasks.append(task)
     if len({t.task_id for t in tasks}) != len(tasks):
         raise ValueError("duplicate task ID")
-    if {t.scenario_class for t in tasks} != set(SCENARIOS):
-        raise ValueError("all six scenarios are required")
+    supported_tasks = {
+        (task_id, VERSION, scenario_class) for task_id, scenario_class in TASK_CHOICES
+    }
+    loaded_tasks = {(t.task_id, t.task_version, t.scenario_class) for t in tasks}
+    if loaded_tasks != supported_tasks:
+        raise ValueError("unsupported v1 task inventory")
     inventory = {
         p.absolute() for p in pack_root.rglob("*") if p.is_file() or p.is_symlink()
     }
@@ -652,6 +656,9 @@ def load_task_pack(repository_root: Path) -> TaskPack:
     selection = TaskPack(tuple(tasks), ())
     for value in _list(golden["cases"]):
         case = _object(value, set(GoldenCase.__dataclass_fields__))
+        case_version = _identity(case["case_version"], version=True)
+        if case_version != VERSION:
+            raise ValueError("unsupported golden case version")
         task = selection.select(
             _identity(case["domain_task_id"]),
             _identity(case["domain_task_version"], version=True),
@@ -664,7 +671,7 @@ def load_task_pack(repository_root: Path) -> TaskPack:
         cases.append(
             GoldenCase(
                 _identity(case["case_id"]),
-                _identity(case["case_version"], version=True),
+                case_version,
                 task.task_id,
                 task.task_version,
                 expected,
