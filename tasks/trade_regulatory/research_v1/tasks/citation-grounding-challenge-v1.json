@@ -1,0 +1,71 @@
+{
+  "schema_version": "1",
+  "task_id": "trade-regulatory.citation-grounding-challenge",
+  "task_version": "1.0.0",
+  "scenario_class": "CITATION_GROUNDING_CHALLENGE",
+  "title": "Citation grounding challenge",
+  "task_text": "Describe the supplied synthetic trade notice with an exact source/chunk citation. The deterministic negative fixture deliberately names a missing chunk.",
+  "query": "synthetic",
+  "context_ref": {
+    "id": "context.synthetic-request.001",
+    "version": "1.0.0"
+  },
+  "sources": [
+    {
+      "corpus_id": "corpus.synthetic-trade-notice.001",
+      "corpus_version": "1.0.0",
+      "source_id": "synthetic-trade-notice-001",
+      "source_version": "1.0.0",
+      "chunk_id": "synthetic-trade-notice-chunk-001",
+      "ordinal": 0
+    }
+  ],
+  "model_fixture_ref": {
+    "id": "model-output.trade-regulatory-missing-chunk.001",
+    "version": "1.0.0"
+  },
+  "automated_control_ref": {
+    "task_id": "p0-source-grounded-output",
+    "task_version": "1.0.0",
+    "rubric_id": "p0-deterministic-critical-gate",
+    "rubric_version": "1.0.0"
+  },
+  "expected": {
+    "permission_state": "ALLOW",
+    "run_status": "GENERATED",
+    "retrieval_called": true,
+    "model_called": true,
+    "criteria": {
+      "authorized-source": "PASS",
+      "citation-resolution": "FAIL",
+      "permission-boundary": "PASS",
+      "provenance-completeness": "PASS"
+    },
+    "gate": "BLOCK",
+    "review_state": "PENDING",
+    "allowed_decisions": [
+      "REJECT",
+      "REQUEST_REVISION"
+    ]
+  },
+  "expected_output_behavior": "Generated controlled negative output cites an authorized source and nonexistent chunk.",
+  "safe_failure": "Block the automated gate and APPROVE; retain governed REJECT and REQUEST_REVISION.",
+  "configuration_options": {
+    "task_pack_id": "trade-regulatory-research",
+    "task_pack_version": "1.0.0",
+    "domain_task_id": "trade-regulatory.citation-grounding-challenge",
+    "domain_task_version": "1.0.0",
+    "scenario_class": "CITATION_GROUNDING_CHALLENGE"
+  },
+  "substantive_rubric_ref": {
+    "id": "trade-regulatory-substantive-review",
+    "version": "1.0.0"
+  },
+  "substantive_review": {
+    "status": "DRAFT",
+    "reviewer_id": null,
+    "reviewed_at": null,
+    "criterion_results": {}
+  },
+  "prospect_demo_eligible": false
+}

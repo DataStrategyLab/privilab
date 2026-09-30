@@ -1,0 +1,31 @@
+{
+  "schema_version": "1",
+  "rubric_id": "trade-regulatory-substantive-review",
+  "rubric_version": "1.0.0",
+  "criteria": [
+    {
+      "criterion_id": "proposition-support",
+      "criterion_version": "1.0.0",
+      "release_critical": true,
+      "description": "Material propositions are supported by the supplied cited source."
+    },
+    {
+      "criterion_id": "scope-discipline",
+      "criterion_version": "1.0.0",
+      "release_critical": true,
+      "description": "Conclusions remain bounded to the supplied synthetic source and task; no claims about actual law."
+    },
+    {
+      "criterion_id": "uncertainty-handling",
+      "criterion_version": "1.0.0",
+      "release_critical": true,
+      "description": "Insufficient supplied authority is identified and appropriate review or additional authority requested."
+    },
+    {
+      "criterion_id": "draft-clarity",
+      "criterion_version": "1.0.0",
+      "release_critical": true,
+      "description": "The controlled draft and any intentional negative fixture are clearly explained for internal review."
+    }
+  ]
+}

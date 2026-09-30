@@ -1,0 +1,377 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DSL-117 outer domain task v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "task_id",
+    "task_version",
+    "scenario_class",
+    "title",
+    "task_text",
+    "query",
+    "context_ref",
+    "sources",
+    "model_fixture_ref",
+    "automated_control_ref",
+    "expected",
+    "expected_output_behavior",
+    "safe_failure",
+    "configuration_options",
+    "substantive_rubric_ref",
+    "substantive_review",
+    "prospect_demo_eligible"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "task_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "scenario_class": {
+      "enum": [
+        "GROUNDED_HAPPY_PATH",
+        "INSUFFICIENT_SOURCE",
+        "PERMISSION_BLOCK",
+        "CRITICAL_EVAL_FAILURE",
+        "CITATION_GROUNDING_CHALLENGE",
+        "MALICIOUS_SOURCE_INJECTION"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "query": {
+      "type": "string",
+      "minLength": 1
+    },
+    "context_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "corpus_id",
+          "corpus_version",
+          "source_id",
+          "source_version",
+          "chunk_id",
+          "ordinal"
+        ],
+        "properties": {
+          "corpus_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+          },
+          "corpus_version": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+          },
+          "source_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+          },
+          "source_version": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+          },
+          "chunk_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+          },
+          "ordinal": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "model_fixture_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        }
+      }
+    },
+    "automated_control_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_id",
+        "task_version",
+        "rubric_id",
+        "rubric_version"
+      ],
+      "properties": {
+        "task_id": {
+          "const": "p0-source-grounded-output"
+        },
+        "task_version": {
+          "const": "1.0.0"
+        },
+        "rubric_id": {
+          "const": "p0-deterministic-critical-gate"
+        },
+        "rubric_version": {
+          "const": "1.0.0"
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "permission_state",
+        "run_status",
+        "retrieval_called",
+        "model_called",
+        "criteria",
+        "gate",
+        "review_state",
+        "allowed_decisions"
+      ],
+      "properties": {
+        "permission_state": {
+          "enum": [
+            "ALLOW",
+            "CONDITIONAL",
+            "BLOCK",
+            "UNKNOWN"
+          ]
+        },
+        "run_status": {
+          "enum": [
+            "GENERATED",
+            "PERMISSION_STOPPED",
+            "FAILED"
+          ]
+        },
+        "retrieval_called": {
+          "type": "boolean"
+        },
+        "model_called": {
+          "type": "boolean"
+        },
+        "criteria": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "authorized-source",
+            "citation-resolution",
+            "permission-boundary",
+            "provenance-completeness"
+          ],
+          "properties": {
+            "authorized-source": {
+              "enum": [
+                "PASS",
+                "FAIL",
+                "ERROR",
+                "UNKNOWN"
+              ]
+            },
+            "citation-resolution": {
+              "enum": [
+                "PASS",
+                "FAIL",
+                "ERROR",
+                "UNKNOWN"
+              ]
+            },
+            "permission-boundary": {
+              "enum": [
+                "PASS",
+                "FAIL",
+                "ERROR",
+                "UNKNOWN"
+              ]
+            },
+            "provenance-completeness": {
+              "enum": [
+                "PASS",
+                "FAIL",
+                "ERROR",
+                "UNKNOWN"
+              ]
+            }
+          }
+        },
+        "gate": {
+          "enum": [
+            "PASS",
+            "BLOCK"
+          ]
+        },
+        "review_state": {
+          "enum": [
+            "PENDING",
+            "NOT REVIEWABLE"
+          ]
+        },
+        "allowed_decisions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "APPROVE",
+              "REJECT",
+              "REQUEST_REVISION"
+            ]
+          }
+        }
+      }
+    },
+    "expected_output_behavior": {
+      "type": "string",
+      "minLength": 1
+    },
+    "safe_failure": {
+      "type": "string",
+      "minLength": 1
+    },
+    "configuration_options": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_pack_id",
+        "task_pack_version",
+        "domain_task_id",
+        "domain_task_version",
+        "scenario_class"
+      ],
+      "properties": {
+        "task_pack_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+        },
+        "task_pack_version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        },
+        "domain_task_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+        },
+        "domain_task_version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        },
+        "scenario_class": {
+          "enum": [
+            "GROUNDED_HAPPY_PATH",
+            "INSUFFICIENT_SOURCE",
+            "PERMISSION_BLOCK",
+            "CRITICAL_EVAL_FAILURE",
+            "CITATION_GROUNDING_CHALLENGE",
+            "MALICIOUS_SOURCE_INJECTION"
+          ]
+        }
+      }
+    },
+    "substantive_rubric_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        }
+      }
+    },
+    "substantive_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reviewer_id",
+        "reviewed_at",
+        "criterion_results"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "DRAFT",
+            "APPROVED",
+            "REJECTED"
+          ]
+        },
+        "reviewer_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewed_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "criterion_results": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "UNKNOWN"
+            ]
+          }
+        }
+      }
+    },
+    "prospect_demo_eligible": {
+      "type": "boolean"
+    }
+  }
+}

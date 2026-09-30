@@ -11,7 +11,7 @@ export UV_CACHE_DIR := $(CURDIR)/.local/uv-cache
 export UV_PYTHON_INSTALL_DIR := $(CURDIR)/.local/python
 
 .PHONY: bootstrap ci ci-stages guard contract fixture-validation format-check lint typecheck \
-	build-check tests fixture-smoke secret-scan clean-state preview \
+	build-check tests fixture-smoke golden-eval secret-scan clean-state preview \
 	container-build container-preview
 
 bootstrap:
@@ -35,7 +35,7 @@ ci: guard
 		exit 1; \
 	fi
 
-ci-stages: contract fixture-validation format-check lint typecheck build-check tests fixture-smoke secret-scan clean-state
+ci-stages: contract fixture-validation format-check lint typecheck build-check tests fixture-smoke golden-eval secret-scan clean-state
 
 contract:
 	@echo "==> validate configuration, schemas, and repository contract"
@@ -78,6 +78,10 @@ tests:
 fixture-smoke:
 	@echo "==> fixture smoke eval"
 	@"$(PYTHON)" -m privilab.evals.smoke
+
+golden-eval: guard
+	@"$(PYTHON)" scripts/validate_trade_regulatory.py
+	@"$(PYTHON)" -m privilab.evals.trade_regulatory --root "$(CURDIR)"
 
 secret-scan:
 	@echo "==> secret scan"

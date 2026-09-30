@@ -20,6 +20,7 @@ from privilab.application.run_review import (
     RunReviewService,
     RunReviewView,
 )
+from privilab.application.trade_regulatory_tasks import TASK_CHOICES
 from privilab.config import Settings, load_settings
 from privilab.domain import SyntheticRequestContext
 from privilab.web.preview import CONTEXT_CHOICES, QUERY, TASK_TEXT, open_preview_run
@@ -91,6 +92,18 @@ def _run_values(outcome: RunOutcome | None, record: RunProvenance) -> dict[str, 
             ("Provider version", configuration.provider_version),
             ("Configured model", configuration.model_id),
             ("Model version", configuration.model_version),
+            *(
+                (name, value)
+                for name, value in configuration.options
+                if name
+                in {
+                    "task_pack_id",
+                    "task_pack_version",
+                    "domain_task_id",
+                    "domain_task_version",
+                    "scenario_class",
+                }
+            ),
         ),
     }
 
@@ -215,7 +228,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "title": active_settings.title,
                     "banner": active_settings.reference_banner,
                     "environment": active_settings.environment,
-                    "choices": tuple((key, label) for key, label, _ in CONTEXT_CHOICES),
+                    "choices": tuple((key, label) for key, label, _ in CONTEXT_CHOICES)
+                    + tuple(
+                        (key, "DSL-117 (local checkout): " + label)
+                        for key, label in TASK_CHOICES
+                    ),
                     "task_text": TASK_TEXT,
                     "query": QUERY,
                     "selected_choice": "standard",
@@ -247,6 +264,40 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 else 200,
             )
 
+    def execute_domain_task(request: Request, choice: str) -> HTMLResponse:
+        # Explicit local task selection is the only preview artifact-loading path.
+        # Reuse the configured canonical corpus location; do not discover a checkout.
+        from privilab.evals.trade_regulatory import open_task_run
+
+        repository = active_settings.preview_corpus_root.parent.parent
+        if active_settings.preview_corpus_root != repository / "fixtures/corpus":
+            raise ValueError("DSL-117 requires the canonical local checkout layout")
+        with open_task_run(
+            repository, choice, database_path=active_settings.preview_database
+        ) as (task, service, store):
+            outcome, view = RunReviewService(store, store).execute(
+                service,
+                context=task.context,
+                task_text=task.task_text,
+                query=task.query,
+            )
+            return render(
+                request,
+                values=_run_values(outcome, view.run)
+                | _review_values(view)
+                | {
+                    "selected_choice": choice,
+                    "task_text": task.task_text,
+                    "query": task.query,
+                    "domain_task_note": "Internal fixture; substantive review: "
+                    + task.substantive_review.status
+                    + ". No prospect-demo release is granted.",
+                },
+                status_code=500
+                if outcome.status is RunStatus.FAILED or view.evaluation is None
+                else 200,
+            )
+
     @application.get("/", response_class=HTMLResponse)
     def index(request: Request) -> HTMLResponse:
         try:
@@ -259,7 +310,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             try:
                 choice = await _form_choice(
-                    request, "context_choice", {key for key, _, _ in CONTEXT_CHOICES}
+                    request,
+                    "context_choice",
+                    {key for key, _, _ in CONTEXT_CHOICES}
+                    | {key for key, _ in TASK_CHOICES},
                 )
             except ValueError:
                 return render(
@@ -271,6 +325,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     },
                     status_code=400,
                 )
+            if choice in {key for key, _ in TASK_CHOICES}:
+                return await run_in_threadpool(execute_domain_task, request, choice)
             context = next(
                 value for key, _label, value in CONTEXT_CHOICES if key == choice
             )

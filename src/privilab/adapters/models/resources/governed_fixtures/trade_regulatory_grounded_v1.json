@@ -1,0 +1,9 @@
+{
+  "answer_text": "The supplied synthetic trade notice states that its text is for fixture and provenance validation only. This is a bounded description of the supplied source, not a statement of legal obligations.",
+  "citations": [
+    {
+      "source_id": "synthetic-trade-notice-001",
+      "chunk_id": "synthetic-trade-notice-chunk-001"
+    }
+  ]
+}

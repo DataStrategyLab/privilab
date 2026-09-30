@@ -257,6 +257,12 @@ def test_new_run_page_has_only_the_controlled_form(
         "conditional-role",
         "critical-citation-failure",
         "malicious-source",
+        "trade-regulatory.grounded-happy-path",
+        "trade-regulatory.insufficient-source",
+        "trade-regulatory.permission-block",
+        "trade-regulatory.critical-eval-failure",
+        "trade-regulatory.citation-grounding-challenge",
+        "trade-regulatory.malicious-source-injection",
     ]
     assert re.findall(r'<(?:input|select|textarea)[^>]*name="([^"]+)"', html) == [
         "context_choice"

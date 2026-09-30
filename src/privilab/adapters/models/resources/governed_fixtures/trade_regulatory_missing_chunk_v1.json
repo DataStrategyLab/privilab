@@ -1,0 +1,9 @@
+{
+  "answer_text": "Controlled negative fixture: this description of the supplied synthetic trade notice intentionally cites a nonexistent chunk. This output must remain blocked.",
+  "citations": [
+    {
+      "source_id": "synthetic-trade-notice-001",
+      "chunk_id": "synthetic-missing-chunk-001"
+    }
+  ]
+}
