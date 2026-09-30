@@ -30,6 +30,9 @@ TOKEN_FIELDS = (
 )
 _DECIMAL = re.compile(r"(?:0|[1-9][0-9]*)(?:\.[0-9]+)?\Z")
 _IDENTIFIER = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}\Z")
+_PRICING_SOURCE_HOSTS = frozenset(
+    {"openai.com", "developers.openai.com", "platform.openai.com"}
+)
 _TIMESTAMP = re.compile(
     r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}"
     r"(?:\.[0-9]{1,6})?(?:Z|[+-][0-9]{2}:[0-9]{2})\Z"
@@ -114,6 +117,34 @@ def _parse_timestamp(value: object) -> datetime:
 def _identifier(value: object) -> None:
     if not isinstance(value, str) or not _IDENTIFIER.fullmatch(value):
         raise ValueError("pricing identifier is invalid")
+
+
+def _approved_pricing_source(value: object) -> bool:
+    """Check the DSL-116 origin allowlist without DNS or network access."""
+    if (
+        not isinstance(value, str)
+        or len(value) > 2048
+        or any(ord(c) <= 32 or ord(c) >= 127 for c in value)
+    ):
+        return False
+    try:
+        url = urlsplit(value)
+        hostname = (url.hostname or "").lower()
+        port = url.port  # Access validates malformed and out-of-range ports.
+    except ValueError:
+        # Discard parser errors, which may contain operator-supplied content.
+        return False
+    return (
+        url.scheme == "https"
+        and hostname in _PRICING_SOURCE_HOSTS
+        and port in (None, 443)
+        and url.username is None
+        and url.password is None
+        # Require an omitted port or canonical :443, including exact authority.
+        and url.netloc.lower() in (hostname, f"{hostname}:443")
+        and "?" not in value
+        and "#" not in value
+    )
 
 
 def _object(
@@ -202,22 +233,8 @@ class PricingSnapshot:
             r"[A-Z]{3}", self.currency
         ):
             raise ValueError("currency must be a three-letter currency code")
-        if (
-            not isinstance(self.source_url, str)
-            or len(self.source_url) > 2048
-            or any(ord(c) <= 32 or ord(c) >= 127 for c in self.source_url)
-        ):
-            raise ValueError("pricing source must be a public HTTPS URL")
-        url = urlsplit(self.source_url)
-        if (
-            url.scheme != "https"
-            or not url.hostname
-            or url.username is not None
-            or url.password is not None
-            or url.query
-            or url.fragment
-        ):
-            raise ValueError("pricing source must be a public HTTPS URL")
+        if not _approved_pricing_source(self.source_url):
+            raise ValueError("pricing source must be an approved public HTTPS URL")
         for name in ("retrieved_at", "expires_at"):
             object.__setattr__(self, name, utc_timestamp(getattr(self, name)))
         if self.effective_at is not None:

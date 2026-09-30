@@ -48,7 +48,7 @@ def price() -> PricingInput:
             "gpt-5.6-terra",
             ProcessingMode.STANDARD,
             "synthetic-price",
-            "https://example.invalid/synthetic-pricing",
+            "https://openai.com/synthetic-pricing-test-fixture",
             STAMP,
             STAMP,
             STAMP + timedelta(seconds=5),

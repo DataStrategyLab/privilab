@@ -46,7 +46,7 @@ The strict snapshot schema is:
 | `schema_version` | `"1"` |
 | `provider_id`, `model_id` | Identifiers; calculation requires `openai-provider` and `gpt-5.6-terra` |
 | `processing_mode` | Enum described below |
-| `source_id`, `source_url` | Pricing-source identity and public HTTPS URL without credentials, query, or fragment |
+| `source_id`, `source_url` | Pricing-source identity and approved public-origin HTTPS URL as restricted below |
 | `retrieved_at`, `expires_at` | Required aware RFC3339 timestamps |
 | `effective_at` | Aware RFC3339 timestamp or explicit JSON null |
 | `currency` | Three uppercase letters; no currency conversion |
@@ -56,6 +56,17 @@ The strict snapshot schema is:
 | Rate values | Non-negative fixed-point decimal strings, never JSON numbers |
 | `calculation_rule_version` | Calculation supports `openai-gpt56-text-v1` |
 | `billing_attestation` | Optional object described below; omit if unconfirmed |
+
+`source_url` must contain at most 2,048 ASCII characters, without whitespace or
+control characters, credentials, a query, or a fragment (including empty `?` or
+`#` delimiters). DSL-116 permits only the exact hostnames `openai.com`,
+`developers.openai.com`, and `platform.openai.com`, compared in lowercase. The
+authority must be that hostname alone or followed by the canonical HTTPS port
+`:443`. Other hosts, suffix lookalikes, trailing-dot hosts, private/local/IP
+authorities, and malformed or other ports are rejected. Validation performs no
+DNS resolution or network lookup. A rejected URL produces `INVALID` pricing and
+`NOT_CALCULATED / PRICING_EVIDENCE_INVALID` without preventing generation or
+retaining the URL or parser error in provenance, configuration, or live output.
 
 The supported attestation shape is:
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import shutil
+import socket
 import sqlite3
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
@@ -111,6 +112,102 @@ def test_governed_runner_persists_reconstructable_evidence(
         "Briefly summarize",
     ):
         assert sentinel not in output.out + output.err + caplog.text + dump
+
+
+@pytest.mark.parametrize(
+    "source_url",
+    [
+        "https://localhost/private-pricing.json",
+        "https://127.0.0.1/private",
+        "https://10.0.0.1/private",
+        "https://169.254.169.254/private",
+        "https://[::1]/private",
+        "https://example.com:99999/pricing",
+        "https://openai.com:99999/pricing",
+        "https://openai.com:private-port/pricing",
+        "https://[private]/pricing",
+        "https://openai.com:8443/pricing",
+        "https://openai.com.evil.example/pricing",
+        "https://evilopenai.com/pricing",
+        "https://user:secret@openai.com/pricing",
+        "https://openai.com/pricing?secret=private",
+        "https://openai.com/pricing#private",
+    ],
+)
+def test_rejected_source_allows_generation_without_leaking_evidence(
+    source_url: str,
+    case_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    def no_dns(*args: object, **kwargs: object) -> None:
+        raise AssertionError("pricing sources must not be resolved")
+
+    for name in ("getaddrinfo", "gethostbyname", "gethostbyname_ex"):
+        monkeypatch.setattr(socket, name, no_dns)
+    calls = sdk(monkeypatch, FakeClock())
+    monkeypatch.setenv("PRIVILAB_LIVE_EVAL", "1")
+    pricing_path = case_root / "private-pricing-input-sentinel.json"
+    snapshot = price().snapshot
+    assert snapshot is not None
+    raw = json.loads(snapshot.canonical_json())
+    raw["source_url"] = source_url
+    pricing_path.write_text(json.dumps(raw), encoding="utf-8")
+    monkeypatch.setenv("PRIVILAB_PRICING_EVIDENCE_FILE", str(pricing_path))
+    envelope = live_openai.load_pricing(str(pricing_path))
+    assert envelope.state is PricingInputState.INVALID
+    assert envelope.snapshot is None and envelope.configuration_options() == ()
+    caplog.set_level(logging.DEBUG)
+    original = live_openai.run_live
+    monkeypatch.setattr(live_openai, "run_live", lambda: original(case_root))
+    live_openai.main()
+    output = capsys.readouterr()
+    summary = json.loads(output.out)
+    assert len(calls) == 1 and summary["status"] == "GENERATED"
+    assert summary["cost_status"] == "NOT_CALCULATED"
+    assert summary["cost_amount_decimal"] is None
+    assert summary["cost_unavailable_reason"] == "PRICING_EVIDENCE_INVALID"
+    assert summary["pricing_source_id"] is None
+    assert summary["pricing_snapshot_hash"] is None
+    assert summary["pricing_snapshot_schema_version"] is None
+    database = Path(summary["database_path"])
+    store = SQLiteProvenanceStore(database)
+    try:
+        run = store.get(store.recent_run_ids()[0])
+        assert run is not None and run.status is RunStatus.GENERATED
+        assert run.model_telemetry is not None
+        assert run.model_telemetry.pricing_snapshot is None
+        assert run.model_telemetry.cost_status is CostStatus.NOT_CALCULATED
+        assert run.model_telemetry.cost_amount_decimal is None
+        assert (
+            run.model_telemetry.cost_unavailable_reason
+            is CostUnavailableReason.PRICING_EVIDENCE_INVALID
+        )
+        assert not any("pricing" in key for key, _ in run.configuration.options)
+        evaluation = store.get_evaluation(run.run_id)
+        assert evaluation is not None and evaluation.gate_status.value == "PASS"
+        assert store.get_review(run.run_id) is None
+    finally:
+        store.close()
+    with sqlite3.connect(database) as connection:
+        assert connection.execute(
+            "SELECT pricing_snapshot_json FROM model_telemetry"
+        ).fetchall() == [(None,)]
+        dump = "\n".join(connection.iterdump())
+    captured = output.out + output.err + caplog.text + dump + repr(run) + repr(envelope)
+    for sentinel in (
+        source_url,
+        str(pricing_path),
+        "private-pricing-input-sentinel",
+        "private-port",
+        "Port out of range",
+        "Port could not be cast",
+        "does not appear to be an IPv4 or IPv6 address",
+        "Traceback",
+    ):
+        assert sentinel not in captured
+    assert all(record.exc_info is None for record in caplog.records)
 
 
 def test_missing_credentials_fail_safely_after_model_stage(

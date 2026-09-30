@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import logging
+import socket
+import traceback
 from dataclasses import FrozenInstanceError, replace
 from datetime import UTC, datetime, timedelta, timezone
 from decimal import localcontext
@@ -43,7 +46,7 @@ def snapshot() -> PricingSnapshot:
         "gpt-5.6-terra",
         ProcessingMode.STANDARD,
         "synthetic-pricing",
-        "https://example.invalid/synthetic-pricing",
+        "https://openai.com/synthetic-pricing-test-fixture",
         START,
         None,
         END,
@@ -309,6 +312,111 @@ def test_invalid_pricing_is_content_free(field: str, value: Any) -> None:
     envelope = PricingInput.from_json(json.dumps(raw))
     assert envelope == PricingInput(PricingInputState.INVALID)
     assert envelope.configuration_options() == ()
+
+
+@pytest.fixture
+def no_source_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    def forbidden(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("pricing validation must not resolve or connect")
+
+    for name in (
+        "getaddrinfo",
+        "gethostbyname",
+        "gethostbyname_ex",
+        "create_connection",
+    ):
+        monkeypatch.setattr(socket, name, forbidden)
+    monkeypatch.setattr(socket.socket, "connect", forbidden)
+    monkeypatch.setattr(socket.socket, "connect_ex", forbidden)
+
+
+@pytest.mark.usefixtures("no_source_network")
+@pytest.mark.parametrize(
+    "source_url",
+    [
+        "https://localhost/private-pricing.json",
+        "https://127.0.0.1/private",
+        "https://10.0.0.1/private",
+        "https://169.254.169.254/private",
+        "https://[::1]/private",
+        "https://example.com:99999/pricing",
+        "https://openai.com:99999/pricing",
+        "https://openai.com:private-port/pricing",
+        "https://openai.com:8443/pricing",
+        "https://openai.com:/pricing",
+        "https://openai.com:0443/pricing",
+        "https://openai.com.evil.example/pricing",
+        "https://evilopenai.com/pricing",
+        "https://openai.com./pricing",
+        "https://pricing.local/private",
+        "https://[private/pricing",
+        "https://[private]/pricing",
+        "https://secret@openai.com/pricing",
+        "https://user:secret@openai.com/pricing",
+        "https://openai.com/pricing?secret=private",
+        "https://openai.com/pricing#private",
+        "https://openai.com/pricing?",
+        "https://openai.com/pricing#",
+        "http://openai.com/pricing",
+        "https://openai.com/pri\ncing",
+        "https://openai.com/pri\tc ing",
+        "https://openai.com/pricing\x7f",
+        "https://openai.com/pric\u00edng",
+        pytest.param(
+            "https://openai.com/" + "x" * (2049 - len("https://openai.com/")),
+            id="overlong-url",
+        ),
+        "",
+        None,
+        443,
+    ],
+)
+def test_rejected_source_is_invalid_without_content_or_parser_error(
+    source_url: Any, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.DEBUG)
+    raw = json.loads(snapshot().canonical_json())
+    raw["source_url"] = source_url
+    envelope = PricingInput.from_json(json.dumps(raw))
+    assert envelope == PricingInput(PricingInputState.INVALID)
+    assert envelope.snapshot is None and envelope.configuration_options() == ()
+    result = calculate(pricing=envelope)
+    assert result.cost_status is CostStatus.NOT_CALCULATED
+    assert result.cost_amount_decimal is None
+    assert result.cost_unavailable_reason is Reason.PRICING_EVIDENCE_INVALID
+    assert result.pricing_snapshot is None
+    with pytest.raises(ValueError) as caught:
+        PricingSnapshot.from_json(json.dumps(raw))
+    assert str(caught.value) == "pricing source must be an approved public HTTPS URL"
+    assert caught.value.__cause__ is None and caught.value.__context__ is None
+    if isinstance(source_url, str) and source_url:
+        assert source_url not in "".join(traceback.format_exception(caught.value))
+        assert source_url not in repr(envelope)
+    assert caplog.text == ""
+
+
+@pytest.mark.usefixtures("no_source_network")
+@pytest.mark.parametrize(
+    "source_url",
+    [
+        "https://openai.com/api/pricing/",
+        "https://developers.openai.com/api/docs/pricing",
+        "https://platform.openai.com/docs/pricing",
+        "https://openai.com:443/api/pricing/",
+        "https://developers.openai.com:443/api/docs/pricing",
+        "https://platform.openai.com:443/docs/pricing",
+        "HTTPS://DeVeLoPeRs.OpEnAi.CoM:443/api/docs/pricing",
+        pytest.param(
+            "https://openai.com/" + "x" * (2048 - len("https://openai.com/")),
+            id="maximum-length-url",
+        ),
+    ],
+)
+def test_approved_source_roundtrip(source_url: str) -> None:
+    price = replace(snapshot(), source_url=source_url)
+    envelope = PricingInput.from_json(price.canonical_json())
+    assert envelope == PricingInput(PricingInputState.VALID, price)
+    assert calculate(pricing=envelope).cost_status is CostStatus.CALCULATED
 
 
 @pytest.mark.parametrize(
