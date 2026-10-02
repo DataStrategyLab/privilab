@@ -1,140 +1,137 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title }} — fixture preview</title>
-    <style>
-      :root { color-scheme: light; font-family: system-ui, sans-serif; }
-      body { max-width: 68rem; margin: 2rem auto; padding: 0 1.5rem; line-height: 1.5; color: #17252d; }
-      .notice { border-left: 0.3rem solid #a34b00; padding: 0.75rem 1rem; background: #fff4e8; }
-      code { background: #f1f3f5; padding: 0.1rem 0.25rem; }
-      section, details { margin-top: 2rem; }
-      label, dt { font-weight: 600; }
-      select, button { font: inherit; padding: 0.6rem; margin: 0.5rem 0; max-width: 100%; }
-      select { display: block; }
-      button { cursor: pointer; }
-      :focus-visible { outline: 3px solid #146d9a; outline-offset: 3px; }
-      .stop, .error { border-left: 0.3rem solid #a32121; padding: 0.75rem 1rem; background: #fff0f0; }
-      .answer { white-space: pre-wrap; overflow-wrap: anywhere; }
-      .table-scroll { overflow-x: auto; }
-      table { width: 100%; border-collapse: collapse; text-align: left; }
-      th, td { padding: 0.65rem; border-bottom: 1px solid #cad1d5; }
-      td, dd { overflow-wrap: anywhere; }
-      dd { margin: 0.2rem 0 0.8rem; }
-      summary { cursor: pointer; font-weight: 600; }
-    </style>
-  </head>
-  <body>
-    <main>
-      <p class="notice"><strong>{{ banner }}</strong></p>
-      <h1>{{ title }} fixture preview</h1>
-      <p>Simulated context controls and a fixed synthetic fixture answer.</p>
-      <p>Environment: <code>{{ environment }}</code></p>
-
-      <p><a href="/runs">Recent run history</a></p>
-      {% if not reopened %}
-      <section aria-labelledby="new-run-heading">
-        <h2 id="new-run-heading">New fixture run</h2>
-        <dl>
-          <dt>Fixed synthetic task</dt><dd>{{ task_text }}</dd>
-          <dt>Fixed retrieval query</dt><dd><code>{{ query }}</code></dd>
-        </dl>
-        {% if form_error %}<p class="error" role="alert">{{ form_error }}</p>{% endif %}
-        <form method="post" action="/runs">
-          <label for="context-choice">Synthetic context scenario</label>
-          <select id="context-choice" name="context_choice" required>
-            {% for key, label in choices %}
-            <option value="{{ key }}"{% if key == selected_choice %} selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-          <button type="submit">Run synthetic fixture</button>
-        </form>
-      </section>
-
-      {% endif %}
-
-      {% if domain_task_note %}<p class="notice">{{ domain_task_note }}</p>{% endif %}
-      {% if run_status %}
-      <section id="permission-result" aria-labelledby="permission-heading">
-        <h2 id="permission-heading">Current run</h2>
-        <p>Terminal status: <strong>{{ run_status }}</strong></p>
-        <p>Permission: <strong>{{ permission_state or 'No completed decision' }}</strong></p>
-        {% if run_status == 'PERMISSION_STOPPED' %}
-        <div class="stop">
-          <p><strong>{{ permission_state }} — {% if stop_reason == 'UNRESOLVED_CONDITIONS' %}unresolved conditions; {% endif %}protected progression stopped</strong></p>
-          <p>Stop reason: <code>{{ stop_reason }}</code></p>
-          {% if conditions %}
-          <p>Unresolved condition identifiers:</p>
-          <ul>{% for condition in conditions %}<li><code>{{ condition }}</code></li>{% endfor %}</ul>
-          {% endif %}
-        </div>
-        {% elif run_status == 'FAILED' %}
-        <p class="error" role="alert">Run failed during {{ failure_stage }}. No fixture result is available.</p>
-        {% endif %}
-        <p>Retrieval: {{ 'called' if retrieval_called else 'not executed' }}.</p>
-        <p>Model: {{ 'called' if model_called else 'not executed' }}.</p>
-      </section>
-
-      {% if source_rows %}
-      <section id="authorized-sources" aria-labelledby="sources-heading">
-        <h2 id="sources-heading">Authorized source/chunk metadata</h2>
-        <div class="table-scroll">
-          <table>
-            <caption>Current-run provenance in retrieval order. Ordinal and position are zero-based.</caption>
-            <thead><tr><th scope="col">Source ID</th><th scope="col">Version</th><th scope="col">Chunk ID</th><th scope="col">Ordinal</th><th scope="col">Retrieval position</th></tr></thead>
-            <tbody>
-              {% for source_id, version, chunk_id, ordinal, position in source_rows %}
-              <tr><td>{{ source_id }}</td><td>{{ version }}</td><td>{{ chunk_id }}</td><td>{{ ordinal }}</td><td>{{ position }}</td></tr>
-              {% else %}
-              <tr><td colspan="5">No retrieved source metadata recorded.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+{% extends "base.html" %}
+{% from "_status.html" import status %}
+{% block page_title %}{{ 'Run overview' if run_status else 'New run' }}{% endblock %}
+{% block content %}
+  {% if form_error %}<div class="callout callout-stop" role="alert"><p><strong>Request unavailable</strong></p><p>{{ form_error }}</p></div>{% endif %}
+  {% if not run_status %}
+  <div class="page-intro">
+    <p class="eyebrow">Controlled workflows · Visible decisions</p>
+    <h1>PriviLAB Reference Demo</h1>
+    <p class="lead">A reference architecture for controlled, permission-aware AI in legal and regulated environments.</p>
+    <p>This demo makes context, permissions, authorized sources, evaluation, human review, and provenance visible.</p>
+  </div>
+  <section class="panel launcher" aria-labelledby="new-run-heading">
+    <div class="section-heading"><span class="step" aria-hidden="true">01</span><div><p class="eyebrow">Repository-governed scenarios</p><h2 id="new-run-heading">Start a reference run</h2></div></div>
+    <p>Choose a bounded synthetic task to explore the workflow and its stop conditions.</p>
+    <form method="post" action="/runs" class="launcher-form">
+      <div><label for="context-choice">Synthetic context scenario</label>
+        <select id="context-choice" name="context_choice" required aria-describedby="scenario-help">
+          {% for key, label in choices %}<option value="{{ key }}"{% if key == selected_choice %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <button class="primary" type="submit">Run scenario <span aria-hidden="true">→</span></button>
+    </form>
+    <p id="scenario-help" class="muted">All choices use synthetic context and fixed fixture outputs. Trade / regulatory scenarios require the local task-pack checkout.</p>
+    <details class="scenario-guide"><summary>Scenario guide and bounded tasks</summary>
+      <div class="guide-grid">{% for label, description, bounded_task in scenario_guide %}
+        <section aria-labelledby="guide-{{ loop.index }}"><h3 id="guide-{{ loop.index }}">{{ label }}</h3><p>{{ description }}</p><p class="muted"><strong>Bounded task:</strong> {{ bounded_task }}</p></section>
+      {% endfor %}</div>
+    </details>
+  </section>
+  <section class="orientation" aria-labelledby="workflow-heading">
+    <h2 id="workflow-heading">Follow the controls around the draft</h2>
+    <ol class="workflow-guide"><li><strong>Context & permission</strong><span>See which synthetic context governs progression.</span></li><li><strong>Evidence & draft</strong><span>Inspect authorized metadata and the draft's source references.</span></li><li><strong>Evaluation & judgment</strong><span>Keep the automated gate separate from a human decision.</span></li><li><strong>Traceability</strong><span>Reopen the recorded run metadata without repeating execution.</span></li></ol>
+  </section>
+  {% else %}
+  <section id="run-summary" class="page-intro" aria-labelledby="run-heading">
+    <p class="eyebrow">{{ 'Recorded run · Metadata only' if reopened else 'Current reference run' }}</p>
+    <h1 id="run-heading">{{ scenario_label }}</h1>
+    {% if scenario_description %}<p>{{ scenario_description }}</p>{% endif %}
+    <dl class="status-strip">
+      <div><dt>Run status</dt><dd>{{ status(run_status) }}</dd></div>
+      <div><dt>Permission</dt><dd>{{ status(permission_state or 'No completed decision') }}</dd></div>
+      <div><dt>Retrieval</dt><dd>{{ 'Called' if retrieval_called else 'Not executed' }}</dd></div>
+      <div><dt>Fixture model</dt><dd>{{ 'Called' if model_called else 'Not executed' }}</dd></div>
+      <div><dt>Automated gate</dt><dd>{{ status(gate_status) if gate_status else 'Unavailable' }}</dd></div>
+      <div><dt>Human review</dt><dd>{{ status(review_state) }}</dd></div>
+    </dl>
+  </section>
+  {% if domain_task_note %}<p class="callout">{{ domain_task_note }}</p>{% endif %}
+  {% if reopened %}<p class="callout">Reopened metadata only. Generated answer text and draft citations are not retained. Metadata only; generated answers and source text are not retained here.</p>{% endif %}
+  <div class="workbench">
+    <section class="panel context-panel" aria-labelledby="context-heading">
+      <p class="eyebrow">01 · Governing context</p><h2 id="context-heading">Synthetic context</h2>
+      <dl class="facts">{% for label, display, raw in context_rows %}<div><dt>{{ label }}</dt><dd>{{ display }}</dd></div>{% endfor %}</dl>
+      <details><summary>Context identifiers</summary><dl class="technical">{% for label, display, raw in context_rows %}<dt>{{ label }}</dt><dd>{{ raw if raw is not none else 'Not provided' }}</dd>{% endfor %}</dl></details>
+    </section>
+    <section id="permission-result" class="panel permission-panel" aria-labelledby="permission-heading">
+      <p class="eyebrow">02 · Permission before progression</p><h2 id="permission-heading">Permission decision</h2>
+      <p>Permission: <strong>{{ permission_state or 'No completed decision' }}</strong></p>
+      {% if run_status == 'PERMISSION_STOPPED' %}
+      <div class="callout callout-stop" role="status">
+        <p><strong>{{ permission_state }} — {% if stop_reason == 'UNRESOLVED_CONDITIONS' %}unresolved conditions; {% endif %}protected progression stopped</strong></p>
+        <p>{% if permission_state == 'BLOCK' %}The governing permission decision blocks this request.{% elif permission_state == 'UNKNOWN' %}Required permission context is unresolved.{% else %}Required permission conditions remain unresolved.{% endif %}</p>
+        <p>Stop reason: <code>{{ stop_reason }}</code></p>
+        {% if conditions %}<p>Unresolved condition identifiers:</p><ul>{% for condition in conditions %}<li><code>{{ condition }}</code></li>{% endfor %}</ul>{% endif %}
+      </div>
+      {% elif permission_state == 'ALLOW' %}<p>Protected progression was permitted by the application permission decision.</p>{% endif %}
+      {% if run_status == 'FAILED' %}<p class="callout callout-stop" role="alert">Run failed during {{ failure_stage }}. No fixture result is available.</p>{% endif %}
+      <p class="execution-flags">Retrieval: {{ 'called' if retrieval_called else 'not executed' }}.<br>Model: {{ 'called' if model_called else 'not executed' }}.</p>
+      {% if run_status != 'GENERATED' %}<p>A draft and human-review actions are unavailable for this run.</p><a class="button primary" href="/">Start a new run</a>{% endif %}
+    </section>
+    <div class="draft-column">
+      {% if not reopened %}<section class="task-panel" aria-labelledby="task-heading"><p class="eyebrow">Bounded task</p><h2 id="task-heading">Research task</h2><p>{{ task_text }}</p><details><summary>Retrieval query</summary><code>{{ query }}</code></details></section>{% endif %}
+      {% if run_status == 'GENERATED' %}
+      <section id="authorized-sources" class="panel" aria-labelledby="sources-heading">
+        <p class="eyebrow">03 · Authorized evidence</p><h2 id="sources-heading">Authorized source metadata</h2>
+        <p>{{ source_count }} authorized source{{ '' if source_count == 1 else 's' }} recorded. Source text is not displayed.</p>
+        {% if injection_fixture %}<p class="callout">Retrieved metadata includes an untrusted synthetic injection fixture. Its instructions have no application authority.</p>{% endif %}
+        <div class="table-scroll" role="region" aria-label="Authorized source and chunk references" tabindex="0"><table>
+          <caption>Current-run provenance in retrieval order. Ordinal and position are zero-based.</caption>
+          <thead><tr><th scope="col">Source ID</th><th scope="col">Version</th><th scope="col">Chunk ID</th><th scope="col">Ordinal</th><th scope="col">Retrieval position</th></tr></thead>
+          <tbody>{% for source_id, version, chunk_id, ordinal, position in source_rows %}
+            <tr><td>{{ source_id }}</td><td>{{ version }}</td><td>{{ chunk_id }}</td><td>{{ ordinal }}</td><td>{{ position }}</td></tr>
+          {% else %}<tr><td colspan="5">No authorized source metadata recorded.</td></tr>{% endfor %}</tbody>
+        </table></div>
       </section>
       {% endif %}
       {% if answer %}
-      <section id="research-result" aria-labelledby="result-heading">
-        <h2 id="result-heading">Fixture research draft</h2>
-        <p><strong>Presented for reviewer consideration.</strong></p>
-        <p class="answer">{{ answer }}</p>
+      <section id="research-result" class="panel draft-panel" aria-labelledby="result-heading">
+        <p class="eyebrow">04 · Fixture-generated content</p><h2 id="result-heading">Draft result</h2>
+        <p class="reviewer-notice"><strong>Presented for reviewer consideration.</strong></p>
+        <div class="draft-content"><p class="answer">{{ answer }}</p></div>
+        <section id="draft-citations" aria-labelledby="citations-heading"><h3 id="citations-heading">Source references</h3>
+          <p class="muted">References supplied with this draft. Display does not establish grounding or approval; see the automated evaluation below.</p>
+          <ol class="citations">{% for citation in citation_rows %}<li>{% if citation %}<span>{{ citation[0] }}</span><span class="muted">Chunk: {{ citation[1] }}</span>{% else %}<span>Reference unavailable</span>{% endif %}</li>{% else %}<li>No citation references supplied.</li>{% endfor %}</ol>
+        </section>
       </section>
       {% endif %}
-
-      {% if reopened %}<p>Reopened metadata only. Generated answer text is not retained.</p>{% endif %}
-      {% if injection_fixture %}<p>Retrieved metadata includes an untrusted synthetic injection fixture. Source text is not displayed.</p>{% endif %}
-      <section id="evaluation">
-        <h2>Deterministic evaluation</h2>
+      {% if run_status == 'GENERATED' %}
+      <section id="evaluation" class="panel" aria-labelledby="evaluation-heading">
+        <p class="eyebrow">05 · Application evaluation</p><h2 id="evaluation-heading">Automated evaluation</h2>
         {% if gate_status %}
-        <p>Critical gate: <strong>{{ gate_status }}</strong></p>
-        <p>The automated gate is separate from the human decision.</p>
-        <dl>{% for label, value in evaluation_detail %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
-        <div class="table-scroll"><table>
-          <thead><tr><th>Criterion / version</th><th>Evaluator / version</th><th>Criticality</th><th>Status</th><th>Evidence</th></tr></thead>
-          <tbody>{% for id, version, evaluator, evaluator_version, criticality, status, reasons, sources, citations in criteria %}
-          <tr><td>{{ id }} / {{ version }}</td><td>{{ evaluator }} / {{ evaluator_version }}</td><td>{{ criticality }}</td><td>{{ status }}</td><td>{{ reasons }}; sources: {{ sources }}; citations: {{ citations }}</td></tr>
-          {% endfor %}</tbody>
-        </table></div>
-        {% if gate_blocks %}<ul>{% for reason, id, version in gate_blocks %}<li>{{ reason }}{% if id %}: {{ id }} / {{ version }}{% endif %}</li>{% endfor %}</ul>{% endif %}
-        {% else %}<p class="error">Evaluation unavailable or incomplete.</p>{% endif %}
+        <p>Critical gate: {{ status(gate_status) }}</p><p>The automated gate is separate from the human decision.</p>
+        {% if gate_status == 'BLOCK' %}<p class="callout callout-stop">The recorded critical criteria block approval. Review the criterion explanations below.</p>{% endif %}
+        <ul class="criteria-summary">{% for label, criticality, state, reasons in criteria_summary %}<li><div><h3>{{ label }}</h3><span class="muted">{{ criticality }}</span></div>{{ status(state) }}<p>{% for reason in reasons %}{{ reason }}{% if not loop.last %} {% endif %}{% endfor %}</p></li>{% endfor %}</ul>
+        {% include "_evaluation_detail.html" %}
+        {% else %}<p class="callout callout-stop" role="alert">Evaluation unavailable or incomplete.</p><p>No automated gate result is available. Human review is unavailable for this run.</p>{% endif %}
       </section>
-      <section id="human-review">
-        <h2>Human decision</h2>
-        <p>State: <strong>{{ review_state }}</strong></p>
-        <p>Local demo reviewer identity: <code>synthetic-local-reviewer</code>. This is not authenticated attribution or release authority.</p>
-        <dl>{% for label, value in review_detail %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
-        <form method="post" action="/runs/{{ run_id }}/review">
-          {% for decision, enabled in decisions %}<button name="decision" value="{{ decision }}" type="submit"{% if not enabled %} disabled{% endif %}>{{ decision }}</button>{% endfor %}
-        </form>
-        <p>A decision is final for this run. Another execution creates an independent run.</p>
-      </section>
-      <details id="run-detail">
-        <summary>Basic current-run detail</summary>
-        <dl>{% for label, value in run_detail %}<dt>{{ label }}</dt><dd>{{ value if value is not none else 'Not available' }}</dd>{% endfor %}</dl>
-      </details>
-      <p><a href="/">Return to the new-run form</a></p>
       {% endif %}
-    </main>
-  </body>
-</html>
+    </div>
+    {% if run_status == 'GENERATED' %}
+    <section id="human-review" class="panel review-panel" aria-labelledby="review-heading">
+      <p class="eyebrow">06 · Separate human judgment</p><h2 id="review-heading">Human review</h2>
+      <p>State: {{ status(review_state) }}</p>
+      <p>Local demo reviewer identity: <code>synthetic-local-reviewer</code>. This is not authenticated production/client release authority.</p>
+      <dl class="technical">{% for label, value in review_detail %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
+      {% if approval_explanation %}<p id="approval-explanation" class="callout">{{ approval_explanation }}</p>{% endif %}
+      <form method="post" action="/runs/{{ run_id }}/review" class="review-actions">
+        {% for decision, enabled in decisions %}<button name="decision" value="{{ decision }}" type="submit"{% if decision == 'APPROVE' and enabled %} class="primary"{% endif %}{% if not enabled %} disabled{% if decision == 'APPROVE' %} aria-describedby="approval-explanation"{% endif %}{% endif %}>{{ {'APPROVE': 'Approve', 'REJECT': 'Reject', 'REQUEST_REVISION': 'Request revision'}[decision] }}</button>{% endfor %}
+      </form>
+      <p class="muted">A decision is final for this run. Another execution creates an independent run.</p>
+      <a{% if approval_explanation %} class="button primary"{% endif %} href="/">Start a new run</a>
+    </section>
+    {% endif %}
+    <section class="panel trace-panel" aria-labelledby="trace-heading">
+      <p class="eyebrow">07 · Run evidence</p><h2 id="trace-heading">Traceability</h2>
+      <dl class="facts"><div><dt>Run ID</dt><dd><a href="/runs/{{ run_id }}">{{ run_id }}</a></dd></div><div><dt>Configured provider</dt><dd>{{ provider_label }}</dd></div><div><dt>Configured model</dt><dd>{{ model_label }}</dd></div><div><dt>Authorized sources recorded</dt><dd>{{ source_count }}</dd></div><div><dt>Reviewer state</dt><dd>{{ review_state }}</dd></div></dl>
+      <details id="run-detail"><summary>Run metadata, versions & timestamps</summary><dl class="technical">{% for label, value in run_detail %}<dt>{{ label }}</dt><dd>{{ value if value is not none else 'Not available' }}</dd>{% endfor %}</dl></details>
+      {% if run_status != 'GENERATED' %}
+        {% if gate_status %}<details id="stop-evaluation"><summary>Recorded stop evaluation · {{ gate_status }}</summary><p>This evaluation records the stopped or failed run. It does not indicate that a draft was generated.</p><p>The automated gate is separate from the human decision.</p>{% include "_evaluation_detail.html" %}</details>
+        {% else %}<p>Evaluation unavailable or incomplete.</p>{% endif %}
+        <p>Human review: {{ review_state }}. {{ approval_explanation }}</p>
+      {% endif %}
+    </section>
+  </div>
+  {% endif %}
+{% endblock %}

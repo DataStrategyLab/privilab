@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} Reference Demo — {% block page_title %}Workbench{% endblock %}</title>
+    <link rel="stylesheet" href="/static/app.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <header class="app-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="PriviLAB Reference Demo home">
+          <img src="/static/branding/DSL_primary_full-color_light-bg_1024w_v1.png" width="1024" height="444" alt="Data Strategy Lab">
+          <span class="product-name">PriviLAB <span>Reference Demo</span></span>
+        </a>
+        <nav aria-label="Main navigation">
+          <a href="/"{% if not run_status and not history_page %} aria-current="page"{% endif %}>New run</a>
+          {% if run_id %}<a href="#run-summary" aria-current="page">Current run</a>{% endif %}
+          <a href="/runs"{% if history_page %} aria-current="page"{% endif %}>Recent history</a>
+        </nav>
+      </div>
+      <div class="reference-bar"><div><span class="reference-dot" aria-hidden="true"></span><strong>{{ banner }}</strong><span>Local fixture execution</span></div></div>
+    </header>
+    <main id="main" tabindex="-1">{% block content %}{% endblock %}</main>
+    <footer class="app-footer">Data Strategy Lab · PriviLAB Reference Demo <span>Context → permission → evidence → draft → evaluation → human review → traceability</span></footer>
+  </body>
+</html>
