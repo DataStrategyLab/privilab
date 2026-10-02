@@ -145,21 +145,70 @@ def test_block_rejects_approval_but_allows_negative_decisions(
 def test_partial_completion_remains_visible_and_unreviewable(
     settings: Settings, monkeypatch: pytest.MonkeyPatch, failure: str
 ) -> None:
-    owner = run_review if failure == "evaluate" else SQLiteProvenanceStore
-    monkeypatch.setattr(
-        owner, failure, Mock(side_effect=RuntimeError("PRIVATE SENTINEL"))
-    )
-    app = create_app(settings)
-    identity = execute(app, expected_status=500)
-    restarted = create_app(settings)
-    for path in (f"/runs/{identity}", "/runs"):
-        status, html, _ = get(restarted, path)
-        assert status == 200 and "NOT REVIEWABLE" in html
-        assert "PRIVATE SENTINEL" not in html
-    assert post(restarted, f"/runs/{identity}/review", b"decision=REJECT")[0] == 409
+    with monkeypatch.context() as patches:
+        owner = run_review if failure == "evaluate" else SQLiteProvenanceStore
+        patches.setattr(
+            owner, failure, Mock(side_effect=RuntimeError("PRIVATE SENTINEL"))
+        )
+        app = create_app(settings)
+        status, initial_html, _ = post(app, "/runs", b"context_choice=standard")
+        assert status == 500
+        match = re.search(r'action="/runs/([a-f0-9-]{36})/review"', initial_html)
+        assert match is not None
+        identity = match[1]
+        assert 'class="answer"' in initial_html
+        assert "NOT REVIEWABLE" in initial_html
+        assert "Evaluation unavailable or incomplete." in initial_html
+        assert "Critical gate:" not in initial_html
+        assert "PRIVATE SENTINEL" not in initial_html
+
+        no_replay = (
+            (FixtureModelProvider, "generate"),
+            (SQLiteFtsRetrievalProvider, "retrieve"),
+            (run_review, "evaluate"),
+        )
+        for replay_owner, name in no_replay:
+            patches.setattr(
+                replay_owner,
+                name,
+                Mock(side_effect=AssertionError("replay prohibited")),
+            )
+        restarted = create_app(settings)
+        for path in (f"/runs/{identity}", "/runs"):
+            status, html, _ = get(restarted, path)
+            assert status == 200 and "NOT REVIEWABLE" in html
+            assert "Critical gate:" not in html
+            assert "PRIVATE SENTINEL" not in html
+            if path != "/runs":
+                assert "Evaluation unavailable or incomplete." in html
+        approval_status, approval_html, _ = post(
+            restarted, f"/runs/{identity}/review", b"decision=APPROVE"
+        )
+        assert approval_status == 409
+        assert "PRIVATE SENTINEL" not in approval_html
+        for replay_owner, name in no_replay:
+            getattr(replay_owner, name).assert_not_called()
+
     with closing(SQLiteProvenanceStore(settings.preview_database)) as store:
-        assert store.get(RunId(identity)) is not None
+        run = store.get(RunId(identity))
+        assert run is not None
+        assert run.status.value == "GENERATED"
+        assert run.retrieval_called and run.model_called
         assert store.get_evaluation(RunId(identity)) is None
+        assert store.get_review(RunId(identity)) is None
+        view = RunReviewService(store, store).get(RunId(identity))
+        assert view.review_state == "NOT REVIEWABLE"
+        assert view.allowed_decisions == ()
+        assert "PRIVATE SENTINEL" not in "\n".join(store._connection.iterdump())
+
+    rerun_id = execute(create_app(settings))
+    assert rerun_id != identity
+    with closing(SQLiteProvenanceStore(settings.preview_database)) as store:
+        original = RunReviewService(store, store).get(RunId(identity))
+        rerun = RunReviewService(store, store).get(RunId(rerun_id))
+        assert original.review_state == "NOT REVIEWABLE"
+        assert rerun.review_state == "PENDING"
+        assert rerun.evaluation is not None and rerun.review is None
 
 
 def test_concurrent_valid_review_submissions_have_one_commit(
