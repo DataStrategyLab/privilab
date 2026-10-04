@@ -162,6 +162,31 @@ when known. Do not modify CI to obtain a checkbox or copy raw logs into Git.
 
 ## Verification, review, and remediation record
 
-Execution results will be recorded after the tooling commit is frozen. Development
-checks are not release-candidate attestations. Dedicated AI review and all human
-gates remain PENDING until actual evidence is recorded.
+Frozen tooling head: `ac6e36dbec543badccd01874943ebafd354da0e7`.
+Required bootstrap, make ci, and git diff --check passed from a clean checkout;
+verification did not change repository-visible state. Observed suite counts:
+42 contract tests; 2,190 unit/integration/security tests, including 13 new
+collector checks; five deterministic smoke cases; six golden cases. Fixture and
+license validation, format/lint, mypy, build smoke, and secret scanning passed.
+The sanitized collector passed all twelve checks across ten independent runs.
+
+The required make preview initially encountered a sandbox loopback-bind denial.
+A separately approved loopback-only invocation then served the real application;
+Codex browser automation exercised all six tasks and one synthetic APPROVE.
+A browser reopen preserved all nine table snapshots. These are separate browser
+run IDs, not the collector IDs and not human visual acceptance. Seven draft JPEG
+captures exist at the ignored paths/hashes in the manifest. They are unaccepted
+backup candidates; no recording or Drive upload was performed. One browser
+locator click failed before submission; scrolling to the visible control and a
+coordinate click completed the action once, as confirmed by its stored decision.
+
+`make container-build` exited 2 because the sandbox cannot access the Docker
+socket. Container preview was NOT_RUN; no Docker boundary was changed.
+
+Development remediation: a content-exclusion test initially treated the generic
+query word “synthetic” inside a permitted metadata ID as leaked query text. The
+assertion was corrected to check complete JSON string values, and checks exclude
+actual task/fixture-answer bodies. No product defect or behavior change resulted.
+
+Independent review results will be recorded after the prepared package commit.
+All human gates remain PENDING.
