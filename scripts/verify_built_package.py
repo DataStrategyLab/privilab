@@ -10,6 +10,15 @@ import zipfile
 from pathlib import Path
 
 _RESOURCE_PREFIX = "privilab/adapters/models/resources/governed_fixtures/"
+_WEB_FILES = {
+    "privilab/web/static/app.css",
+    "privilab/web/static/branding/DSL_primary_full-color_light-bg_1024w_v1.png",
+    "privilab/web/templates/base.html",
+    "privilab/web/templates/index.html",
+    "privilab/web/templates/history.html",
+    "privilab/web/templates/_status.html",
+    "privilab/web/templates/_evaluation_detail.html",
+}
 _RESOURCE_FILES = {
     f"{_RESOURCE_PREFIX}trade_regulatory_grounded_v1.json",
     f"{_RESOURCE_PREFIX}trade_regulatory_insufficient_source_v1.json",
@@ -45,6 +54,8 @@ def verify_built_package(wheel: Path, work_root: Path) -> None:
     if wheel.suffix != ".whl":
         raise ValueError("built package verification requires a wheel")
     with zipfile.ZipFile(wheel) as archive:
+        if not _WEB_FILES.issubset(archive.namelist()):
+            raise ValueError("built wheel is missing local preview presentation files")
         packaged_resources = {
             name
             for name in archive.namelist()

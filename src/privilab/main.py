@@ -8,6 +8,7 @@ from uuid import UUID
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.concurrency import run_in_threadpool
 
@@ -23,9 +24,16 @@ from privilab.application.run_review import (
 from privilab.application.trade_regulatory_tasks import TASK_CHOICES
 from privilab.config import Settings, load_settings
 from privilab.domain import SyntheticRequestContext
+from privilab.web.presentation import (
+    CONTEXT_LABELS,
+    CRITERION_LABELS,
+    REASON_LABELS,
+    SCENARIO_COPY,
+)
 from privilab.web.preview import CONTEXT_CHOICES, QUERY, TASK_TEXT, open_preview_run
 
 TEMPLATE_DIR = Path(__file__).parent / "web" / "templates"
+STATIC_DIR = Path(__file__).parent / "web" / "static"
 templates = Jinja2Templates(directory=TEMPLATE_DIR)
 
 
@@ -38,7 +46,7 @@ def _unavailable_response() -> HTMLResponse:
         "<p><strong>Synthetic/reference demo only</strong></p>"
         "<h1>Preview unavailable</h1>"
         "<p>The current run could not be displayed. Please try again.</p>"
-        '<a href="/">Return to the new-run form</a></main></body></html>',
+        '<a href="/">Start a new run</a></main></body></html>',
         status_code=500,
     )
 
@@ -48,7 +56,33 @@ def _run_values(outcome: RunOutcome | None, record: RunProvenance) -> dict[str, 
     configuration = record.configuration
     permission = record.permission
     generated = record.status is RunStatus.GENERATED
+    result = outcome.result if generated and outcome else None
+    # Disclosure only: do not modify the result evaluated by RunReviewService.
+    # A matching pair permits display, never confers citation/grounding approval.
+    authorized_pairs = {
+        (source_id, chunk.chunk_id)
+        for source_id, _version, chunk in record.chunks_in_retrieval_order
+    }
+    options = dict(configuration.options)
+    scenario = options.get("domain_task_id") or options.get("scenario")
+    scenario_copy = SCENARIO_COPY.get(scenario or "")
+    context_rows = tuple(
+        (label, CONTEXT_LABELS.get(value, value) if value else "Not provided", value)
+        for label, value in (
+            ("Synthetic user", record.context.user_id),
+            ("Synthetic role", record.context.role_id),
+            ("Synthetic client", record.context.client_id),
+            ("Synthetic matter", record.context.matter_id),
+            ("Synthetic workflow", record.context.workflow_id),
+        )
+    )
     return {
+        "scenario_label": scenario_copy[0] if scenario_copy else "Recorded scenario",
+        "scenario_description": scenario_copy[1] if scenario_copy else None,
+        "context_rows": context_rows,
+        "source_count": len(record.sources),
+        "provider_label": configuration.provider_id,
+        "model_label": configuration.model_id,
         "run_status": record.status.value,
         "permission_state": (permission.state.value if permission else None),
         "stop_reason": record.stop_reason.value if record.stop_reason else None,
@@ -56,9 +90,15 @@ def _run_values(outcome: RunOutcome | None, record: RunProvenance) -> dict[str, 
         "failure_stage": record.failure_stage.value if record.failure_stage else None,
         "retrieval_called": record.retrieval_called,
         "model_called": record.model_called,
-        "answer": outcome.result.answer_text
-        if generated and outcome and outcome.result
-        else None,
+        "answer": result.answer_text if result else None,
+        "citation_rows": tuple(
+            (citation.source_id, citation.chunk_id)
+            if (citation.source_id, citation.chunk_id) in authorized_pairs
+            else None
+            for citation in result.citations
+        )
+        if result
+        else (),
         "source_rows": (
             tuple(
                 (
@@ -75,6 +115,7 @@ def _run_values(outcome: RunOutcome | None, record: RunProvenance) -> dict[str, 
         ),
         "run_detail": (
             ("Run ID", record.run_id.value),
+            ("Scenario", scenario),
             ("Terminal status", record.status.value),
             ("Started (UTC)", record.started_at.isoformat()),
             ("Completed (UTC)", record.completed_at.isoformat()),
@@ -150,9 +191,26 @@ def _web_run_id(value: str) -> RunId:
 def _review_values(view: RunReviewView) -> dict[str, object]:
     evaluation = view.evaluation
     review = view.review
+    approval_explanation = None
+    if ReviewDecision.APPROVE not in view.allowed_decisions:
+        if review is not None:
+            approval_explanation = "A final decision is already recorded for this run."
+        elif view.run.status is not RunStatus.GENERATED:
+            approval_explanation = "This run did not produce a draft for human review."
+        elif evaluation is None:
+            approval_explanation = (
+                "Evaluation unavailable or incomplete. This run is not reviewable."
+            )
+        elif evaluation.gate_status.value == "BLOCK":
+            approval_explanation = (
+                "The automated critical gate is BLOCK. Approval is unavailable."
+            )
+        else:
+            approval_explanation = "Approval is unavailable for this recorded state."
     return {
         "run_id": view.run.run_id.value,
         "review_state": view.review_state,
+        "approval_explanation": approval_explanation,
         "decisions": tuple(
             (decision.value, decision in view.allowed_decisions)
             for decision in ReviewDecision
@@ -165,6 +223,20 @@ def _review_values(view: RunReviewView) -> dict[str, object]:
             ("Reviewed (UTC)", review.reviewed_at.isoformat()),
         ),
         "gate_status": evaluation.gate_status.value if evaluation else None,
+        "criteria_summary": tuple(
+            (
+                CRITERION_LABELS.get(item.criterion_id, item.criterion_id),
+                item.criticality.value,
+                item.status.value,
+                tuple(
+                    REASON_LABELS.get(code.value, code.value)
+                    for code in item.evidence.reason_codes
+                ),
+            )
+            for item in evaluation.criteria
+        )
+        if evaluation
+        else (),
         "evaluation_detail": ()
         if evaluation is None
         else (
@@ -212,6 +284,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
         openapi_url=None,
     )
+    application.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     def render(
         request: Request,
@@ -228,11 +301,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "title": active_settings.title,
                     "banner": active_settings.reference_banner,
                     "environment": active_settings.environment,
-                    "choices": tuple((key, label) for key, label, _ in CONTEXT_CHOICES)
-                    + tuple(
-                        (key, "DSL-117 (local checkout): " + label)
-                        for key, label in TASK_CHOICES
+                    "choices": tuple(
+                        (key, SCENARIO_COPY[key][0])
+                        for key in (
+                            *(key for key, _label, _context in CONTEXT_CHOICES),
+                            *(key for key, _label in TASK_CHOICES),
+                        )
                     ),
+                    "scenario_guide": tuple(SCENARIO_COPY.values()),
                     "task_text": TASK_TEXT,
                     "query": QUERY,
                     "selected_choice": "standard",

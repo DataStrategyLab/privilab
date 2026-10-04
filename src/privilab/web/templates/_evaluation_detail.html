@@ -1,0 +1,9 @@
+<details class="evaluation-detail"><summary>Evaluation evidence & versions</summary>
+  <dl class="technical">{% for label, value in evaluation_detail %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
+  <div class="table-scroll" role="region" aria-label="Detailed evaluation evidence" tabindex="0"><table>
+    <caption>Recorded deterministic criterion evidence</caption>
+    <thead><tr><th scope="col">Criterion / version</th><th scope="col">Evaluator / version</th><th scope="col">Criticality</th><th scope="col">Status</th><th scope="col">Evidence</th></tr></thead>
+    <tbody>{% for id, version, evaluator, evaluator_version, criticality, state, reasons, sources, citations in criteria %}<tr><td>{{ id }} / {{ version }}</td><td>{{ evaluator }} / {{ evaluator_version }}</td><td>{{ criticality }}</td><td>{{ state }}</td><td>{{ reasons }}; sources: {{ sources }}; citations: {{ citations }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% if gate_blocks %}<ul>{% for reason, id, version in gate_blocks %}<li>{{ reason }}{% if id %}: {{ id }} / {{ version }}{% endif %}</li>{% endfor %}</ul>{% endif %}
+</details>

@@ -76,6 +76,30 @@ FORBIDDEN_CLAIMS = (
     "human approval",
     "release approved",
     "release approval",
+    "privilege preserving",
+    "privilege-preserving",
+    "privilege compliant",
+    "ocg compliance",
+    "security certification",
+    "cybersecurity certification",
+    "private deployment",
+    "zero data retention",
+    "zero-data-retention",
+    "zdr",
+    "air-gapped",
+    "zero hallucinations",
+    "audit ready",
+    "audit-ready",
+    "client approved",
+    "law-firm approved",
+    "law-firm certified",
+    "vendor partnership",
+    "vendor endorsement",
+    "bar endorsement",
+    "court endorsement",
+    "benchmark superiority",
+    "guaranteed savings",
+    "guaranteed cost reduction",
 )
 
 
@@ -167,6 +191,8 @@ def assert_no_later_sections(html: str) -> None:
     assert 'id="authorized-sources"' not in html
     assert 'id="research-result"' not in html
     assert REVIEWER_PHRASE not in html
+    assert 'id="evaluation"' not in html
+    assert 'id="human-review"' not in html
 
 
 def fail(*args: object, **kwargs: object) -> NoReturn:
@@ -267,8 +293,9 @@ def test_new_run_page_has_only_the_controlled_form(
     assert re.findall(r'<(?:input|select|textarea)[^>]*name="([^"]+)"', html) == [
         "context_choice"
     ]
-    assert "Simulated context controls" in html
-    assert "fixed synthetic fixture answer" in html
+    assert "synthetic context and fixed fixture outputs" in html
+    assert "Scenario guide and bounded tasks" in html
+    assert 'value="standard" selected' in html
 
 
 def test_import_does_not_open_adapters() -> None:

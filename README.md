@@ -277,12 +277,20 @@ The preview completes a controlled fixture run, records its terminal provenance,
 runs the existing DSL-113 deterministic evaluation, and stores one immutable
 metadata snapshot. Human review remains a separate, explicit action.
 
+The **PriviLAB Reference Demo** uses a compact synthetic-scenario selector and an
+expandable guide. **Run scenario** opens the run summary, context, permission,
+authorized source metadata, draft, evaluation, human review, and traceability.
+Technical identifiers and evidence remain inspectable through disclosure controls.
+The interface, stylesheet, and approved DSL logo are served locally without a
+frontend build step or required JavaScript.
+
 Walk through these scenarios:
 
-1. **Standard synthetic researcher**: inspect the transient fixture answer,
+1. **Standard synthetic researcher**: inspect the transient **Draft result**,
    evaluation criteria and PASS gate. The human decision starts PENDING; choose
-   APPROVE, REJECT or REQUEST_REVISION.
-2. **Blocked role**, **missing workflow**, or **conditional role**: BLOCK, UNKNOWN,
+   **Approve**, **Reject**, or **Request revision**.
+2. **Blocked researcher role**, **Missing workflow context**, or **Unresolved
+   permission condition**: BLOCK, UNKNOWN,
    or unresolved CONDITIONAL stops progression before retrieval or model calls.
    These runs are NOT REVIEWABLE.
 3. **Critical citation failure**: inspect the recorded BLOCK. Approval is disabled;
@@ -293,10 +301,22 @@ Walk through these scenarios:
    citation-failure model fixture produces BLOCK. HTML shows source/chunk metadata
    and an untrusted-fixture label, never the retrieved text. This demonstrates
    deterministic controls, not general live-model injection resistance.
-5. Open **Recent run history**, stop and restart `make preview`, and reopen a run.
+5. Use the **Trade / regulatory** choices to inspect all six DSL-117 scenarios,
+   including insufficient evidence, missing citations, and the citation challenge.
+   These remain internal DRAFT fixtures requiring the local task-pack checkout.
+6. Open **Recent history**, stop and restart `make preview`, and reopen a run.
    History lists the newest 25 finalized runs by completion time and run ID,
    descending; older run URLs still work. Reopening and reviewing never rerun
    generation, retrieval or evaluation.
+
+Original-run **Source references** disclose only citation pairs present in the
+run's authorized source/chunk metadata. Other pairs display **Reference unavailable**;
+their identifiers are withheld. Evaluation still receives the unchanged result.
+Neither displaying a citation nor an automated PASS supplies human approval.
+Reopened runs retain neither generated answer text nor draft citations.
+
+The [demo UI verification aid](docs/product/evidence/demo-ui-claims-checklist.md)
+maps claims, accessibility-oriented checks, and acceptance evidence to the code.
 
 `synthetic-local-reviewer` is a fixed **local demo identity**, not authenticated
 attribution. Each run permits one immutable decision. REQUEST_REVISION creates no

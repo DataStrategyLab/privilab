@@ -1,18 +1,16 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ title }} — run history</title><style>
-    :root { color-scheme: light; font-family: system-ui, sans-serif; }
-    body { max-width: 68rem; margin: 2rem auto; padding: 0 1.5rem; line-height: 1.5; color: #17252d; }
-    .notice { border-left: 0.3rem solid #a34b00; padding: 0.75rem 1rem; background: #fff4e8; }
-    .table-scroll { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th, td { padding: 0.65rem; border-bottom: 1px solid #cad1d5; vertical-align: top; }
-    td { overflow-wrap: anywhere; }
-    :focus-visible { outline: 3px solid #146d9a; outline-offset: 3px; }
-  </style></head>
-<body><main><p class="notice"><strong>{{ banner }}</strong></p><h1>Recent run history</h1>
-<p>Newest 25 runs. Metadata only; generated answers and source text are not retained here.</p>
-<div class="table-scroll"><table><thead><tr><th>Run ID</th><th>Completed (UTC)</th><th>Run status</th><th>Permission</th><th>Critical gate</th><th>Human decision</th></tr></thead>
-<tbody>{% for id, completed, status, permission, gate, review in history_rows %}
-<tr><td><a href="/runs/{{ id }}">{{ id }}</a></td><td>{{ completed }}</td><td>{{ status }}</td><td>{{ permission }}</td><td>{{ gate }}</td><td>{{ review }}</td></tr>
-{% else %}<tr><td colspan="6">No runs recorded.</td></tr>{% endfor %}</tbody></table></div>
-<p><a href="/">New fixture run</a></p></main></body></html>
+{% extends "base.html" %}
+{% from "_status.html" import status %}
+{% set history_page = true %}
+{% block page_title %}Recent history{% endblock %}
+{% block content %}
+  <div class="page-intro"><p class="eyebrow">Traceable run metadata</p><h1>Recent run history</h1><p class="lead">Revisit the recorded decisions.</p><p>Newest 25 runs. Metadata only; generated answers and source text are not retained here.</p></div>
+  <section class="panel" aria-labelledby="history-heading"><h2 id="history-heading">Recorded runs</h2>
+    {% if history_rows %}
+    <div class="table-scroll" role="region" aria-label="Recent run history" tabindex="0"><table class="history-table">
+      <caption>Newest first by completion time and run ID. Opening a run does not repeat execution.</caption>
+      <thead><tr><th scope="col">Run ID</th><th scope="col">Completed (UTC)</th><th scope="col">Run status</th><th scope="col">Permission</th><th scope="col">Automated gate</th><th scope="col">Human review</th></tr></thead>
+      <tbody>{% for id, completed, run_status, permission, gate, review in history_rows %}<tr><td><a href="/runs/{{ id }}">{{ id }}</a></td><td>{{ completed }}</td><td>{{ status(run_status) }}</td><td>{{ status(permission) }}</td><td>{{ status(gate) }}</td><td>{{ status(review) }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty-state"><p>No runs recorded.</p><p class="muted">Run a synthetic scenario to inspect its decisions and traceability.</p><a class="button primary" href="/">Start a new run</a></div>{% endif %}
+  </section>
+{% endblock %}
