@@ -188,5 +188,30 @@ query word “synthetic” inside a permitted metadata ID as leaked query text. 
 assertion was corrected to check complete JSON string values, and checks exclude
 actual task/fixture-answer bodies. No product defect or behavior change resulted.
 
-Independent review results will be recorded after the prepared package commit.
-All human gates remain PENDING.
+Dedicated independent Codex review completed on prepared package head
+`2bae8ad3723844131eadd4a046767c9338370e90` using actual model `gpt-6-astra`,
+Codex 0.154.0, xhigh reasoning, workspace-write review sandbox. Session:
+`01a108c6-bc8c-7203-99ae-84a9cbb32d6b`; interval
+2026-10-04T21:16:44.634963Z–2026-10-04T21:18:51.764873Z; exit 0.
+Conclusion: **No actionable regressions found.** Critical: 0; High: 0;
+Medium/Low findings: none, so no outstanding dispositions.
+
+The reviewer independently reran make ci (42 contract; 2,190 other tests;
+five smoke and six golden cases), a fresh twelve-scenario collector capture,
+and committed artifact/identity/persistence consistency checks. Its local socket
+bind was sandbox-blocked; this does not replace or negate the separately recorded
+author browser rehearsal. Its own Linear authentication was unavailable, so its
+review used repository evidence; the preparation agent's live Linear read is
+separate. Initial review startup required approved normal Codex state access;
+repository configuration and review-model settings were unchanged.
+
+This later evidence-only recording of review results does not change collector
+or product behavior. The manifest records the exact reviewed head and leaves
+its own evidence_commit_sha null for an external final binding. Raw reviewer
+output is not copied into Git; session identity, bounded conclusion, checks,
+limitations, timestamps, and log hash are retained durably.
+
+Recommended Linear state: **In Review**. Engineering evidence and independent
+review are complete; all required human approvals, holdout disposition, final
+visual/claims acceptance, Drive promotion, hosted PR CI linkage, and Andrew's
+merge/Gate 5 decision remain explicit. DSL-120 has not been marked Done.

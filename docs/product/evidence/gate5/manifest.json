@@ -8,7 +8,7 @@
   "artifacts": [
     {
       "path": "README.md",
-      "sha256": "13a924ad6d7e078b7e58771363454ae889cf5fb723a3823c13bcf19e18c7b72a"
+      "sha256": "0ccff8a8fe71a941072c8c7c780938798cca8eb7df5d2f52d966479fe8a666b8"
     },
     {
       "path": "scenarios.json",
@@ -128,6 +128,7 @@
     "required_action": "Andrew designates approved folder; promote approved final readiness/decision record and accepted backup assets, then retain canonical URLs/hashes.",
     "status": "PENDING"
   },
+  "engineering_evidence_status": "READY_FOR_HUMAN_REVIEW",
   "environment": {
     "architecture": "arm64",
     "os": "Darwin",
@@ -203,14 +204,52 @@
     }
   },
   "independent_review": {
-    "actual_model": null,
+    "actual_model": "gpt-6-astra",
+    "approval_mode": "never",
+    "checks": {
+      "artifact_hashes_and_records": "CONSISTENT",
+      "contract_tests": 42,
+      "fresh_collector_result": "PASS",
+      "fresh_collector_scenarios": 12,
+      "golden_cases": 6,
+      "make_ci": "PASS",
+      "smoke_cases": 5,
+      "unit_integration_security_tests": 2190
+    },
+    "codex_version": "0.154.0",
+    "command": "codex review --base 8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+    "completed_at": "2026-10-04T21:18:51.764873Z",
+    "conclusion": "No actionable regressions found.",
+    "configuration_reference": ".codex/config.toml",
+    "configuration_sha256": "a037657150774b289f0d4f09da384527d0338717731aaf8211cf5d456a49c102",
     "configured_model": "gpt-6-astra",
-    "critical_findings": null,
-    "high_findings": null,
+    "critical_findings": 0,
+    "exit_code": 0,
+    "high_findings": 0,
+    "limitations": [
+      "Independent reviewer localhost bind was blocked by its sandbox; the separately approved author loopback/browser verification remains recorded.",
+      "Reviewer-specific Linear authentication was unavailable; review used local repository evidence. The preparation agent read the live Ready issue through the approved integration."
+    ],
+    "log_sha256": "9e4ac2041ad5d46126891896ef7eb96a69ff5635a15bdee4b9b266fcb68287d3",
     "medium_low_dispositions": [],
-    "review_id": null,
-    "reviewed_head_sha": null,
-    "status": "PENDING"
+    "reasoning_effort": "xhigh",
+    "review_id": "01a108c6-bc8c-7203-99ae-84a9cbb32d6b",
+    "reviewed_head_sha": "2bae8ad3723844131eadd4a046767c9338370e90",
+    "sandbox": "workspace-write",
+    "started_at": "2026-10-04T21:16:44.634963Z",
+    "startup_attempts": [
+      {
+        "exit_code": 1,
+        "status": "BLOCKED_BY_LOCAL_STATE_PERMISSIONS"
+      },
+      {
+        "normal_codex_state_access_approved": true,
+        "repository_configuration_changed": false,
+        "status": "COMPLETE"
+      }
+    ],
+    "status": "COMPLETE",
+    "verification_timestamp_basis": "Commands completed during the recorded review interval; exact per-command timestamps not retained."
   },
   "limitations_reference": "claims-and-limitations.md#shared-limitations",
   "live_model": {
@@ -834,6 +873,8 @@
     ]
   },
   "product_paths_unchanged": true,
+  "recommended_linear_state": "In Review",
+  "recorded_at": "2026-10-04T17:19:38.628156-04:00",
   "rehearsal_at": "2026-10-04T21:13:15.981420+00:00",
   "runtime_candidate_changed": false,
   "scenario_evidence": {
