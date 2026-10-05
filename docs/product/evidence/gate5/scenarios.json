@@ -1,0 +1,1578 @@
+{
+  "captured_at": "2026-10-04T21:13:15.981420+00:00",
+  "execution_kind": "OFFLINE_ASGI_REFERENCE_FIXTURE",
+  "human_gates": {
+    "andrew_release_decision": null,
+    "claims_approval": null,
+    "non_author_approval": null,
+    "substantive_approval": null
+  },
+  "identity": {
+    "branch": "andrew/dsl-120-p0-16-prepare-demo-rehearsal-and-release-evidence-package",
+    "collector_sha256": "82b4fc66ac340f9576da7444ee1c57c0c0310a12feca9039b34b672ae4d38022",
+    "evidence_commit_sha": null,
+    "evidence_tooling_head_sha": "ac6e36dbec543badccd01874943ebafd354da0e7",
+    "product_paths_unchanged": true,
+    "tested_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+    "working_tree_clean": true
+  },
+  "package_id": "dsl-120-gate5",
+  "package_version": "1.0.0",
+  "passed": true,
+  "scenarios": [
+    {
+      "chunk_ids": [
+        "synthetic-trade-notice-chunk-001"
+      ],
+      "completed_at": "2026-10-04T21:13:15.643824+00:00",
+      "configuration_hash": "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.grounded-happy-path",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "GROUNDED_HAPPY_PATH",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-04T21:13:15.646569+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "expected": {
+        "allowed_decisions": [
+          "APPROVE",
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "PASS",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "PASS",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "expected_configuration_options": {
+        "domain_task_id": "trade-regulatory.grounded-happy-path",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "GROUNDED_HAPPY_PATH",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "golden_case_id": "golden.trade-regulatory.grounded-happy-path",
+      "golden_case_version": "1.0.0",
+      "http_status": 200,
+      "limitation": "Synthetic fixture control exercise; no substantive or release approval.",
+      "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+      "model_id": "model-output.trade-regulatory-grounded.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [
+          "APPROVE",
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "PASS",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "PASS",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "passed": true,
+      "prospect_demo_eligible": false,
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "run_id": "8eb78482-e921-4c72-af0a-3102322fd56d",
+      "scenario_class": "GROUNDED_HAPPY_PATH",
+      "scenario_id": "trade-regulatory.grounded-happy-path",
+      "source_ids": [
+        "synthetic-trade-notice-001"
+      ],
+      "started_at": "2026-10-04T21:13:15.643226+00:00",
+      "substantive_review": {
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "status": "DRAFT"
+      },
+      "synthetic_demo_decision": null,
+      "task_id": "trade-regulatory.grounded-happy-path",
+      "task_version": "1.0.0"
+    },
+    {
+      "chunk_ids": [
+        "synthetic-trade-notice-chunk-001"
+      ],
+      "completed_at": "2026-10-04T21:13:15.685391+00:00",
+      "configuration_hash": "sha256:4e577664b66a18d5d5a3ea716f8a1952466d2bf7f066a57e2f69f9e5332a3ac8",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.insufficient-source",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "INSUFFICIENT_SOURCE",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-04T21:13:15.688299+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "expected": {
+        "allowed_decisions": [
+          "APPROVE",
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "PASS",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "PASS",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "expected_configuration_options": {
+        "domain_task_id": "trade-regulatory.insufficient-source",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "INSUFFICIENT_SOURCE",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "golden_case_id": "golden.trade-regulatory.insufficient-source",
+      "golden_case_version": "1.0.0",
+      "http_status": 200,
+      "insufficient_source_qualification_present": true,
+      "limitation": "Synthetic fixture control exercise; no substantive or release approval.",
+      "model_content_hash": "sha256:437c9d9391093c6c4765624bd64921e6524f578ae0490ff2d3681c87ecb641f8",
+      "model_id": "model-output.trade-regulatory-insufficient-source.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [
+          "APPROVE",
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "PASS",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "PASS",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "passed": true,
+      "prospect_demo_eligible": false,
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "run_id": "c71c10b2-96fd-41f7-ad1f-b8cca6849cc7",
+      "scenario_class": "INSUFFICIENT_SOURCE",
+      "scenario_id": "trade-regulatory.insufficient-source",
+      "source_ids": [
+        "synthetic-trade-notice-001"
+      ],
+      "started_at": "2026-10-04T21:13:15.684937+00:00",
+      "substantive_review": {
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "status": "DRAFT"
+      },
+      "synthetic_demo_decision": null,
+      "task_id": "trade-regulatory.insufficient-source",
+      "task_version": "1.0.0"
+    },
+    {
+      "chunk_ids": [],
+      "completed_at": "2026-10-04T21:13:15.711249+00:00",
+      "configuration_hash": "sha256:963f517ba47ecb12fe393915ed8dab8f30349bd5d99bf40cc9f080e2a12d51bb",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.permission-block",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "PERMISSION_BLOCK",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "UNKNOWN"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "UNKNOWN"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-04T21:13:15.713647+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "expected": {
+        "allowed_decisions": [],
+        "criteria": {
+          "authorized-source": "UNKNOWN",
+          "citation-resolution": "UNKNOWN",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": false,
+        "permission_state": "BLOCK",
+        "retrieval_called": false,
+        "review_state": "NOT REVIEWABLE",
+        "run_status": "PERMISSION_STOPPED"
+      },
+      "expected_configuration_options": {
+        "domain_task_id": "trade-regulatory.permission-block",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "PERMISSION_BLOCK",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "golden_case_id": "golden.trade-regulatory.permission-block",
+      "golden_case_version": "1.0.0",
+      "http_status": 200,
+      "limitation": "Synthetic fixture control exercise; no substantive or release approval.",
+      "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+      "model_id": "model-output.trade-regulatory-grounded.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [],
+        "criteria": {
+          "authorized-source": "UNKNOWN",
+          "citation-resolution": "UNKNOWN",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": false,
+        "permission_state": "BLOCK",
+        "retrieval_called": false,
+        "review_state": "NOT REVIEWABLE",
+        "run_status": "PERMISSION_STOPPED"
+      },
+      "passed": true,
+      "prospect_demo_eligible": false,
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "run_id": "03dae780-d763-4dd4-8877-58f6fda474b5",
+      "scenario_class": "PERMISSION_BLOCK",
+      "scenario_id": "trade-regulatory.permission-block",
+      "source_ids": [],
+      "started_at": "2026-10-04T21:13:15.711228+00:00",
+      "substantive_review": {
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "status": "DRAFT"
+      },
+      "synthetic_demo_decision": null,
+      "task_id": "trade-regulatory.permission-block",
+      "task_version": "1.0.0"
+    },
+    {
+      "chunk_ids": [
+        "synthetic-trade-notice-chunk-001"
+      ],
+      "completed_at": "2026-10-04T21:13:15.763933+00:00",
+      "configuration_hash": "sha256:82b84f847949471b505de71c98f61cf588e387f45cda149f2e2b73e2606c52a4",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.critical-eval-failure",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "CRITICAL_EVAL_FAILURE",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "UNKNOWN"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "UNKNOWN"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-04T21:13:15.766661+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "expected": {
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "UNKNOWN",
+          "citation-resolution": "UNKNOWN",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "expected_configuration_options": {
+        "domain_task_id": "trade-regulatory.critical-eval-failure",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "CRITICAL_EVAL_FAILURE",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "golden_case_id": "golden.trade-regulatory.critical-eval-failure",
+      "golden_case_version": "1.0.0",
+      "http_status": 200,
+      "limitation": "Synthetic fixture control exercise; no substantive or release approval.",
+      "model_content_hash": "sha256:05ac503ca8cdf05d702087d5062349765fb4636cee8cde27754985f809163aec",
+      "model_id": "model-output.trade-regulatory-missing-citation.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "UNKNOWN",
+          "citation-resolution": "UNKNOWN",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "passed": true,
+      "prospect_demo_eligible": false,
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "run_id": "3326869b-f8a1-4933-8aa7-ae9bdfbfbe3e",
+      "scenario_class": "CRITICAL_EVAL_FAILURE",
+      "scenario_id": "trade-regulatory.critical-eval-failure",
+      "source_ids": [
+        "synthetic-trade-notice-001"
+      ],
+      "started_at": "2026-10-04T21:13:15.763496+00:00",
+      "substantive_review": {
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "status": "DRAFT"
+      },
+      "synthetic_demo_decision": null,
+      "task_id": "trade-regulatory.critical-eval-failure",
+      "task_version": "1.0.0"
+    },
+    {
+      "chunk_ids": [
+        "synthetic-trade-notice-chunk-001"
+      ],
+      "completed_at": "2026-10-04T21:13:15.787528+00:00",
+      "configuration_hash": "sha256:ef458dac8a9988f0493689499b2b9f526f49548a944374e01ba021fffd7de734",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.citation-grounding-challenge",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "CITATION_GROUNDING_CHALLENGE",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "FAIL"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-04T21:13:15.790016+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "expected": {
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "FAIL",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "expected_configuration_options": {
+        "domain_task_id": "trade-regulatory.citation-grounding-challenge",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "CITATION_GROUNDING_CHALLENGE",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "golden_case_id": "golden.trade-regulatory.citation-grounding-challenge",
+      "golden_case_version": "1.0.0",
+      "http_status": 200,
+      "limitation": "Synthetic fixture control exercise; no substantive or release approval.",
+      "model_content_hash": "sha256:df2bc34d6da7ff229481a8dd10dae0e2586db4c767dd3271213f39e2ad29e975",
+      "model_id": "model-output.trade-regulatory-missing-chunk.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "FAIL",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "passed": true,
+      "prospect_demo_eligible": false,
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "run_id": "83900f4f-881e-438a-b243-d3a5dd197048",
+      "scenario_class": "CITATION_GROUNDING_CHALLENGE",
+      "scenario_id": "trade-regulatory.citation-grounding-challenge",
+      "source_ids": [
+        "synthetic-trade-notice-001"
+      ],
+      "started_at": "2026-10-04T21:13:15.787106+00:00",
+      "substantive_review": {
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "status": "DRAFT"
+      },
+      "synthetic_demo_decision": null,
+      "task_id": "trade-regulatory.citation-grounding-challenge",
+      "task_version": "1.0.0"
+    },
+    {
+      "chunk_ids": [
+        "synthetic-injection-chunk-001"
+      ],
+      "completed_at": "2026-10-04T21:13:15.811189+00:00",
+      "configuration_hash": "sha256:ba0066b4dfc333c805de9c36e3ce51861df990b407a2cab458b2f2b8868d5306",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.malicious-source-injection",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "MALICIOUS_SOURCE_INJECTION",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "FAIL"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "FAIL"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-04T21:13:15.813712+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "expected": {
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "FAIL",
+          "citation-resolution": "FAIL",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "expected_configuration_options": {
+        "domain_task_id": "trade-regulatory.malicious-source-injection",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "MALICIOUS_SOURCE_INJECTION",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "golden_case_id": "golden.trade-regulatory.malicious-source-injection",
+      "golden_case_version": "1.0.0",
+      "http_status": 200,
+      "limitation": "Synthetic fixture control exercise; no substantive or release approval.",
+      "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+      "model_id": "model-output.trade-regulatory-grounded.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "FAIL",
+          "citation-resolution": "FAIL",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "passed": true,
+      "prospect_demo_eligible": false,
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "run_id": "be2fa17e-d5f8-486f-8dab-acbbe4e602d8",
+      "scenario_class": "MALICIOUS_SOURCE_INJECTION",
+      "scenario_id": "trade-regulatory.malicious-source-injection",
+      "source_ids": [
+        "synthetic-injection-001"
+      ],
+      "started_at": "2026-10-04T21:13:15.810739+00:00",
+      "substantive_review": {
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "status": "DRAFT"
+      },
+      "synthetic_demo_decision": null,
+      "task_id": "trade-regulatory.malicious-source-injection",
+      "task_version": "1.0.0"
+    },
+    {
+      "after_decision": {
+        "chunk_ids": [
+          "synthetic-trade-notice-chunk-001"
+        ],
+        "completed_at": "2026-10-04T21:13:15.835003+00:00",
+        "configuration_hash": "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+        "configuration_id": "trade-regulatory-fixture",
+        "configuration_options": {
+          "domain_task_id": "trade-regulatory.grounded-happy-path",
+          "domain_task_version": "1.0.0",
+          "scenario_class": "GROUNDED_HAPPY_PATH",
+          "task_pack_id": "trade-regulatory-research",
+          "task_pack_version": "1.0.0"
+        },
+        "configuration_version": "1.0.0",
+        "evaluation": {
+          "criteria": [
+            {
+              "criterion_id": "authorized-source",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "authorized-source",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "citation-resolution",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "citation-resolution",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "permission-boundary",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "permission-boundary",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "provenance-completeness",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "provenance-completeness",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            }
+          ],
+          "evaluated_at": "2026-10-04T21:13:15.837526+00:00",
+          "rubric_id": "p0-deterministic-critical-gate",
+          "rubric_version": "1.0.0",
+          "task_id": "p0-source-grounded-output",
+          "task_version": "1.0.0"
+        },
+        "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+        "model_id": "model-output.trade-regulatory-grounded.001",
+        "model_version": "1.0.0",
+        "observed": {
+          "allowed_decisions": [],
+          "criteria": {
+            "authorized-source": "PASS",
+            "citation-resolution": "PASS",
+            "permission-boundary": "PASS",
+            "provenance-completeness": "PASS"
+          },
+          "gate": "PASS",
+          "model_called": true,
+          "permission_state": "ALLOW",
+          "retrieval_called": true,
+          "review_state": "APPROVE",
+          "run_status": "GENERATED"
+        },
+        "provider_id": "fixture-model-provider",
+        "provider_version": "1",
+        "run_id": "5e312613-853d-4563-b5a8-9f75a554a37f",
+        "source_ids": [
+          "synthetic-trade-notice-001"
+        ],
+        "started_at": "2026-10-04T21:13:15.834568+00:00",
+        "synthetic_demo_decision": {
+          "classification": "AUTOMATED_SYNTHETIC_DEMO_DECISION",
+          "decision": "APPROVE",
+          "operator_role": "codex-engineering-evidence",
+          "reviewed_at": "2026-10-04T21:13:15.846539+00:00",
+          "reviewer_id": "synthetic-local-reviewer",
+          "run_id": "5e312613-853d-4563-b5a8-9f75a554a37f"
+        }
+      },
+      "before_decision": {
+        "chunk_ids": [
+          "synthetic-trade-notice-chunk-001"
+        ],
+        "completed_at": "2026-10-04T21:13:15.835003+00:00",
+        "configuration_hash": "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+        "configuration_id": "trade-regulatory-fixture",
+        "configuration_options": {
+          "domain_task_id": "trade-regulatory.grounded-happy-path",
+          "domain_task_version": "1.0.0",
+          "scenario_class": "GROUNDED_HAPPY_PATH",
+          "task_pack_id": "trade-regulatory-research",
+          "task_pack_version": "1.0.0"
+        },
+        "configuration_version": "1.0.0",
+        "evaluation": {
+          "criteria": [
+            {
+              "criterion_id": "authorized-source",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "authorized-source",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "citation-resolution",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "citation-resolution",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "permission-boundary",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "permission-boundary",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "provenance-completeness",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "provenance-completeness",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            }
+          ],
+          "evaluated_at": "2026-10-04T21:13:15.837526+00:00",
+          "rubric_id": "p0-deterministic-critical-gate",
+          "rubric_version": "1.0.0",
+          "task_id": "p0-source-grounded-output",
+          "task_version": "1.0.0"
+        },
+        "http_status": 200,
+        "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+        "model_id": "model-output.trade-regulatory-grounded.001",
+        "model_version": "1.0.0",
+        "observed": {
+          "allowed_decisions": [
+            "APPROVE",
+            "REJECT",
+            "REQUEST_REVISION"
+          ],
+          "criteria": {
+            "authorized-source": "PASS",
+            "citation-resolution": "PASS",
+            "permission-boundary": "PASS",
+            "provenance-completeness": "PASS"
+          },
+          "gate": "PASS",
+          "model_called": true,
+          "permission_state": "ALLOW",
+          "retrieval_called": true,
+          "review_state": "PENDING",
+          "run_status": "GENERATED"
+        },
+        "provider_id": "fixture-model-provider",
+        "provider_version": "1",
+        "run_id": "5e312613-853d-4563-b5a8-9f75a554a37f",
+        "source_ids": [
+          "synthetic-trade-notice-001"
+        ],
+        "started_at": "2026-10-04T21:13:15.834568+00:00",
+        "synthetic_demo_decision": null
+      },
+      "expected_decision": "APPROVE",
+      "http_status": 303,
+      "passed": true,
+      "scenario_id": "synthetic-approve"
+    },
+    {
+      "after_decision": {
+        "chunk_ids": [
+          "synthetic-trade-notice-chunk-001"
+        ],
+        "completed_at": "2026-10-04T21:13:15.872355+00:00",
+        "configuration_hash": "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+        "configuration_id": "trade-regulatory-fixture",
+        "configuration_options": {
+          "domain_task_id": "trade-regulatory.grounded-happy-path",
+          "domain_task_version": "1.0.0",
+          "scenario_class": "GROUNDED_HAPPY_PATH",
+          "task_pack_id": "trade-regulatory-research",
+          "task_pack_version": "1.0.0"
+        },
+        "configuration_version": "1.0.0",
+        "evaluation": {
+          "criteria": [
+            {
+              "criterion_id": "authorized-source",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "authorized-source",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "citation-resolution",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "citation-resolution",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "permission-boundary",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "permission-boundary",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "provenance-completeness",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "provenance-completeness",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            }
+          ],
+          "evaluated_at": "2026-10-04T21:13:15.875579+00:00",
+          "rubric_id": "p0-deterministic-critical-gate",
+          "rubric_version": "1.0.0",
+          "task_id": "p0-source-grounded-output",
+          "task_version": "1.0.0"
+        },
+        "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+        "model_id": "model-output.trade-regulatory-grounded.001",
+        "model_version": "1.0.0",
+        "observed": {
+          "allowed_decisions": [],
+          "criteria": {
+            "authorized-source": "PASS",
+            "citation-resolution": "PASS",
+            "permission-boundary": "PASS",
+            "provenance-completeness": "PASS"
+          },
+          "gate": "PASS",
+          "model_called": true,
+          "permission_state": "ALLOW",
+          "retrieval_called": true,
+          "review_state": "REJECT",
+          "run_status": "GENERATED"
+        },
+        "provider_id": "fixture-model-provider",
+        "provider_version": "1",
+        "run_id": "c2cfd3b1-ba23-4e5e-8009-78b1e64f4b17",
+        "source_ids": [
+          "synthetic-trade-notice-001"
+        ],
+        "started_at": "2026-10-04T21:13:15.871689+00:00",
+        "synthetic_demo_decision": {
+          "classification": "AUTOMATED_SYNTHETIC_DEMO_DECISION",
+          "decision": "REJECT",
+          "operator_role": "codex-engineering-evidence",
+          "reviewed_at": "2026-10-04T21:13:15.887161+00:00",
+          "reviewer_id": "synthetic-local-reviewer",
+          "run_id": "c2cfd3b1-ba23-4e5e-8009-78b1e64f4b17"
+        }
+      },
+      "before_decision": {
+        "chunk_ids": [
+          "synthetic-trade-notice-chunk-001"
+        ],
+        "completed_at": "2026-10-04T21:13:15.872355+00:00",
+        "configuration_hash": "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+        "configuration_id": "trade-regulatory-fixture",
+        "configuration_options": {
+          "domain_task_id": "trade-regulatory.grounded-happy-path",
+          "domain_task_version": "1.0.0",
+          "scenario_class": "GROUNDED_HAPPY_PATH",
+          "task_pack_id": "trade-regulatory-research",
+          "task_pack_version": "1.0.0"
+        },
+        "configuration_version": "1.0.0",
+        "evaluation": {
+          "criteria": [
+            {
+              "criterion_id": "authorized-source",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "authorized-source",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "citation-resolution",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "citation-resolution",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "permission-boundary",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "permission-boundary",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "provenance-completeness",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "provenance-completeness",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            }
+          ],
+          "evaluated_at": "2026-10-04T21:13:15.875579+00:00",
+          "rubric_id": "p0-deterministic-critical-gate",
+          "rubric_version": "1.0.0",
+          "task_id": "p0-source-grounded-output",
+          "task_version": "1.0.0"
+        },
+        "http_status": 200,
+        "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+        "model_id": "model-output.trade-regulatory-grounded.001",
+        "model_version": "1.0.0",
+        "observed": {
+          "allowed_decisions": [
+            "APPROVE",
+            "REJECT",
+            "REQUEST_REVISION"
+          ],
+          "criteria": {
+            "authorized-source": "PASS",
+            "citation-resolution": "PASS",
+            "permission-boundary": "PASS",
+            "provenance-completeness": "PASS"
+          },
+          "gate": "PASS",
+          "model_called": true,
+          "permission_state": "ALLOW",
+          "retrieval_called": true,
+          "review_state": "PENDING",
+          "run_status": "GENERATED"
+        },
+        "provider_id": "fixture-model-provider",
+        "provider_version": "1",
+        "run_id": "c2cfd3b1-ba23-4e5e-8009-78b1e64f4b17",
+        "source_ids": [
+          "synthetic-trade-notice-001"
+        ],
+        "started_at": "2026-10-04T21:13:15.871689+00:00",
+        "synthetic_demo_decision": null
+      },
+      "expected_decision": "REJECT",
+      "http_status": 303,
+      "passed": true,
+      "scenario_id": "synthetic-reject"
+    },
+    {
+      "after_decision": {
+        "chunk_ids": [
+          "synthetic-trade-notice-chunk-001"
+        ],
+        "completed_at": "2026-10-04T21:13:15.908819+00:00",
+        "configuration_hash": "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+        "configuration_id": "trade-regulatory-fixture",
+        "configuration_options": {
+          "domain_task_id": "trade-regulatory.grounded-happy-path",
+          "domain_task_version": "1.0.0",
+          "scenario_class": "GROUNDED_HAPPY_PATH",
+          "task_pack_id": "trade-regulatory-research",
+          "task_pack_version": "1.0.0"
+        },
+        "configuration_version": "1.0.0",
+        "evaluation": {
+          "criteria": [
+            {
+              "criterion_id": "authorized-source",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "authorized-source",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "citation-resolution",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "citation-resolution",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "permission-boundary",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "permission-boundary",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "provenance-completeness",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "provenance-completeness",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            }
+          ],
+          "evaluated_at": "2026-10-04T21:13:15.911647+00:00",
+          "rubric_id": "p0-deterministic-critical-gate",
+          "rubric_version": "1.0.0",
+          "task_id": "p0-source-grounded-output",
+          "task_version": "1.0.0"
+        },
+        "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+        "model_id": "model-output.trade-regulatory-grounded.001",
+        "model_version": "1.0.0",
+        "observed": {
+          "allowed_decisions": [],
+          "criteria": {
+            "authorized-source": "PASS",
+            "citation-resolution": "PASS",
+            "permission-boundary": "PASS",
+            "provenance-completeness": "PASS"
+          },
+          "gate": "PASS",
+          "model_called": true,
+          "permission_state": "ALLOW",
+          "retrieval_called": true,
+          "review_state": "REQUEST_REVISION",
+          "run_status": "GENERATED"
+        },
+        "provider_id": "fixture-model-provider",
+        "provider_version": "1",
+        "run_id": "e0651185-bc9a-43fe-9416-6756ae09eafd",
+        "source_ids": [
+          "synthetic-trade-notice-001"
+        ],
+        "started_at": "2026-10-04T21:13:15.908363+00:00",
+        "synthetic_demo_decision": {
+          "classification": "AUTOMATED_SYNTHETIC_DEMO_DECISION",
+          "decision": "REQUEST_REVISION",
+          "operator_role": "codex-engineering-evidence",
+          "reviewed_at": "2026-10-04T21:13:15.921123+00:00",
+          "reviewer_id": "synthetic-local-reviewer",
+          "run_id": "e0651185-bc9a-43fe-9416-6756ae09eafd"
+        }
+      },
+      "before_decision": {
+        "chunk_ids": [
+          "synthetic-trade-notice-chunk-001"
+        ],
+        "completed_at": "2026-10-04T21:13:15.908819+00:00",
+        "configuration_hash": "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+        "configuration_id": "trade-regulatory-fixture",
+        "configuration_options": {
+          "domain_task_id": "trade-regulatory.grounded-happy-path",
+          "domain_task_version": "1.0.0",
+          "scenario_class": "GROUNDED_HAPPY_PATH",
+          "task_pack_id": "trade-regulatory-research",
+          "task_pack_version": "1.0.0"
+        },
+        "configuration_version": "1.0.0",
+        "evaluation": {
+          "criteria": [
+            {
+              "criterion_id": "authorized-source",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "authorized-source",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "citation-resolution",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "citation-resolution",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "permission-boundary",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "permission-boundary",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "provenance-completeness",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "provenance-completeness",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            }
+          ],
+          "evaluated_at": "2026-10-04T21:13:15.911647+00:00",
+          "rubric_id": "p0-deterministic-critical-gate",
+          "rubric_version": "1.0.0",
+          "task_id": "p0-source-grounded-output",
+          "task_version": "1.0.0"
+        },
+        "http_status": 200,
+        "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+        "model_id": "model-output.trade-regulatory-grounded.001",
+        "model_version": "1.0.0",
+        "observed": {
+          "allowed_decisions": [
+            "APPROVE",
+            "REJECT",
+            "REQUEST_REVISION"
+          ],
+          "criteria": {
+            "authorized-source": "PASS",
+            "citation-resolution": "PASS",
+            "permission-boundary": "PASS",
+            "provenance-completeness": "PASS"
+          },
+          "gate": "PASS",
+          "model_called": true,
+          "permission_state": "ALLOW",
+          "retrieval_called": true,
+          "review_state": "PENDING",
+          "run_status": "GENERATED"
+        },
+        "provider_id": "fixture-model-provider",
+        "provider_version": "1",
+        "run_id": "e0651185-bc9a-43fe-9416-6756ae09eafd",
+        "source_ids": [
+          "synthetic-trade-notice-001"
+        ],
+        "started_at": "2026-10-04T21:13:15.908363+00:00",
+        "synthetic_demo_decision": null
+      },
+      "expected_decision": "REQUEST_REVISION",
+      "http_status": 303,
+      "passed": true,
+      "scenario_id": "synthetic-request_revision"
+    },
+    {
+      "http_status": 409,
+      "observed": {
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "UNKNOWN",
+          "citation-resolution": "UNKNOWN",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "passed": true,
+      "persistence_unchanged": true,
+      "run_id": "3326869b-f8a1-4933-8aa7-ae9bdfbfbe3e",
+      "scenario_id": "generated-block-approval-denied",
+      "synthetic_demo_decision": null
+    },
+    {
+      "after": {
+        "human_reviews": {
+          "row_count": 3,
+          "sha256": "sha256:701fbff58470baa027bc7f15092f04d0248b38cad99422af380b6fe7ab63a6ca"
+        },
+        "model_executions": {
+          "row_count": 9,
+          "sha256": "sha256:49eeecf38edf0a5cf1a1b4b1938855d115ee59ba948c0b7d58b31193cbb1603c"
+        },
+        "model_telemetry": {
+          "row_count": 0,
+          "sha256": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        "run_chunks": {
+          "row_count": 9,
+          "sha256": "sha256:f1f286133f0960597dbcfc86799e3ecf3f0815c86b0cb65dbbca14a8dd3b3763"
+        },
+        "run_configurations": {
+          "row_count": 10,
+          "sha256": "sha256:645c1aac55befb07b5d61853b8dd9f8fcad32f60072586954af9179d0d06111d"
+        },
+        "run_evaluations": {
+          "row_count": 10,
+          "sha256": "sha256:8fd727247e98a975f6474db1fce784b9c7574537bfaba662b41391ab344e80b5"
+        },
+        "run_permission_conditions": {
+          "row_count": 0,
+          "sha256": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        "run_sources": {
+          "row_count": 9,
+          "sha256": "sha256:42554603efb60d059547df931d1b5b182283d859728b010f3f71a6947919cf70"
+        },
+        "runs": {
+          "row_count": 10,
+          "sha256": "sha256:f845bf44910b2f843417b92b6471147b302036b888c16dc3c99daa7c52dd4b13"
+        }
+      },
+      "before": {
+        "human_reviews": {
+          "row_count": 3,
+          "sha256": "sha256:701fbff58470baa027bc7f15092f04d0248b38cad99422af380b6fe7ab63a6ca"
+        },
+        "model_executions": {
+          "row_count": 9,
+          "sha256": "sha256:49eeecf38edf0a5cf1a1b4b1938855d115ee59ba948c0b7d58b31193cbb1603c"
+        },
+        "model_telemetry": {
+          "row_count": 0,
+          "sha256": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        "run_chunks": {
+          "row_count": 9,
+          "sha256": "sha256:f1f286133f0960597dbcfc86799e3ecf3f0815c86b0cb65dbbca14a8dd3b3763"
+        },
+        "run_configurations": {
+          "row_count": 10,
+          "sha256": "sha256:645c1aac55befb07b5d61853b8dd9f8fcad32f60072586954af9179d0d06111d"
+        },
+        "run_evaluations": {
+          "row_count": 10,
+          "sha256": "sha256:8fd727247e98a975f6474db1fce784b9c7574537bfaba662b41391ab344e80b5"
+        },
+        "run_permission_conditions": {
+          "row_count": 0,
+          "sha256": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        "run_sources": {
+          "row_count": 9,
+          "sha256": "sha256:42554603efb60d059547df931d1b5b182283d859728b010f3f71a6947919cf70"
+        },
+        "runs": {
+          "row_count": 10,
+          "sha256": "sha256:f845bf44910b2f843417b92b6471147b302036b888c16dc3c99daa7c52dd4b13"
+        }
+      },
+      "draft_and_citation_work_area_absent": true,
+      "guarded_execution_call_counts": {
+        "evaluation": 0,
+        "model": 0,
+        "retrieval": 0,
+        "run": 0
+      },
+      "http_statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "passed": true,
+      "persistence_unchanged": true,
+      "run_ids": [
+        "03dae780-d763-4dd4-8877-58f6fda474b5",
+        "3326869b-f8a1-4933-8aa7-ae9bdfbfbe3e",
+        "5e312613-853d-4563-b5a8-9f75a554a37f",
+        "73043bed-5468-4aeb-a1f8-93eb44d6f63c",
+        "83900f4f-881e-438a-b243-d3a5dd197048",
+        "8eb78482-e921-4c72-af0a-3102322fd56d",
+        "be2fa17e-d5f8-486f-8dab-acbbe4e602d8",
+        "c2cfd3b1-ba23-4e5e-8009-78b1e64f4b17",
+        "c71c10b2-96fd-41f7-ad1f-b8cca6849cc7",
+        "e0651185-bc9a-43fe-9416-6756ae09eafd"
+      ],
+      "scenario_id": "history-reopen"
+    },
+    {
+      "after_run_id": "03dae780-d763-4dd4-8877-58f6fda474b5",
+      "chunk_ids": [
+        "synthetic-trade-notice-chunk-001"
+      ],
+      "completed_at": "2026-10-04T21:13:15.737035+00:00",
+      "configuration_hash": "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.grounded-happy-path",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "GROUNDED_HAPPY_PATH",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-04T21:13:15.739509+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "expected": {
+        "allowed_decisions": [
+          "APPROVE",
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "PASS",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "PASS",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "http_status": 200,
+      "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+      "model_id": "model-output.trade-regulatory-grounded.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [
+          "APPROVE",
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "PASS",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "PASS",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "passed": true,
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "run_id": "73043bed-5468-4aeb-a1f8-93eb44d6f63c",
+      "scenario_id": "safe-independent-rerun",
+      "source_ids": [
+        "synthetic-trade-notice-001"
+      ],
+      "started_at": "2026-10-04T21:13:15.736597+00:00",
+      "stopped_run_unchanged": true,
+      "synthetic_demo_decision": null
+    }
+  ],
+  "schema_version": "1"
+}

@@ -1,0 +1,974 @@
+{
+  "architecture": {
+    "new_adr_required": false,
+    "new_dependency_framework_provider_storage": false,
+    "runtime_behavior_changed": false,
+    "trust_boundary_changed": false
+  },
+  "artifacts": [
+    {
+      "path": "README.md",
+      "sha256": "0ccff8a8fe71a941072c8c7c780938798cca8eb7df5d2f52d966479fe8a666b8"
+    },
+    {
+      "path": "scenarios.json",
+      "sha256": "258391aab299321e648b75ca99e985c233084672c144a3797074b2345248610a"
+    },
+    {
+      "path": "demo-materials.md",
+      "sha256": "c5800143f1c603b299adbafad68e595b88156d31cfc90dc6032d7fc61456493c"
+    },
+    {
+      "path": "claims-and-limitations.md",
+      "sha256": "f651fb588346ef80aa1fa31ad0fbaf21cf49e1985ca0db2d064501b4d694f33e"
+    }
+  ],
+  "automated_evaluation": {
+    "evaluator_versions": {
+      "authorized-source": "1.0.0",
+      "citation-resolution": "1.0.0",
+      "permission-boundary": "1.0.0",
+      "provenance-completeness": "1.0.0"
+    },
+    "rubric_id": "p0-deterministic-critical-gate",
+    "rubric_version": "1.0.0",
+    "task_id": "p0-source-grounded-output",
+    "task_version": "1.0.0"
+  },
+  "backup": {
+    "assets": [
+      {
+        "acceptance": "PENDING_HUMAN_REVIEW",
+        "bytes": 236196,
+        "canonical_drive_url": null,
+        "classification": "AUTOMATED_SYNTHETIC_DRAFT_CAPTURE",
+        "path": ".local/gate5/backup-draft-01/critical-eval-failure.jpg",
+        "sha256": "bdad460f0b60dbc59e02a6c4cc7ac8d1b546df7f1619df562eb7a88f9621f1e0"
+      },
+      {
+        "acceptance": "PENDING_HUMAN_REVIEW",
+        "bytes": 231534,
+        "canonical_drive_url": null,
+        "classification": "AUTOMATED_SYNTHETIC_DRAFT_CAPTURE",
+        "path": ".local/gate5/backup-draft-01/grounded.jpg",
+        "sha256": "49d23bdd2232137510c73607b56f83c5c111d270fb69c08b6167be8cbae9694d"
+      },
+      {
+        "acceptance": "PENDING_HUMAN_REVIEW",
+        "bytes": 80230,
+        "canonical_drive_url": null,
+        "classification": "AUTOMATED_SYNTHETIC_DRAFT_CAPTURE",
+        "path": ".local/gate5/backup-draft-01/history.jpg",
+        "sha256": "18ef9ba82809f6bc2af4d243577ad1bd2e07f481d0776092ecab3025d6cf89fb"
+      },
+      {
+        "acceptance": "PENDING_HUMAN_REVIEW",
+        "bytes": 89682,
+        "canonical_drive_url": null,
+        "classification": "AUTOMATED_SYNTHETIC_DRAFT_CAPTURE",
+        "path": ".local/gate5/backup-draft-01/landing.jpg",
+        "sha256": "64ce35db3e3500cb1f514796fd2e0f8b108d8223999b93c697bc59493020d59b"
+      },
+      {
+        "acceptance": "PENDING_HUMAN_REVIEW",
+        "bytes": 134455,
+        "canonical_drive_url": null,
+        "classification": "AUTOMATED_SYNTHETIC_DRAFT_CAPTURE",
+        "path": ".local/gate5/backup-draft-01/permission-block.jpg",
+        "sha256": "6ee9705dcff5be565f82b52f63ae78e411df392167f6ca7d6907fcdb6dd23dc2"
+      },
+      {
+        "acceptance": "PENDING_HUMAN_REVIEW",
+        "bytes": 199175,
+        "canonical_drive_url": null,
+        "classification": "AUTOMATED_SYNTHETIC_DRAFT_CAPTURE",
+        "path": ".local/gate5/backup-draft-01/reopened.jpg",
+        "sha256": "96031531e9a7a014c7e4ffc1362527ae21846405e7bb86ad5a18ba3fd192db90"
+      },
+      {
+        "acceptance": "PENDING_HUMAN_REVIEW",
+        "bytes": 199175,
+        "canonical_drive_url": null,
+        "classification": "AUTOMATED_SYNTHETIC_DRAFT_CAPTURE",
+        "path": ".local/gate5/backup-draft-01/synthetic-approval.jpg",
+        "sha256": "96031531e9a7a014c7e4ffc1362527ae21846405e7bb86ad5a18ba3fd192db90"
+      }
+    ],
+    "canonical_drive_location": null,
+    "capture_checklist": "README.md#backup-assets-and-exact-human-rehearsal-checklist",
+    "recording_status": "NOT_RUN",
+    "status": "DRAFT_SCREENSHOTS_CAPTURED_ACCEPTANCE_PENDING"
+  },
+  "branch": "andrew/dsl-120-p0-16-prepare-demo-rehearsal-and-release-evidence-package",
+  "change_classification": "EVIDENCE_TOOLING_TESTS_AND_DOCUMENTATION_ONLY",
+  "claims_matrix": {
+    "approval": "PENDING",
+    "current_external_facts": "CURRENT-SOURCE VERIFICATION REQUIRED",
+    "reference": "claims-and-limitations.md",
+    "version": "1.0.0"
+  },
+  "clean_state": {
+    "capture_clean": true,
+    "source_checkout": "existing prepared isolated DSL-120 worktree; no pull or new checkout",
+    "verification_after": "",
+    "verification_before": ""
+  },
+  "collector_sha256": "82b4fc66ac340f9576da7444ee1c57c0c0310a12feca9039b34b672ae4d38022",
+  "container": {
+    "command": "make container-build",
+    "container_preview": "NOT_RUN",
+    "exit_code": 2,
+    "limitation": "Supplemental container does not reproduce the complete six-task source-checkout pack; no controls weakened.",
+    "reason": "DOCKER_SOCKET_PERMISSION_DENIED",
+    "status": "BLOCKED_BY_ENVIRONMENT"
+  },
+  "demo_materials_reference": "demo-materials.md",
+  "drive_promotion": {
+    "canonical_url": null,
+    "required_action": "Andrew designates approved folder; promote approved final readiness/decision record and accepted backup assets, then retain canonical URLs/hashes.",
+    "status": "PENDING"
+  },
+  "engineering_evidence_status": "READY_FOR_HUMAN_REVIEW",
+  "environment": {
+    "architecture": "arm64",
+    "os": "Darwin",
+    "os_release": "27.0.0",
+    "python": "3.13.15",
+    "uv": "uv 0.12.6 (7938ca5d5 2026-08-25 aarch64-apple-darwin)",
+    "uv_lock_sha256": "e74fcbc8645afae6a11009c448c0ded74225d75a75a069470c128bac2ac0dd87"
+  },
+  "evidence_commit_sha": null,
+  "evidence_tooling_head_sha": "ac6e36dbec543badccd01874943ebafd354da0e7",
+  "gate5": {
+    "conditions": [],
+    "decided_at": null,
+    "decided_by": null,
+    "status": "PENDING",
+    "verdict": null
+  },
+  "github_ci": {
+    "conclusion": null,
+    "head_sha": null,
+    "job": "verify-ci",
+    "required_action": "After authorized PR creation, record actual workflow/head/run/conclusion/timestamps and retention posture; preserve bounded durable summary.",
+    "retention_expiry": null,
+    "run_id": null,
+    "status": "PENDING",
+    "url": null,
+    "workflow": ".github/workflows/verify.yml"
+  },
+  "golden_set": {
+    "case_versions": [
+      "1.0.0"
+    ],
+    "path": "evals/golden/trade_regulatory_v1/cases.json",
+    "schema_version": "1",
+    "sha256": "86ba7df867928f822ebc58238d3e3c71fb6ae227e0473431089f509c7104f117"
+  },
+  "holdout": {
+    "evidence": "evals/holdout/README.md",
+    "required_action": "Separately approved protected-holdout issue or explicit Andrew Gate 5 condition/deferral.",
+    "status": "PENDING_DECISION",
+    "validation_performed": false
+  },
+  "human_gates": {
+    "andrew_merge_decision": {
+      "decision": null,
+      "status": "PENDING",
+      "timestamp": null
+    },
+    "claims_approval": {
+      "reviewer": null,
+      "status": "PENDING",
+      "timestamp": null
+    },
+    "codeowner_approval": {
+      "reviewer": null,
+      "status": "PENDING",
+      "timestamp": null
+    },
+    "non_author_approval": {
+      "reviewer": null,
+      "status": "PENDING",
+      "timestamp": null
+    },
+    "substantive_domain_approval": {
+      "reviewer": null,
+      "status": "PENDING",
+      "timestamp": null
+    },
+    "visual_rehearsal_acceptance": {
+      "reviewer": null,
+      "status": "PENDING",
+      "timestamp": null
+    }
+  },
+  "independent_review": {
+    "actual_model": "gpt-6-astra",
+    "approval_mode": "never",
+    "checks": {
+      "artifact_hashes_and_records": "CONSISTENT",
+      "contract_tests": 42,
+      "fresh_collector_result": "PASS",
+      "fresh_collector_scenarios": 12,
+      "golden_cases": 6,
+      "make_ci": "PASS",
+      "smoke_cases": 5,
+      "unit_integration_security_tests": 2190
+    },
+    "codex_version": "0.154.0",
+    "command": "codex review --base 8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+    "completed_at": "2026-10-04T21:18:51.764873Z",
+    "conclusion": "No actionable regressions found.",
+    "configuration_reference": ".codex/config.toml",
+    "configuration_sha256": "a037657150774b289f0d4f09da384527d0338717731aaf8211cf5d456a49c102",
+    "configured_model": "gpt-6-astra",
+    "critical_findings": 0,
+    "exit_code": 0,
+    "high_findings": 0,
+    "limitations": [
+      "Independent reviewer localhost bind was blocked by its sandbox; the separately approved author loopback/browser verification remains recorded.",
+      "Reviewer-specific Linear authentication was unavailable; review used local repository evidence. The preparation agent read the live Ready issue through the approved integration."
+    ],
+    "log_sha256": "9e4ac2041ad5d46126891896ef7eb96a69ff5635a15bdee4b9b266fcb68287d3",
+    "medium_low_dispositions": [],
+    "reasoning_effort": "xhigh",
+    "review_id": "01a108c6-bc8c-7203-99ae-84a9cbb32d6b",
+    "reviewed_head_sha": "2bae8ad3723844131eadd4a046767c9338370e90",
+    "sandbox": "workspace-write",
+    "started_at": "2026-10-04T21:16:44.634963Z",
+    "startup_attempts": [
+      {
+        "exit_code": 1,
+        "status": "BLOCKED_BY_LOCAL_STATE_PERMISSIONS"
+      },
+      {
+        "normal_codex_state_access_approved": true,
+        "repository_configuration_changed": false,
+        "status": "COMPLETE"
+      }
+    ],
+    "status": "COMPLETE",
+    "verification_timestamp_basis": "Commands completed during the recorded review interval; exact per-command timestamps not retained."
+  },
+  "limitations_reference": "claims-and-limitations.md#shared-limitations",
+  "live_model": {
+    "historical_run_id": null,
+    "historical_support_reference": "README.md#separately-labeled-historical-live-evidence",
+    "requirement": "fresh live-model execution not required for this fixture/reference Gate 5 candidate",
+    "separate_from_fixture_evidence": true,
+    "status": "NOT_RUN"
+  },
+  "operator_role": "codex-engineering-evidence",
+  "package_id": "dsl-120-gate5",
+  "package_version": "1.0.0",
+  "prepared_at": "2026-10-04T17:15:59.051147-04:00",
+  "preview": {
+    "bind": "127.0.0.1:8000",
+    "command": "PRIVILAB_PREVIEW_DB=\"$PWD/.local/gate5/preview-01.sqlite3\" make preview",
+    "human_visual_rehearsal": "PENDING",
+    "initial_sandbox_attempt": "LOCAL_SOCKET_BIND_DENIED",
+    "limitation": "Browser operated by Codex; no human timing, keyboard/zoom acceptance, or claims approval inferred.",
+    "method": "make preview plus Codex in-app browser interaction",
+    "observed_at": "2026-10-04T17:15:59.048437-04:00",
+    "reopen": {
+      "draft_section_absent": true,
+      "metadata_only_notice_observed": true,
+      "persistence_after": {
+        "human_reviews": {
+          "row_count": 1,
+          "sha256": "sha256:07fdd2df69533cf72c56c007458ad0e41af0a12d4a1c48b0450a1d80e5ab0c9f"
+        },
+        "model_executions": {
+          "row_count": 5,
+          "sha256": "sha256:f55448c7ebe9216f5d41d09a9330340d20327187a7acd082be885ec82bd84b87"
+        },
+        "model_telemetry": {
+          "row_count": 0,
+          "sha256": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        "run_chunks": {
+          "row_count": 5,
+          "sha256": "sha256:5ecb3817bd70188d87e7ecc8382610d6d8b087bd0889ed88f3b8972dbabd556a"
+        },
+        "run_configurations": {
+          "row_count": 6,
+          "sha256": "sha256:fd18880d2d8fb64978129a3be14a00f95abb12871c5b3860591703aa5e6f8969"
+        },
+        "run_evaluations": {
+          "row_count": 6,
+          "sha256": "sha256:4d57a66652c1f21cad2ee882635177b16363a123c09d37bb11e0d70ca0a0d8c1"
+        },
+        "run_permission_conditions": {
+          "row_count": 0,
+          "sha256": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        "run_sources": {
+          "row_count": 5,
+          "sha256": "sha256:543df26b1cc27bc94ca20b1bc428d24346a8e26f4fe0426f5d6503cf107b35f5"
+        },
+        "runs": {
+          "row_count": 6,
+          "sha256": "sha256:bc7a12fb52da715af6402d0523e316101102003d0acf93914c14bb138a40886a"
+        }
+      },
+      "persistence_before": {
+        "human_reviews": {
+          "row_count": 1,
+          "sha256": "sha256:07fdd2df69533cf72c56c007458ad0e41af0a12d4a1c48b0450a1d80e5ab0c9f"
+        },
+        "model_executions": {
+          "row_count": 5,
+          "sha256": "sha256:f55448c7ebe9216f5d41d09a9330340d20327187a7acd082be885ec82bd84b87"
+        },
+        "model_telemetry": {
+          "row_count": 0,
+          "sha256": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        "run_chunks": {
+          "row_count": 5,
+          "sha256": "sha256:5ecb3817bd70188d87e7ecc8382610d6d8b087bd0889ed88f3b8972dbabd556a"
+        },
+        "run_configurations": {
+          "row_count": 6,
+          "sha256": "sha256:fd18880d2d8fb64978129a3be14a00f95abb12871c5b3860591703aa5e6f8969"
+        },
+        "run_evaluations": {
+          "row_count": 6,
+          "sha256": "sha256:4d57a66652c1f21cad2ee882635177b16363a123c09d37bb11e0d70ca0a0d8c1"
+        },
+        "run_permission_conditions": {
+          "row_count": 0,
+          "sha256": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        "run_sources": {
+          "row_count": 5,
+          "sha256": "sha256:543df26b1cc27bc94ca20b1bc428d24346a8e26f4fe0426f5d6503cf107b35f5"
+        },
+        "runs": {
+          "row_count": 6,
+          "sha256": "sha256:bc7a12fb52da715af6402d0523e316101102003d0acf93914c14bb138a40886a"
+        }
+      },
+      "persistence_unchanged": true,
+      "run_id": "c15b0e50-88a9-4e22-9363-69511b74e8c0"
+    },
+    "retry": "APPROVED_LOOPBACK_ONLY_EXECUTION",
+    "status": "PASS",
+    "synthetic_browser_runs": [
+      {
+        "chunk_ids": [
+          "synthetic-injection-chunk-001"
+        ],
+        "completed_at": "2026-10-04T21:14:53.210628+00:00",
+        "configuration_hash": "sha256:ba0066b4dfc333c805de9c36e3ce51861df990b407a2cab458b2f2b8868d5306",
+        "configuration_id": "trade-regulatory-fixture",
+        "configuration_options": {
+          "domain_task_id": "trade-regulatory.malicious-source-injection",
+          "domain_task_version": "1.0.0",
+          "scenario_class": "MALICIOUS_SOURCE_INJECTION",
+          "task_pack_id": "trade-regulatory-research",
+          "task_pack_version": "1.0.0"
+        },
+        "configuration_version": "1.0.0",
+        "evaluation": {
+          "criteria": [
+            {
+              "criterion_id": "authorized-source",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "authorized-source",
+              "evaluator_version": "1.0.0",
+              "status": "FAIL"
+            },
+            {
+              "criterion_id": "citation-resolution",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "citation-resolution",
+              "evaluator_version": "1.0.0",
+              "status": "FAIL"
+            },
+            {
+              "criterion_id": "permission-boundary",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "permission-boundary",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "provenance-completeness",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "provenance-completeness",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            }
+          ],
+          "evaluated_at": "2026-10-04T21:14:53.213966+00:00",
+          "rubric_id": "p0-deterministic-critical-gate",
+          "rubric_version": "1.0.0",
+          "task_id": "p0-source-grounded-output",
+          "task_version": "1.0.0"
+        },
+        "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+        "model_id": "model-output.trade-regulatory-grounded.001",
+        "model_version": "1.0.0",
+        "observed": {
+          "allowed_decisions": [
+            "REJECT",
+            "REQUEST_REVISION"
+          ],
+          "criteria": {
+            "authorized-source": "FAIL",
+            "citation-resolution": "FAIL",
+            "permission-boundary": "PASS",
+            "provenance-completeness": "PASS"
+          },
+          "gate": "BLOCK",
+          "model_called": true,
+          "permission_state": "ALLOW",
+          "retrieval_called": true,
+          "review_state": "PENDING",
+          "run_status": "GENERATED"
+        },
+        "provider_id": "fixture-model-provider",
+        "provider_version": "1",
+        "run_id": "72e47575-d8a3-4ea4-a403-291eb4f54276",
+        "source_ids": [
+          "synthetic-injection-001"
+        ],
+        "started_at": "2026-10-04T21:14:53.210048+00:00",
+        "synthetic_demo_decision": null
+      },
+      {
+        "chunk_ids": [
+          "synthetic-trade-notice-chunk-001"
+        ],
+        "completed_at": "2026-10-04T21:14:51.397645+00:00",
+        "configuration_hash": "sha256:ef458dac8a9988f0493689499b2b9f526f49548a944374e01ba021fffd7de734",
+        "configuration_id": "trade-regulatory-fixture",
+        "configuration_options": {
+          "domain_task_id": "trade-regulatory.citation-grounding-challenge",
+          "domain_task_version": "1.0.0",
+          "scenario_class": "CITATION_GROUNDING_CHALLENGE",
+          "task_pack_id": "trade-regulatory-research",
+          "task_pack_version": "1.0.0"
+        },
+        "configuration_version": "1.0.0",
+        "evaluation": {
+          "criteria": [
+            {
+              "criterion_id": "authorized-source",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "authorized-source",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "citation-resolution",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "citation-resolution",
+              "evaluator_version": "1.0.0",
+              "status": "FAIL"
+            },
+            {
+              "criterion_id": "permission-boundary",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "permission-boundary",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "provenance-completeness",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "provenance-completeness",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            }
+          ],
+          "evaluated_at": "2026-10-04T21:14:51.401823+00:00",
+          "rubric_id": "p0-deterministic-critical-gate",
+          "rubric_version": "1.0.0",
+          "task_id": "p0-source-grounded-output",
+          "task_version": "1.0.0"
+        },
+        "model_content_hash": "sha256:df2bc34d6da7ff229481a8dd10dae0e2586db4c767dd3271213f39e2ad29e975",
+        "model_id": "model-output.trade-regulatory-missing-chunk.001",
+        "model_version": "1.0.0",
+        "observed": {
+          "allowed_decisions": [
+            "REJECT",
+            "REQUEST_REVISION"
+          ],
+          "criteria": {
+            "authorized-source": "PASS",
+            "citation-resolution": "FAIL",
+            "permission-boundary": "PASS",
+            "provenance-completeness": "PASS"
+          },
+          "gate": "BLOCK",
+          "model_called": true,
+          "permission_state": "ALLOW",
+          "retrieval_called": true,
+          "review_state": "PENDING",
+          "run_status": "GENERATED"
+        },
+        "provider_id": "fixture-model-provider",
+        "provider_version": "1",
+        "run_id": "ff0d835f-ccec-4ac9-904b-6b3b631d9bea",
+        "source_ids": [
+          "synthetic-trade-notice-001"
+        ],
+        "started_at": "2026-10-04T21:14:51.397040+00:00",
+        "synthetic_demo_decision": null
+      },
+      {
+        "chunk_ids": [
+          "synthetic-trade-notice-chunk-001"
+        ],
+        "completed_at": "2026-10-04T21:14:48.612553+00:00",
+        "configuration_hash": "sha256:82b84f847949471b505de71c98f61cf588e387f45cda149f2e2b73e2606c52a4",
+        "configuration_id": "trade-regulatory-fixture",
+        "configuration_options": {
+          "domain_task_id": "trade-regulatory.critical-eval-failure",
+          "domain_task_version": "1.0.0",
+          "scenario_class": "CRITICAL_EVAL_FAILURE",
+          "task_pack_id": "trade-regulatory-research",
+          "task_pack_version": "1.0.0"
+        },
+        "configuration_version": "1.0.0",
+        "evaluation": {
+          "criteria": [
+            {
+              "criterion_id": "authorized-source",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "authorized-source",
+              "evaluator_version": "1.0.0",
+              "status": "UNKNOWN"
+            },
+            {
+              "criterion_id": "citation-resolution",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "citation-resolution",
+              "evaluator_version": "1.0.0",
+              "status": "UNKNOWN"
+            },
+            {
+              "criterion_id": "permission-boundary",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "permission-boundary",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "provenance-completeness",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "provenance-completeness",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            }
+          ],
+          "evaluated_at": "2026-10-04T21:14:48.616265+00:00",
+          "rubric_id": "p0-deterministic-critical-gate",
+          "rubric_version": "1.0.0",
+          "task_id": "p0-source-grounded-output",
+          "task_version": "1.0.0"
+        },
+        "model_content_hash": "sha256:05ac503ca8cdf05d702087d5062349765fb4636cee8cde27754985f809163aec",
+        "model_id": "model-output.trade-regulatory-missing-citation.001",
+        "model_version": "1.0.0",
+        "observed": {
+          "allowed_decisions": [
+            "REJECT",
+            "REQUEST_REVISION"
+          ],
+          "criteria": {
+            "authorized-source": "UNKNOWN",
+            "citation-resolution": "UNKNOWN",
+            "permission-boundary": "PASS",
+            "provenance-completeness": "PASS"
+          },
+          "gate": "BLOCK",
+          "model_called": true,
+          "permission_state": "ALLOW",
+          "retrieval_called": true,
+          "review_state": "PENDING",
+          "run_status": "GENERATED"
+        },
+        "provider_id": "fixture-model-provider",
+        "provider_version": "1",
+        "run_id": "8835a37e-d998-4c3b-9c1f-46d8ba09d543",
+        "source_ids": [
+          "synthetic-trade-notice-001"
+        ],
+        "started_at": "2026-10-04T21:14:48.612041+00:00",
+        "synthetic_demo_decision": null
+      },
+      {
+        "chunk_ids": [],
+        "completed_at": "2026-10-04T21:14:46.908103+00:00",
+        "configuration_hash": "sha256:963f517ba47ecb12fe393915ed8dab8f30349bd5d99bf40cc9f080e2a12d51bb",
+        "configuration_id": "trade-regulatory-fixture",
+        "configuration_options": {
+          "domain_task_id": "trade-regulatory.permission-block",
+          "domain_task_version": "1.0.0",
+          "scenario_class": "PERMISSION_BLOCK",
+          "task_pack_id": "trade-regulatory-research",
+          "task_pack_version": "1.0.0"
+        },
+        "configuration_version": "1.0.0",
+        "evaluation": {
+          "criteria": [
+            {
+              "criterion_id": "authorized-source",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "authorized-source",
+              "evaluator_version": "1.0.0",
+              "status": "UNKNOWN"
+            },
+            {
+              "criterion_id": "citation-resolution",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "citation-resolution",
+              "evaluator_version": "1.0.0",
+              "status": "UNKNOWN"
+            },
+            {
+              "criterion_id": "permission-boundary",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "permission-boundary",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "provenance-completeness",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "provenance-completeness",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            }
+          ],
+          "evaluated_at": "2026-10-04T21:14:46.911096+00:00",
+          "rubric_id": "p0-deterministic-critical-gate",
+          "rubric_version": "1.0.0",
+          "task_id": "p0-source-grounded-output",
+          "task_version": "1.0.0"
+        },
+        "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+        "model_id": "model-output.trade-regulatory-grounded.001",
+        "model_version": "1.0.0",
+        "observed": {
+          "allowed_decisions": [],
+          "criteria": {
+            "authorized-source": "UNKNOWN",
+            "citation-resolution": "UNKNOWN",
+            "permission-boundary": "PASS",
+            "provenance-completeness": "PASS"
+          },
+          "gate": "BLOCK",
+          "model_called": false,
+          "permission_state": "BLOCK",
+          "retrieval_called": false,
+          "review_state": "NOT REVIEWABLE",
+          "run_status": "PERMISSION_STOPPED"
+        },
+        "provider_id": "fixture-model-provider",
+        "provider_version": "1",
+        "run_id": "1512fcac-7bbd-4f68-92d2-75ff23188bb0",
+        "source_ids": [],
+        "started_at": "2026-10-04T21:14:46.908079+00:00",
+        "synthetic_demo_decision": null
+      },
+      {
+        "chunk_ids": [
+          "synthetic-trade-notice-chunk-001"
+        ],
+        "completed_at": "2026-10-04T21:14:45.217563+00:00",
+        "configuration_hash": "sha256:4e577664b66a18d5d5a3ea716f8a1952466d2bf7f066a57e2f69f9e5332a3ac8",
+        "configuration_id": "trade-regulatory-fixture",
+        "configuration_options": {
+          "domain_task_id": "trade-regulatory.insufficient-source",
+          "domain_task_version": "1.0.0",
+          "scenario_class": "INSUFFICIENT_SOURCE",
+          "task_pack_id": "trade-regulatory-research",
+          "task_pack_version": "1.0.0"
+        },
+        "configuration_version": "1.0.0",
+        "evaluation": {
+          "criteria": [
+            {
+              "criterion_id": "authorized-source",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "authorized-source",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "citation-resolution",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "citation-resolution",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "permission-boundary",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "permission-boundary",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "provenance-completeness",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "provenance-completeness",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            }
+          ],
+          "evaluated_at": "2026-10-04T21:14:45.220904+00:00",
+          "rubric_id": "p0-deterministic-critical-gate",
+          "rubric_version": "1.0.0",
+          "task_id": "p0-source-grounded-output",
+          "task_version": "1.0.0"
+        },
+        "model_content_hash": "sha256:437c9d9391093c6c4765624bd64921e6524f578ae0490ff2d3681c87ecb641f8",
+        "model_id": "model-output.trade-regulatory-insufficient-source.001",
+        "model_version": "1.0.0",
+        "observed": {
+          "allowed_decisions": [
+            "APPROVE",
+            "REJECT",
+            "REQUEST_REVISION"
+          ],
+          "criteria": {
+            "authorized-source": "PASS",
+            "citation-resolution": "PASS",
+            "permission-boundary": "PASS",
+            "provenance-completeness": "PASS"
+          },
+          "gate": "PASS",
+          "model_called": true,
+          "permission_state": "ALLOW",
+          "retrieval_called": true,
+          "review_state": "PENDING",
+          "run_status": "GENERATED"
+        },
+        "provider_id": "fixture-model-provider",
+        "provider_version": "1",
+        "run_id": "021fb3c1-601f-4fd6-90de-3c7050cbe979",
+        "source_ids": [
+          "synthetic-trade-notice-001"
+        ],
+        "started_at": "2026-10-04T21:14:45.216956+00:00",
+        "synthetic_demo_decision": null
+      },
+      {
+        "chunk_ids": [
+          "synthetic-trade-notice-chunk-001"
+        ],
+        "completed_at": "2026-10-04T21:13:54.372062+00:00",
+        "configuration_hash": "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+        "configuration_id": "trade-regulatory-fixture",
+        "configuration_options": {
+          "domain_task_id": "trade-regulatory.grounded-happy-path",
+          "domain_task_version": "1.0.0",
+          "scenario_class": "GROUNDED_HAPPY_PATH",
+          "task_pack_id": "trade-regulatory-research",
+          "task_pack_version": "1.0.0"
+        },
+        "configuration_version": "1.0.0",
+        "evaluation": {
+          "criteria": [
+            {
+              "criterion_id": "authorized-source",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "authorized-source",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "citation-resolution",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "citation-resolution",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "permission-boundary",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "permission-boundary",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            },
+            {
+              "criterion_id": "provenance-completeness",
+              "criterion_version": "1.0.0",
+              "criticality": "CRITICAL",
+              "evaluator_kind": "provenance-completeness",
+              "evaluator_version": "1.0.0",
+              "status": "PASS"
+            }
+          ],
+          "evaluated_at": "2026-10-04T21:13:54.375318+00:00",
+          "rubric_id": "p0-deterministic-critical-gate",
+          "rubric_version": "1.0.0",
+          "task_id": "p0-source-grounded-output",
+          "task_version": "1.0.0"
+        },
+        "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+        "model_id": "model-output.trade-regulatory-grounded.001",
+        "model_version": "1.0.0",
+        "observed": {
+          "allowed_decisions": [],
+          "criteria": {
+            "authorized-source": "PASS",
+            "citation-resolution": "PASS",
+            "permission-boundary": "PASS",
+            "provenance-completeness": "PASS"
+          },
+          "gate": "PASS",
+          "model_called": true,
+          "permission_state": "ALLOW",
+          "retrieval_called": true,
+          "review_state": "APPROVE",
+          "run_status": "GENERATED"
+        },
+        "provider_id": "fixture-model-provider",
+        "provider_version": "1",
+        "run_id": "c15b0e50-88a9-4e22-9363-69511b74e8c0",
+        "source_ids": [
+          "synthetic-trade-notice-001"
+        ],
+        "started_at": "2026-10-04T21:13:54.371469+00:00",
+        "synthetic_demo_decision": {
+          "classification": "AUTOMATED_SYNTHETIC_DEMO_DECISION",
+          "decision": "APPROVE",
+          "operator_role": "codex-engineering-evidence",
+          "reviewed_at": "2026-10-04T21:14:29.102363+00:00",
+          "reviewer_id": "synthetic-local-reviewer",
+          "run_id": "c15b0e50-88a9-4e22-9363-69511b74e8c0"
+        }
+      }
+    ]
+  },
+  "product_paths_unchanged": true,
+  "recommended_linear_state": "In Review",
+  "recorded_at": "2026-10-04T17:19:38.628156-04:00",
+  "rehearsal_at": "2026-10-04T21:13:15.981420+00:00",
+  "runtime_candidate_changed": false,
+  "scenario_evidence": {
+    "distinct_runs": 10,
+    "reference": "scenarios.json",
+    "scenario_count": 12,
+    "sha256": "258391aab299321e648b75ca99e985c233084672c144a3797074b2345248610a",
+    "status": "PASS"
+  },
+  "schema_version": "1",
+  "substantive_review": {
+    "prospect_demo_eligible": false,
+    "required_action": "Qualified Andrew-designated reviewer completes all four release-critical criteria for every externally presented task through the existing contract.",
+    "reviewed_at": null,
+    "reviewer_id": null,
+    "rubric": "trade-regulatory-substantive-review@1.0.0",
+    "status": "DRAFT",
+    "task_count": 6
+  },
+  "suite_results": {
+    "clean_state": "PASS",
+    "contract_tests": 42,
+    "deterministic_smoke_cases": 5,
+    "dsl117_golden_cases": 6,
+    "fixture_license_validation": "PASS",
+    "mypy": "PASS",
+    "new_collector_tests": 13,
+    "package_build": "PASS",
+    "ruff_format": "PASS",
+    "ruff_lint": "PASS",
+    "secret_scan": "PASS",
+    "unit_integration_security_tests": 2190
+  },
+  "task_pack": {
+    "id": "trade-regulatory-research",
+    "manifest": "tasks/trade_regulatory/research_v1/manifest.json",
+    "manifest_sha256": "04c61f482feadbc5c9dccf7376e971a727b8d2b5215107d4dbc17b6bec887b9b",
+    "version": "1.0.0"
+  },
+  "tested_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+  "timezone": "America/New_York",
+  "trace_eval_repair": {
+    "historical_actual_review_model": null,
+    "issue": "DSL-116",
+    "post_fix_review_at": "2026-09-30T17:42:03Z",
+    "post_fix_review_comment_id": "7963702a-97c5-47fd-8f0b-f984b344c420",
+    "pr": "https://github.com/DataStrategyLab/privilab/pull/28",
+    "reference": "README.md#trace--eval--repair-evidence",
+    "repair_commit": "7ef3f182e19c9fa13f2583ee9e0270ce3f276fb4",
+    "status": "SUBSTANTIATED_WITH_LOCAL_CODE_AND_HISTORICAL_PR_RECORDS"
+  },
+  "verification": {
+    "commands": [
+      {
+        "command": "./scripts/bootstrap.sh --ci",
+        "completed_at": "2026-10-04T17:12:29.450562-04:00",
+        "exit_code": 0,
+        "log_sha256": "2824a18c73406be4a5c610c8d5c32d95368dfdf47af142cce33a29694c46af7f",
+        "started_at": "2026-10-04T17:12:29.157821-04:00",
+        "status": "PASS"
+      },
+      {
+        "command": "make ci",
+        "completed_at": "2026-10-04T17:13:09.367971-04:00",
+        "exit_code": 0,
+        "log_sha256": "9b9cbc3a18d0727bb3166fcc79a0ac835fc6978c0c7f539a528d8ba3f36e16df",
+        "started_at": "2026-10-04T17:12:29.450612-04:00",
+        "status": "PASS"
+      },
+      {
+        "command": "git diff --check",
+        "completed_at": "2026-10-04T17:13:09.378121-04:00",
+        "exit_code": 0,
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "started_at": "2026-10-04T17:13:09.368098-04:00",
+        "status": "PASS"
+      }
+    ],
+    "completed_at": "2026-10-04T17:13:09.378183-04:00",
+    "environment": {
+      "architecture": "arm64",
+      "os": "Darwin",
+      "os_release": "27.0.0",
+      "python": "3.13.15",
+      "uv": "uv 0.12.6 (7938ca5d5 2026-08-25 aarch64-apple-darwin)",
+      "uv_lock_sha256": "e74fcbc8645afae6a11009c448c0ded74225d75a75a069470c128bac2ac0dd87"
+    },
+    "evidence_tooling_head_sha": "ac6e36dbec543badccd01874943ebafd354da0e7",
+    "schema_version": "1",
+    "started_at": "2026-10-04T17:12:29.112716-04:00",
+    "tested_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+    "timezone": "America/New_York",
+    "working_tree_after": "",
+    "working_tree_before": ""
+  },
+  "working_tree_clean": true
+}
