@@ -66,9 +66,10 @@ build-check:
 	trap 'rm -rf "$$temp_root"' EXIT HUP INT TERM; \
 	UV_CACHE_DIR="$$temp_root/uv-cache" UV_OFFLINE=1 "$(UV)" build \
 		--offline --no-sources --out-dir "$$out" >/dev/null; \
-	test "$$(find "$$out" -type f | wc -l | tr -d ' ')" -ge 2; \
 	wheel="$$(find "$$out" -type f -name '*.whl' -print -quit)"; \
+	sdist="$$(find "$$out" -type f -name '*.tar.gz' -print -quit)"; \
 	test -n "$$wheel"; \
+	test -n "$$sdist"; \
 	"$(PYTHON)" scripts/verify_built_package.py "$$wheel" "$$temp_root/smoke"
 
 tests:

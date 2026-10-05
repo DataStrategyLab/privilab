@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-UV_VERSION="0.12.6"
+UV_VERSION="0.12.23"
 PYTHON_VERSION="3.13.15"
 GITLEAKS_VERSION="8.30.1"
 TOOLS_DIR=".tools/bin"
@@ -10,6 +10,7 @@ GITLEAKS_BIN="$TOOLS_DIR/gitleaks"
 
 export UV_CACHE_DIR="${UV_CACHE_DIR:-.local/uv-cache}"
 export UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-.local/python}"
+export UV_MANAGED_PYTHON=true
 
 usage() {
     echo "usage: $0 [--ci]" >&2
@@ -73,25 +74,25 @@ machine="$(uname -m)"
 case "$platform/$machine" in
     Darwin/arm64|Darwin/aarch64)
         uv_asset="uv-aarch64-apple-darwin.tar.gz"
-        uv_sha="14b459d51ea2e71eeba28c45a268c922bdf8607fc6455e3f40b4e082895d160d"
+        uv_sha="50487ae565ccd96e499056b4674d438f4c53170202617b4c759defe0c6a1b544"
         gitleaks_asset="gitleaks_${GITLEAKS_VERSION}_darwin_arm64.tar.gz"
         gitleaks_sha="b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5"
         ;;
     Darwin/x86_64|Darwin/amd64)
         uv_asset="uv-x86_64-apple-darwin.tar.gz"
-        uv_sha="2a26ea71bbeff1c7e12c2cc40245c96a041deff276bc921e7038e304d5d3e04c"
+        uv_sha="960da44cb4b73685206ddd250b19e0a117fa41095710c1038f081f5cb613efb4"
         gitleaks_asset="gitleaks_${GITLEAKS_VERSION}_darwin_x64.tar.gz"
         gitleaks_sha="dfe101a4db2255fc85120ac7f3d25e4342c3c20cf749f2c20a18081af1952709"
         ;;
     Linux/aarch64|Linux/arm64)
         uv_asset="uv-aarch64-unknown-linux-gnu.tar.gz"
-        uv_sha="d58030acd26159499ac82f32da12d1b3c12a3a1bfc414232d9082070c03e128d"
+        uv_sha="6524bd338177ed50d035d39354e12545e993bbeba2ecbddf0480c5b3a81d313f"
         gitleaks_asset="gitleaks_${GITLEAKS_VERSION}_linux_arm64.tar.gz"
         gitleaks_sha="e4a487ee7ccd7d3a7f7ec08657610aa3606637dab924210b3aee62570fb4b080"
         ;;
     Linux/x86_64|Linux/amd64)
         uv_asset="uv-x86_64-unknown-linux-gnu.tar.gz"
-        uv_sha="8681d8921e7d520fb368991dcf5f9c1905b80f5bf2a265a0ed085c8d8e342477"
+        uv_sha="9167d72b3319674b6303c4cbe071854bba13ebdf3d76b1a7cbdc175471fb66d6"
         gitleaks_asset="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
         gitleaks_sha="551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
         ;;
