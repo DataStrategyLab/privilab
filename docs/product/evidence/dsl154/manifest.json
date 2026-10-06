@@ -307,13 +307,6 @@
   "package_artifacts": [
     {
       "build_checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
-      "bytes": 1,
-      "local_path": "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/dist/.gitignore",
-      "name": ".gitignore",
-      "sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1"
-    },
-    {
-      "build_checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
       "bytes": 170087,
       "local_path": "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/dist/privilab-0.1.0-py3-none-any.whl",
       "name": "privilab-0.1.0-py3-none-any.whl",
