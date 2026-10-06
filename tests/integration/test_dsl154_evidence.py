@@ -8,7 +8,7 @@ import json
 import socket
 from pathlib import Path
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -54,9 +54,12 @@ def test_scenarios_and_metadata(capture: dict[str, Any]) -> None:
         )
     assert all(g["status"] == "PENDING" for g in capture["human_gates"].values())
     history = next(c for c in capture["checks"] if c["scenario_id"] == "history-reopen")
-    assert history["before"] == history["after"]
-    assert len(history["run_ids"]) == 12
-    assert not any(history["guarded_execution_call_counts"].values())
+    assert history["passed"]
+    assert [o["phase"] for o in history["observations"]] == ["baseline", "final"]
+    for observation, count in zip(history["observations"], (10, 12), strict=True):
+        assert observation["before"] == observation["after"]
+        assert len(observation["run_ids"]) == count
+        assert not any(observation["guarded_execution_call_counts"].values())
 
 
 def test_content_not_exported(capture: dict[str, Any]) -> None:
@@ -191,7 +194,11 @@ def test_observations_do_not_copy_expected(
     monkeypatch.setattr(collector.helpers, "observed", wrong)
     result = collector.capture(ROOT, tmp_path / "wrong.sqlite3")
     assert not result["passed"]
-    assert all(not c["passed"] for c in result["checks"][:6])
+    assert all(
+        not c["passed"]
+        for c in result["checks"]
+        if c["scenario_id"].startswith("trade-regulatory.")
+    )
 
 
 def test_replay_attempt_is_failure(
@@ -211,7 +218,9 @@ def test_replay_attempt_is_failure(
     result = collector.capture(ROOT, tmp_path / "replay.sqlite3")
     assert not result["passed"]
     history = next(c for c in result["checks"] if c["scenario_id"] == "history-reopen")
-    assert history["guarded_execution_call_counts"]["run"] > 0
+    assert all(
+        o["guarded_execution_call_counts"]["run"] > 0 for o in history["observations"]
+    )
 
 
 def test_failed_or_different_identity_not_repeatable(capture: dict[str, Any]) -> None:
@@ -224,3 +233,181 @@ def test_failed_or_different_identity_not_repeatable(capture: dict[str, Any]) ->
     assert not collector.compare_captures([capture, changed, capture])[
         "all_captures_passed"
     ]
+
+
+@pytest.mark.parametrize(
+    ("baseline_fails", "final_fails"),
+    [(False, False), (False, True), (True, False), (True, True)],
+    ids=["pass-pass", "pass-fail", "fail-pass", "fail-fail"],
+)
+def test_history_observation_failures_are_not_masked(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    baseline_fails: bool,
+    final_fails: bool,
+) -> None:
+    original_reopen = collector.helpers.reopen_evidence
+    original_page = collector.helpers.page
+    observations: list[dict[str, Any]] = []
+    failures = (baseline_fails, final_fails)
+
+    def reopen(*args: Any, **kwargs: Any) -> Any:
+        fail = failures[len(observations)]
+        injected = False
+
+        def page(*args: Any, **kwargs: Any) -> Any:
+            nonlocal injected
+            if fail and not injected:
+                injected = True
+                with pytest.raises(RuntimeError, match="REPLAY_FORBIDDEN"):
+                    collector.helpers.RunService.run(None)
+            return original_page(*args, **kwargs)
+
+        with patch.object(collector.helpers, "page", page):
+            observed = original_reopen(*args, **kwargs)
+        observations.append(copy.deepcopy(observed))
+        return observed
+
+    monkeypatch.setattr(collector.helpers, "reopen_evidence", reopen)
+    result = collector.capture(ROOT, tmp_path / "history-truth-table.sqlite3")
+    assert len(observations) == 2
+    assert [o["passed"] for o in observations] == [
+        not baseline_fails,
+        not final_fails,
+    ]
+    # The independent review's FAIL/PASS reproduction fails here on prior H.
+    assert result["passed"] is (not any(failures))
+    history = next(c for c in result["checks"] if c["scenario_id"] == "history-reopen")
+    assert history["passed"] is (not any(failures))
+    assert [o["phase"] for o in history["observations"]] == ["baseline", "final"]
+    for retained, observed, failed in zip(
+        history["observations"], observations, failures, strict=True
+    ):
+        assert retained["guarded_execution_call_counts"]["run"] == int(failed)
+        for key, value in observed.items():
+            assert retained[key] == value
+    if any(failures):
+        assert not collector.compare_captures([result])["all_captures_passed"]
+
+
+@pytest.mark.parametrize("kind", ["missing", "duplicate"])
+def test_required_history_observation_cardinality(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str
+) -> None:
+    original = collector.helpers.capture
+
+    def changed(root: Path, database: Path) -> Any:
+        if kind == "missing":
+            with patch.object(
+                collector.helpers,
+                "reopen_evidence",
+                return_value={"scenario_id": "history-reopen", "passed": False},
+            ):
+                return original(root, database)
+        result = original(root, database)
+        prior = next(
+            c for c in result["scenarios"] if c["scenario_id"] == "history-reopen"
+        )
+        collector.helpers.reopen_evidence(
+            collector.Settings(preview_database=database), prior["run_ids"]
+        )
+        return result
+
+    monkeypatch.setattr(collector.helpers, "capture", changed)
+    result = collector.capture(ROOT, tmp_path / "cardinality.sqlite3")
+    history = next(c for c in result["checks"] if c["scenario_id"] == "history-reopen")
+    assert not result["passed"] and not history["passed"]
+    assert [o["phase"] for o in history["observations"]] == (
+        ["final"] if kind == "missing" else ["baseline", "baseline", "final"]
+    )
+    assert all(o["passed"] for o in history["observations"])
+
+
+@pytest.mark.parametrize("attempt", [0, 1], ids=["baseline", "final"])
+@pytest.mark.parametrize(
+    "missing",
+    [
+        "run_ids",
+        "before",
+        "after",
+        "persistence_unchanged",
+        "guarded_execution_call_counts",
+        "http_statuses",
+        "draft_and_citation_work_area_absent",
+        "passed",
+    ],
+)
+def test_incomplete_history_observation_fails_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, attempt: int, missing: str
+) -> None:
+    original = collector.helpers.reopen_evidence
+    calls = 0
+
+    def incomplete(*args: Any, **kwargs: Any) -> Any:
+        nonlocal calls
+        observed = original(*args, **kwargs)
+        if calls == attempt:
+            del observed[missing]
+            observed["answer_text"] = "PRIVATE HISTORY SENTINEL"
+        calls += 1
+        return observed
+
+    monkeypatch.setattr(collector.helpers, "reopen_evidence", incomplete)
+    result = collector.capture(ROOT, tmp_path / "incomplete.sqlite3")
+    history = next(c for c in result["checks"] if c["scenario_id"] == "history-reopen")
+    assert not result["passed"] and not history["passed"]
+    # Missing passed makes the unchanged historical helper itself raise;
+    # its observed metadata must already have been retained by our observer.
+    assert len(history["observations"]) == (
+        1 if missing == "passed" and attempt == 0 else 2
+    )
+    assert "PRIVATE HISTORY SENTINEL" not in collector.canonical(result)
+    assert not collector.history_observation_passed(history["observations"][attempt])
+
+
+@pytest.mark.parametrize("attempt", [0, 1], ids=["baseline", "final"])
+def test_interrupted_history_attempt_is_preserved(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, attempt: int
+) -> None:
+    original = collector.helpers.reopen_evidence
+    calls = 0
+
+    def interrupted(*args: Any, **kwargs: Any) -> Any:
+        nonlocal calls
+        current = calls
+        calls += 1
+        if current == attempt:
+            raise RuntimeError("PRIVATE HISTORY EXCEPTION")
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(collector.helpers, "reopen_evidence", interrupted)
+    result = collector.capture(ROOT, tmp_path / "interrupted.sqlite3")
+    history = next(c for c in result["checks"] if c["scenario_id"] == "history-reopen")
+    assert not result["passed"] and not history["passed"]
+    assert result["failure_code"] == "CAPTURE_INCOMPLETE"
+    assert len(history["observations"]) == attempt + 1
+    assert history["observations"][attempt]["completed"] is False
+    assert history["observations"][attempt]["passed"] is False
+    assert history["observations"][attempt]["attempted_run_ids"]
+    if attempt:
+        assert collector.history_observation_passed(history["observations"][0])
+    assert "PRIVATE HISTORY EXCEPTION" not in collector.canonical(result)
+
+
+def test_history_survives_later_baseline_composition_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original = collector.helpers.capture
+
+    def interrupted(*args: Any, **kwargs: Any) -> Any:
+        original(*args, **kwargs)
+        raise RuntimeError("PRIVATE COMPOSITION EXCEPTION")
+
+    monkeypatch.setattr(collector.helpers, "capture", interrupted)
+    result = collector.capture(ROOT, tmp_path / "composition.sqlite3")
+    history = next(c for c in result["checks"] if c["scenario_id"] == "history-reopen")
+    assert not result["passed"] and not history["passed"]
+    assert len(history["observations"]) == 1
+    assert collector.history_observation_passed(history["observations"][0])
+    assert result["failure_code"] == "CAPTURE_INCOMPLETE"
+    assert "PRIVATE COMPOSITION EXCEPTION" not in collector.canonical(result)

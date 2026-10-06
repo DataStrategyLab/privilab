@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import importlib.util
 from contextlib import closing
+from copy import deepcopy
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -188,10 +189,54 @@ def compact_check(raw: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def history_observation_passed(observation: dict[str, Any]) -> bool:
+    """Require complete observed controls, not merely a helper's success flag."""
+    identities = observation.get("run_ids")
+    before = observation.get("before")
+    after = observation.get("after")
+    if (
+        observation.get("completed") is not True
+        or observation.get("passed") is not True
+        or observation.get("scenario_id") != "history-reopen"
+        or not isinstance(identities, list)
+        or not identities
+        or not all(isinstance(identity, str) for identity in identities)
+        or len(identities) != len(set(identities))
+        or identities != observation.get("attempted_run_ids")
+        or not isinstance(before, dict)
+        or set(before) != set(helpers.TABLES)
+        or before != after
+    ):
+        return False
+    for snapshot in before.values():
+        if (
+            not isinstance(snapshot, dict)
+            or type(snapshot.get("row_count")) is not int
+            or snapshot["row_count"] < 0
+            or not isinstance(snapshot.get("sha256"), str)
+            or not snapshot["sha256"].startswith("sha256:")
+            or len(snapshot["sha256"]) != 71
+        ):
+            return False
+    return (
+        observation.get("persistence_unchanged") is True
+        and observation.get("draft_and_citation_work_area_absent") is True
+        and observation.get("http_statuses") == [200] * (len(identities) + 1)
+        and observation.get("guarded_execution_call_counts")
+        == {name: 0 for name in ("run", "model", "retrieval", "evaluation")}
+    )
+
+
 def capture(root: Path, database: Path) -> dict[str, Any]:
     """Observe native routes and outputs without replacing any execution result."""
     executions: list[dict[str, Any]] = []
-    checks: list[dict[str, Any]] = []
+    observations: list[dict[str, Any]] = []
+    history: dict[str, Any] = {
+        "scenario_id": "history-reopen",
+        "observations": observations,
+        "passed": False,
+    }
+    checks: list[dict[str, Any]] = [history]
     result: dict[str, Any] = {
         "schema_version": "1",
         "package_id": PACKAGE,
@@ -214,6 +259,35 @@ def capture(root: Path, database: Path) -> dict[str, Any]:
         },
     }
     original = RunReviewService.execute
+    original_reopen = helpers.reopen_evidence
+
+    def observe_reopen(
+        settings: Settings, identities: list[str], *, phase: str = "baseline"
+    ) -> dict[str, Any]:
+        observation: dict[str, Any] = {
+            "phase": phase,
+            "attempted_run_ids": list(identities),
+            "completed": False,
+            "passed": False,
+        }
+        # Attach before calling: completed observations and interrupted attempts
+        # survive even when the historical composition or a later step raises.
+        observations.append(observation)
+        raw = cast(dict[str, Any], original_reopen(settings, identities))
+        keys = (
+            "scenario_id",
+            "run_ids",
+            "before",
+            "after",
+            "persistence_unchanged",
+            "guarded_execution_call_counts",
+            "http_statuses",
+            "draft_and_citation_work_area_absent",
+            "passed",
+        )
+        observation.update(deepcopy({key: raw[key] for key in keys if key in raw}))
+        observation["completed"] = True
+        return raw
 
     def observe(
         instance: RunReviewService, service: RunService, **kwargs: Any
@@ -239,8 +313,13 @@ def capture(root: Path, database: Path) -> dict[str, Any]:
         with patch.object(RunReviewService, "execute", observe):
             # Re-execute the old scenario composition, never its identity/collector.
             # Only actual checks are consumed; historical package metadata is ignored.
-            baseline = helpers.capture(root, database)
-            checks.extend(compact_check(check) for check in baseline["scenarios"])
+            with patch.object(helpers, "reopen_evidence", observe_reopen):
+                baseline = helpers.capture(root, database)
+            checks.extend(
+                compact_check(check)
+                for check in baseline["scenarios"]
+                if check["scenario_id"] != "history-reopen"
+            )
             settings = Settings(
                 preview_database=database, preview_corpus_root=root / "fixtures/corpus"
             )
@@ -252,8 +331,11 @@ def capture(root: Path, database: Path) -> dict[str, Any]:
                 checks.append(permission_check(app, database, choice, state))
         with closing(SQLiteProvenanceStore(database)) as store:
             identities = sorted(run.value for run in store.recent_run_ids())
-        checks[:] = [c for c in checks if c["scenario_id"] != "history-reopen"]
-        checks.append(helpers.reopen_evidence(settings, identities))
+        observe_reopen(settings, identities, phase="final")
+        history["passed"] = [o["phase"] for o in observations] == [
+            "baseline",
+            "final",
+        ] and all(history_observation_passed(o) for o in observations)
         labels = {c["run_id"]: c["scenario_id"] for c in checks if "run_id" in c}
         # Denied approval is another check on the existing critical-failure run.
         for record in executions:
