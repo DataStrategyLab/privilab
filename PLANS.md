@@ -48,3 +48,59 @@ acceptance, durable Drive promotion, and final release authority remain pending.
 A material product change resets the tested candidate; evidence-only recording
 and collector tests do not change product behavior. Findings and remaining
 blockers will be recorded in docs/product/evidence/gate5/README.md.
+
+
+## DSL-154 prospect-demo qualification plan
+
+Governing issue: DSL-154 / P1-01. Start from exact candidate
+`f19f5542105661614c225691c3df780264de8262`. DSL-153 and the P0 implementation
+chain are complete; no architecture change, new dependency, provider, framework,
+storage class, runtime MCP, or hosted deployment is authorized. ADR-003 through
+ADR-010 remain controlling.
+
+1. Inventory the current candidate and prior Gate 5 evidence before changing any
+   qualification artifact. Preserve the DSL-120 historical package as historical
+   evidence; Andrew's 2026-10-05 INTERNAL DEMO READY disposition is recorded in
+   Linear and must not be retroactively rewritten into the old repository manifest.
+2. Create a versioned AI Release Candidate Manifest binding source SHA, artifact
+   or image identity, runtime, dependency state, provider/model configuration,
+   prompt/agent configuration, task/corpus/rubric/evaluator identities, permission
+   configuration, tools/MCP status, feature flags, and evidence/build provenance.
+3. Refresh the exact post-DSL-153 engineering evidence required by DSL-154:
+   bootstrap, `make ci`, `git diff --check`, golden eval, preview, package/build,
+   permission/isolation/adversarial cases, provenance/history reconstruction, and
+   repeat-run stability. Run container checks when the approved environment permits
+   Docker access; otherwise preserve the limitation and hand off the exact check.
+4. Capture bounded software-supply-chain and open-source evidence without adding
+   new runtime frameworks: SBOM where supported, dependency/version/license state,
+   relevant advisory findings supplied through an approved current-source step,
+   container/base-image identity, and build provenance/attestation where available.
+5. Keep fresh external fact checking outside the network-disabled Codex sandbox.
+   Codex inventories every mutable vendor/model/framework/license/security claim
+   and records what needs current-source verification; an approved external research
+   step supplies source/date/result evidence for later consistency checking.
+6. Preserve protected-holdout separation. Do not create, alter, or optimize holdout
+   content merely to pass qualification. Record either separately approved holdout
+   evidence or Andrew's explicit no-holdout condition/deferral.
+7. Treat substantive legal/domain review, proposition-level legal-source approval,
+   human visual/demo rehearsal, backup-media acceptance, durable Drive promotion,
+   non-author review, and final Gate 5 authority as human/system-of-record handoffs.
+   Codex may prepare evidence but may not manufacture those approvals.
+8. If qualification discovers a material product defect, preserve the failing
+   evidence and recommend the smallest bounded corrective issue/PR. Do not expand
+   DSL-154 into product implementation. A material correction creates a new
+   candidate identity and invalidates only affected evidence.
+9. After engineering evidence is complete, run a dedicated configured GPT-6 Astra
+   Codex `/review`. Resolve Critical/High findings and explicitly disposition
+   remaining Medium/Low findings before non-author human review.
+10. Recommend DSL-154 In Review only when engineering evidence and independent AI
+    review are complete. Prospect-demo release still requires required substantive
+    review, holdout disposition, claims/current-fact verification, human rehearsal,
+    durable release record, non-author/CODEOWNER review as applicable, and Andrew's
+    explicit Gate 5 decision.
+
+Use public, synthetic, anonymized, properly redacted, or properly licensed content
+only. Do not retain unnecessary prompt, answer, retrieved-source, secret, client,
+matter, OCG, privileged, work-product, or sensitive security content in evidence.
+A green test suite, successful rehearsal, or automated evaluator result is evidence,
+not release authority.
