@@ -1,0 +1,2191 @@
+{
+  "schema_version": "1",
+  "issue": "DSL-154",
+  "source_url": "https://linear.app/rohic/issue/DSL-154/p1-01-qualify-post-dsl-153-privilab-candidate-for-prospect-demo",
+  "inventory_created_before_capture": true,
+  "inventory_date": "2026-10-06",
+  "classification_vocabulary": [
+    "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+    "HISTORICAL_SUPPORT_ONLY",
+    "CAN_BE_REUSED_IF_IDENTITY_UNCHANGED",
+    "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+    "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+    "ANDREW_DECISION_REQUIRED",
+    "NOT_APPLICABLE",
+    "BLOCKED_BY_ENVIRONMENT",
+    "DEFECT_FOUND"
+  ],
+  "historical_disposition": {
+    "status": "HISTORICAL_SUPPORT_ONLY",
+    "decision": "INTERNAL DEMO READY",
+    "date": "2026-10-05",
+    "owner": "Andrew Tsintsiruk",
+    "linear_comment_id": "735781ca-370c-4e70-88e1-fc5044f9603f",
+    "candidate": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5"
+  },
+  "reuse_rule": "Source/license/task/rubric identities CAN_BE_REUSED_IF_IDENTITY_UNCHANGED; present-time execution, external freshness, and human approval require separate evidence.",
+  "criteria": [
+    {
+      "id": "A01",
+      "group": "A",
+      "criterion": "Exact Git SHA recorded.",
+      "requirement_controls": [
+        "FR-004",
+        "FR-006",
+        "FR-009",
+        "NFR-006",
+        "ADR-003",
+        "ADR-007",
+        "ADR-008"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/manifest.json",
+        "Makefile",
+        "pyproject.toml",
+        "Dockerfile"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh local checkout at committed tooling HEAD; bootstrap --ci, make ci, retained offline build, manifest identity capture.",
+      "expected_artifact": [
+        "manifest.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "A02",
+      "group": "A",
+      "criterion": "AI Release Candidate Manifest complete.",
+      "requirement_controls": [
+        "FR-004",
+        "FR-006",
+        "FR-009",
+        "NFR-006",
+        "ADR-003",
+        "ADR-007",
+        "ADR-008"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/manifest.json",
+        "Makefile",
+        "pyproject.toml",
+        "Dockerfile"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh local checkout at committed tooling HEAD; bootstrap --ci, make ci, retained offline build, manifest identity capture.",
+      "expected_artifact": [
+        "manifest.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "A03",
+      "group": "A",
+      "criterion": "Runtime/dependency state recorded.",
+      "requirement_controls": [
+        "FR-004",
+        "FR-006",
+        "FR-009",
+        "NFR-006",
+        "ADR-003",
+        "ADR-007",
+        "ADR-008"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/manifest.json",
+        "Makefile",
+        "pyproject.toml",
+        "Dockerfile"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh local checkout at committed tooling HEAD; bootstrap --ci, make ci, retained offline build, manifest identity capture.",
+      "expected_artifact": [
+        "manifest.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "A04",
+      "group": "A",
+      "criterion": "Model/provider configuration recorded.",
+      "requirement_controls": [
+        "FR-004",
+        "FR-006",
+        "FR-009",
+        "NFR-006",
+        "ADR-003",
+        "ADR-007",
+        "ADR-008"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/manifest.json",
+        "Makefile",
+        "pyproject.toml",
+        "Dockerfile"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh local checkout at committed tooling HEAD; bootstrap --ci, make ci, retained offline build, manifest identity capture.",
+      "expected_artifact": [
+        "manifest.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "A05",
+      "group": "A",
+      "criterion": "Prompt/agent configuration recorded.",
+      "requirement_controls": [
+        "FR-004",
+        "FR-006",
+        "FR-009",
+        "NFR-006",
+        "ADR-003",
+        "ADR-007",
+        "ADR-008"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/manifest.json",
+        "Makefile",
+        "pyproject.toml",
+        "Dockerfile"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh local checkout at committed tooling HEAD; bootstrap --ci, make ci, retained offline build, manifest identity capture.",
+      "expected_artifact": [
+        "manifest.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "A06",
+      "group": "A",
+      "criterion": "Corpus/task/rubric/evaluator versions recorded.",
+      "requirement_controls": [
+        "FR-004",
+        "FR-006",
+        "FR-009",
+        "NFR-006",
+        "ADR-003",
+        "ADR-007",
+        "ADR-008"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/manifest.json",
+        "Makefile",
+        "pyproject.toml",
+        "Dockerfile"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh local checkout at committed tooling HEAD; bootstrap --ci, make ci, retained offline build, manifest identity capture.",
+      "expected_artifact": [
+        "manifest.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "A07",
+      "group": "A",
+      "criterion": "Tool/MCP configuration recorded or `N/A`.",
+      "requirement_controls": [
+        "FR-004",
+        "FR-006",
+        "FR-009",
+        "NFR-006",
+        "ADR-003",
+        "ADR-007",
+        "ADR-008"
+      ],
+      "evidence_classification": "NOT_APPLICABLE",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/manifest.json",
+        "Makefile",
+        "pyproject.toml",
+        "Dockerfile"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": false,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": false,
+      "execution_method": "Fresh local checkout at committed tooling HEAD; bootstrap --ci, make ci, retained offline build, manifest identity capture.",
+      "expected_artifact": [
+        "manifest.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering records absence",
+      "status": "NOT APPLICABLE",
+      "evidence": [],
+      "limitation": "No runtime MCP/model tools or LLM judge is implemented. This does not validate a hypothetical capability."
+    },
+    {
+      "id": "A08",
+      "group": "A",
+      "criterion": "Artifact/container digest recorded where applicable.",
+      "requirement_controls": [
+        "FR-004",
+        "FR-006",
+        "FR-009",
+        "NFR-006",
+        "ADR-003",
+        "ADR-007",
+        "ADR-008"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/manifest.json",
+        "Makefile",
+        "pyproject.toml",
+        "Dockerfile"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh local checkout at committed tooling HEAD; bootstrap --ci, make ci, retained offline build, manifest identity capture.",
+      "expected_artifact": [
+        "manifest.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "A09",
+      "group": "A",
+      "criterion": "Fresh setup succeeds.",
+      "requirement_controls": [
+        "FR-004",
+        "FR-006",
+        "FR-009",
+        "NFR-006",
+        "ADR-003",
+        "ADR-007",
+        "ADR-008"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/manifest.json",
+        "Makefile",
+        "pyproject.toml",
+        "Dockerfile"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh local checkout at committed tooling HEAD; bootstrap --ci, make ci, retained offline build, manifest identity capture.",
+      "expected_artifact": [
+        "manifest.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "A10",
+      "group": "A",
+      "criterion": "`make ci` passes.",
+      "requirement_controls": [
+        "FR-004",
+        "FR-006",
+        "FR-009",
+        "NFR-006",
+        "ADR-003",
+        "ADR-007",
+        "ADR-008"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/manifest.json",
+        "Makefile",
+        "pyproject.toml",
+        "Dockerfile"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh local checkout at committed tooling HEAD; bootstrap --ci, make ci, retained offline build, manifest identity capture.",
+      "expected_artifact": [
+        "manifest.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "B01",
+      "group": "B",
+      "criterion": "DSL-153 dependency/bootstrap/container behavior verified.",
+      "requirement_controls": [
+        "NFR-001",
+        "NFR-003",
+        "NFR-006",
+        "NFR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "licenses/registry.yaml",
+        "uv.lock",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Offline uv CycloneDX export; reconcile uv.lock, installed metadata and licenses/registry.yaml; container commands subject to existing permissions; current advisories by external operator.",
+      "expected_artifact": [
+        "supply-chain.json",
+        "sbom.cdx.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "B02",
+      "group": "B",
+      "criterion": "SBOM generated/exported where supported.",
+      "requirement_controls": [
+        "NFR-001",
+        "NFR-003",
+        "NFR-006",
+        "NFR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "licenses/registry.yaml",
+        "uv.lock",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Offline uv CycloneDX export; reconcile uv.lock, installed metadata and licenses/registry.yaml; container commands subject to existing permissions; current advisories by external operator.",
+      "expected_artifact": [
+        "supply-chain.json",
+        "sbom.cdx.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "B03",
+      "group": "B",
+      "criterion": "Material dependencies have source/version/license evidence.",
+      "requirement_controls": [
+        "NFR-001",
+        "NFR-003",
+        "NFR-006",
+        "NFR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "licenses/registry.yaml",
+        "uv.lock",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Offline uv CycloneDX export; reconcile uv.lock, installed metadata and licenses/registry.yaml; container commands subject to existing permissions; current advisories by external operator.",
+      "expected_artifact": [
+        "supply-chain.json",
+        "sbom.cdx.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "B04",
+      "group": "B",
+      "criterion": "Relevant new dependencies reviewed for vulnerabilities/malware/advisories.",
+      "requirement_controls": [
+        "NFR-001",
+        "NFR-003",
+        "NFR-006",
+        "NFR-010"
+      ],
+      "evidence_classification": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "existing_evidence": [
+        "licenses/registry.yaml",
+        "uv.lock",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Offline uv CycloneDX export; reconcile uv.lock, installed metadata and licenses/registry.yaml; container commands subject to existing permissions; current advisories by external operator.",
+      "expected_artifact": [
+        "supply-chain.json",
+        "sbom.cdx.json",
+        "verification.json"
+      ],
+      "owner": "Andrew-designated external researcher",
+      "status": "PENDING EXTERNAL",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "B05",
+      "group": "B",
+      "criterion": "Container/base-image provenance recorded where applicable.",
+      "requirement_controls": [
+        "NFR-001",
+        "NFR-003",
+        "NFR-006",
+        "NFR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "licenses/registry.yaml",
+        "uv.lock",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Offline uv CycloneDX export; reconcile uv.lock, installed metadata and licenses/registry.yaml; container commands subject to existing permissions; current advisories by external operator.",
+      "expected_artifact": [
+        "supply-chain.json",
+        "sbom.cdx.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "B06",
+      "group": "B",
+      "criterion": "Build provenance/attestation captured where supported.",
+      "requirement_controls": [
+        "NFR-001",
+        "NFR-003",
+        "NFR-006",
+        "NFR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "licenses/registry.yaml",
+        "uv.lock",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Offline uv CycloneDX export; reconcile uv.lock, installed metadata and licenses/registry.yaml; container commands subject to existing permissions; current advisories by external operator.",
+      "expected_artifact": [
+        "supply-chain.json",
+        "sbom.cdx.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "B07",
+      "group": "B",
+      "criterion": "No unresolved material OSS licensing/IP issue.",
+      "requirement_controls": [
+        "NFR-001",
+        "NFR-003",
+        "NFR-006",
+        "NFR-010"
+      ],
+      "evidence_classification": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "existing_evidence": [
+        "licenses/registry.yaml",
+        "uv.lock",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Offline uv CycloneDX export; reconcile uv.lock, installed metadata and licenses/registry.yaml; container commands subject to existing permissions; current advisories by external operator.",
+      "expected_artifact": [
+        "supply-chain.json",
+        "sbom.cdx.json",
+        "verification.json"
+      ],
+      "owner": "Andrew-designated external researcher",
+      "status": "PENDING EXTERNAL",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "B08",
+      "group": "B",
+      "criterion": "No unsupported open-source/upstream compatibility claim.",
+      "requirement_controls": [
+        "NFR-001",
+        "NFR-003",
+        "NFR-006",
+        "NFR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "licenses/registry.yaml",
+        "uv.lock",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Offline uv CycloneDX export; reconcile uv.lock, installed metadata and licenses/registry.yaml; container commands subject to existing permissions; current advisories by external operator.",
+      "expected_artifact": [
+        "supply-chain.json",
+        "sbom.cdx.json",
+        "verification.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "C01",
+      "group": "C",
+      "criterion": "Selected golden/regression suite passes.",
+      "requirement_controls": [
+        "FR-006",
+        "FR-007",
+        "ADR-006"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "evals/golden/trade_regulatory_v1/cases.json",
+        "evals/holdout/README.md",
+        "docs/product/evidence/gate5/scenarios.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "make golden-eval, current CI evaluator regressions, three fresh full collector captures; explicit holdout/LLM-judge boundary.",
+      "expected_artifact": [
+        "scenarios.json",
+        "repeatability.json",
+        "handoffs.md"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "C02",
+      "group": "C",
+      "criterion": "Critical criteria evaluated separately from aggregate quality.",
+      "requirement_controls": [
+        "FR-006",
+        "FR-007",
+        "ADR-006"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "evals/golden/trade_regulatory_v1/cases.json",
+        "evals/holdout/README.md",
+        "docs/product/evidence/gate5/scenarios.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "make golden-eval, current CI evaluator regressions, three fresh full collector captures; explicit holdout/LLM-judge boundary.",
+      "expected_artifact": [
+        "scenarios.json",
+        "repeatability.json",
+        "handoffs.md"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "C03",
+      "group": "C",
+      "criterion": "Automated graders versioned.",
+      "requirement_controls": [
+        "FR-006",
+        "FR-007",
+        "ADR-006"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "evals/golden/trade_regulatory_v1/cases.json",
+        "evals/holdout/README.md",
+        "docs/product/evidence/gate5/scenarios.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "make golden-eval, current CI evaluator regressions, three fresh full collector captures; explicit holdout/LLM-judge boundary.",
+      "expected_artifact": [
+        "scenarios.json",
+        "repeatability.json",
+        "handoffs.md"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "C04",
+      "group": "C",
+      "criterion": "Model-based grading calibrated to human/domain review where material.",
+      "requirement_controls": [
+        "FR-006",
+        "FR-007",
+        "ADR-006"
+      ],
+      "evidence_classification": "NOT_APPLICABLE",
+      "existing_evidence": [
+        "evals/golden/trade_regulatory_v1/cases.json",
+        "evals/holdout/README.md",
+        "docs/product/evidence/gate5/scenarios.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": false,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": false,
+      "execution_method": "make golden-eval, current CI evaluator regressions, three fresh full collector captures; explicit holdout/LLM-judge boundary.",
+      "expected_artifact": [
+        "scenarios.json",
+        "repeatability.json",
+        "handoffs.md"
+      ],
+      "owner": "Codex engineering records absence",
+      "status": "NOT APPLICABLE",
+      "evidence": [],
+      "limitation": "No runtime MCP/model tools or LLM judge is implemented. This does not validate a hypothetical capability."
+    },
+    {
+      "id": "C05",
+      "group": "C",
+      "criterion": "Holdout disposition explicit.",
+      "requirement_controls": [
+        "FR-006",
+        "FR-007",
+        "ADR-006"
+      ],
+      "evidence_classification": "ANDREW_DECISION_REQUIRED",
+      "existing_evidence": [
+        "evals/golden/trade_regulatory_v1/cases.json",
+        "evals/holdout/README.md",
+        "docs/product/evidence/gate5/scenarios.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "make golden-eval, current CI evaluator regressions, three fresh full collector captures; explicit holdout/LLM-judge boundary.",
+      "expected_artifact": [
+        "scenarios.json",
+        "repeatability.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew Tsintsiruk",
+      "status": "PENDING ANDREW",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "C06",
+      "group": "C",
+      "criterion": "No improper holdout optimization.",
+      "requirement_controls": [
+        "FR-006",
+        "FR-007",
+        "ADR-006"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "evals/golden/trade_regulatory_v1/cases.json",
+        "evals/holdout/README.md",
+        "docs/product/evidence/gate5/scenarios.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "make golden-eval, current CI evaluator regressions, three fresh full collector captures; explicit holdout/LLM-judge boundary.",
+      "expected_artifact": [
+        "scenarios.json",
+        "repeatability.json",
+        "handoffs.md"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "C07",
+      "group": "C",
+      "criterion": "Repeat-run stability completed.",
+      "requirement_controls": [
+        "FR-006",
+        "FR-007",
+        "ADR-006"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "evals/golden/trade_regulatory_v1/cases.json",
+        "evals/holdout/README.md",
+        "docs/product/evidence/gate5/scenarios.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "make golden-eval, current CI evaluator regressions, three fresh full collector captures; explicit holdout/LLM-judge boundary.",
+      "expected_artifact": [
+        "scenarios.json",
+        "repeatability.json",
+        "handoffs.md"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "C08",
+      "group": "C",
+      "criterion": "Material corrections become evals or documented exclusions.",
+      "requirement_controls": [
+        "FR-006",
+        "FR-007",
+        "ADR-006"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "evals/golden/trade_regulatory_v1/cases.json",
+        "evals/holdout/README.md",
+        "docs/product/evidence/gate5/scenarios.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "make golden-eval, current CI evaluator regressions, three fresh full collector captures; explicit holdout/LLM-judge boundary.",
+      "expected_artifact": [
+        "scenarios.json",
+        "repeatability.json",
+        "handoffs.md"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "D01",
+      "group": "D",
+      "criterion": "Every prospect-visible substantive task has an explicit review disposition.",
+      "requirement_controls": [
+        "FR-005",
+        "NFR-001",
+        "Qualified substantive review"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "tasks/trade_regulatory/research_v1/README.md",
+        "tasks/trade_regulatory/research_v1/rubrics/substantive-review-v1.json",
+        "fixtures/corpus/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Six per-task worksheets against canonical sources and substantive rubric; local structural checks plus Andrew-designated qualified review.",
+      "expected_artifact": [
+        "substantive-review.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "D02",
+      "group": "D",
+      "criterion": "Internal-only tasks excluded.",
+      "requirement_controls": [
+        "FR-005",
+        "NFR-001",
+        "Qualified substantive review"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "tasks/trade_regulatory/research_v1/README.md",
+        "tasks/trade_regulatory/research_v1/rubrics/substantive-review-v1.json",
+        "fixtures/corpus/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Six per-task worksheets against canonical sources and substantive rubric; local structural checks plus Andrew-designated qualified review.",
+      "expected_artifact": [
+        "substantive-review.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "D03",
+      "group": "D",
+      "criterion": "Every material citation exists.",
+      "requirement_controls": [
+        "FR-005",
+        "NFR-001",
+        "Qualified substantive review"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "tasks/trade_regulatory/research_v1/README.md",
+        "tasks/trade_regulatory/research_v1/rubrics/substantive-review-v1.json",
+        "fixtures/corpus/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Six per-task worksheets against canonical sources and substantive rubric; local structural checks plus Andrew-designated qualified review.",
+      "expected_artifact": [
+        "substantive-review.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "D04",
+      "group": "D",
+      "criterion": "Critical propositions are supported by cited sources.",
+      "requirement_controls": [
+        "FR-005",
+        "NFR-001",
+        "Qualified substantive review"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "tasks/trade_regulatory/research_v1/README.md",
+        "tasks/trade_regulatory/research_v1/rubrics/substantive-review-v1.json",
+        "fixtures/corpus/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Six per-task worksheets against canonical sources and substantive rubric; local structural checks plus Andrew-designated qualified review.",
+      "expected_artifact": [
+        "substantive-review.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "D05",
+      "group": "D",
+      "criterion": "Jurisdiction/authority/date/currentness reviewed where relevant.",
+      "requirement_controls": [
+        "FR-005",
+        "NFR-001",
+        "Qualified substantive review"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "tasks/trade_regulatory/research_v1/README.md",
+        "tasks/trade_regulatory/research_v1/rubrics/substantive-review-v1.json",
+        "fixtures/corpus/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Six per-task worksheets against canonical sources and substantive rubric; local structural checks plus Andrew-designated qualified review.",
+      "expected_artifact": [
+        "substantive-review.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "D06",
+      "group": "D",
+      "criterion": "Superseded/withdrawn authority is not represented as current.",
+      "requirement_controls": [
+        "FR-005",
+        "NFR-001",
+        "Qualified substantive review"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "tasks/trade_regulatory/research_v1/README.md",
+        "tasks/trade_regulatory/research_v1/rubrics/substantive-review-v1.json",
+        "fixtures/corpus/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Six per-task worksheets against canonical sources and substantive rubric; local structural checks plus Andrew-designated qualified review.",
+      "expected_artifact": [
+        "substantive-review.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "D07",
+      "group": "D",
+      "criterion": "Required legal/domain qualifications reflected in demo.",
+      "requirement_controls": [
+        "FR-005",
+        "NFR-001",
+        "Qualified substantive review"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "tasks/trade_regulatory/research_v1/README.md",
+        "tasks/trade_regulatory/research_v1/rubrics/substantive-review-v1.json",
+        "fixtures/corpus/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Six per-task worksheets against canonical sources and substantive rubric; local structural checks plus Andrew-designated qualified review.",
+      "expected_artifact": [
+        "substantive-review.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "E01",
+      "group": "E",
+      "criterion": "Permission tests pass.",
+      "requirement_controls": [
+        "FR-002",
+        "FR-003",
+        "FR-007",
+        "NFR-003",
+        "ADR-004",
+        "ADR-005",
+        "ADR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/architecture/adversarial-coverage.md",
+        "tests/security",
+        "tests/integration/test_preview_app.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh make ci tests/security and mapped integration/unit boundary tests; current collector fail-closed/adversarial scenarios.",
+      "expected_artifact": [
+        "security-evidence.json",
+        "scenarios.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "E02",
+      "group": "E",
+      "criterion": "Unknown permission fails closed.",
+      "requirement_controls": [
+        "FR-002",
+        "FR-003",
+        "FR-007",
+        "NFR-003",
+        "ADR-004",
+        "ADR-005",
+        "ADR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/architecture/adversarial-coverage.md",
+        "tests/security",
+        "tests/integration/test_preview_app.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh make ci tests/security and mapped integration/unit boundary tests; current collector fail-closed/adversarial scenarios.",
+      "expected_artifact": [
+        "security-evidence.json",
+        "scenarios.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "E03",
+      "group": "E",
+      "criterion": "Cross-context isolation passes.",
+      "requirement_controls": [
+        "FR-002",
+        "FR-003",
+        "FR-007",
+        "NFR-003",
+        "ADR-004",
+        "ADR-005",
+        "ADR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/architecture/adversarial-coverage.md",
+        "tests/security",
+        "tests/integration/test_preview_app.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh make ci tests/security and mapped integration/unit boundary tests; current collector fail-closed/adversarial scenarios.",
+      "expected_artifact": [
+        "security-evidence.json",
+        "scenarios.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "E04",
+      "group": "E",
+      "criterion": "Indirect prompt-injection test passes.",
+      "requirement_controls": [
+        "FR-002",
+        "FR-003",
+        "FR-007",
+        "NFR-003",
+        "ADR-004",
+        "ADR-005",
+        "ADR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/architecture/adversarial-coverage.md",
+        "tests/security",
+        "tests/integration/test_preview_app.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh make ci tests/security and mapped integration/unit boundary tests; current collector fail-closed/adversarial scenarios.",
+      "expected_artifact": [
+        "security-evidence.json",
+        "scenarios.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "E05",
+      "group": "E",
+      "criterion": "Untrusted content cannot redefine permissions/system instructions.",
+      "requirement_controls": [
+        "FR-002",
+        "FR-003",
+        "FR-007",
+        "NFR-003",
+        "ADR-004",
+        "ADR-005",
+        "ADR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/architecture/adversarial-coverage.md",
+        "tests/security",
+        "tests/integration/test_preview_app.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh make ci tests/security and mapped integration/unit boundary tests; current collector fail-closed/adversarial scenarios.",
+      "expected_artifact": [
+        "security-evidence.json",
+        "scenarios.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "E06",
+      "group": "E",
+      "criterion": "Tool escalation blocked where applicable.",
+      "requirement_controls": [
+        "FR-002",
+        "FR-003",
+        "FR-007",
+        "NFR-003",
+        "ADR-004",
+        "ADR-005",
+        "ADR-010"
+      ],
+      "evidence_classification": "NOT_APPLICABLE",
+      "existing_evidence": [
+        "docs/architecture/adversarial-coverage.md",
+        "tests/security",
+        "tests/integration/test_preview_app.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": false,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": false,
+      "execution_method": "Fresh make ci tests/security and mapped integration/unit boundary tests; current collector fail-closed/adversarial scenarios.",
+      "expected_artifact": [
+        "security-evidence.json",
+        "scenarios.json"
+      ],
+      "owner": "Codex engineering records absence",
+      "status": "NOT APPLICABLE",
+      "evidence": [],
+      "limitation": "No runtime MCP/model tools or LLM judge is implemented. This does not validate a hypothetical capability."
+    },
+    {
+      "id": "E07",
+      "group": "E",
+      "criterion": "Sensitive side effects require approval where applicable.",
+      "requirement_controls": [
+        "FR-002",
+        "FR-003",
+        "FR-007",
+        "NFR-003",
+        "ADR-004",
+        "ADR-005",
+        "ADR-010"
+      ],
+      "evidence_classification": "NOT_APPLICABLE",
+      "existing_evidence": [
+        "docs/architecture/adversarial-coverage.md",
+        "tests/security",
+        "tests/integration/test_preview_app.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": false,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": false,
+      "execution_method": "Fresh make ci tests/security and mapped integration/unit boundary tests; current collector fail-closed/adversarial scenarios.",
+      "expected_artifact": [
+        "security-evidence.json",
+        "scenarios.json"
+      ],
+      "owner": "Codex engineering records absence",
+      "status": "NOT APPLICABLE",
+      "evidence": [],
+      "limitation": "No runtime MCP/model tools or LLM judge is implemented. This does not validate a hypothetical capability."
+    },
+    {
+      "id": "E08",
+      "group": "E",
+      "criterion": "Secret/sensitive-information tests pass.",
+      "requirement_controls": [
+        "FR-002",
+        "FR-003",
+        "FR-007",
+        "NFR-003",
+        "ADR-004",
+        "ADR-005",
+        "ADR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/architecture/adversarial-coverage.md",
+        "tests/security",
+        "tests/integration/test_preview_app.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh make ci tests/security and mapped integration/unit boundary tests; current collector fail-closed/adversarial scenarios.",
+      "expected_artifact": [
+        "security-evidence.json",
+        "scenarios.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "E09",
+      "group": "E",
+      "criterion": "Evaluator manipulation test passes where applicable.",
+      "requirement_controls": [
+        "FR-002",
+        "FR-003",
+        "FR-007",
+        "NFR-003",
+        "ADR-004",
+        "ADR-005",
+        "ADR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/architecture/adversarial-coverage.md",
+        "tests/security",
+        "tests/integration/test_preview_app.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh make ci tests/security and mapped integration/unit boundary tests; current collector fail-closed/adversarial scenarios.",
+      "expected_artifact": [
+        "security-evidence.json",
+        "scenarios.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "E10",
+      "group": "E",
+      "criterion": "Provider/tool failure produces controlled failure.",
+      "requirement_controls": [
+        "FR-002",
+        "FR-003",
+        "FR-007",
+        "NFR-003",
+        "ADR-004",
+        "ADR-005",
+        "ADR-010"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/architecture/adversarial-coverage.md",
+        "tests/security",
+        "tests/integration/test_preview_app.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Fresh make ci tests/security and mapped integration/unit boundary tests; current collector fail-closed/adversarial scenarios.",
+      "expected_artifact": [
+        "security-evidence.json",
+        "scenarios.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "F01",
+      "group": "F",
+      "criterion": "Prospect-visible runs reconstructable.",
+      "requirement_controls": [
+        "FR-009",
+        "NFR-005",
+        "NFR-006",
+        "ADR-007",
+        "Human review/history (canonical FR ID unavailable)"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/scenarios.json",
+        "src/privilab/application/provenance.py",
+        "src/privilab/application/run_review.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Current collector metadata and nine-table snapshots; no-replay guards; separate synthetic reviews and actual pending human release.",
+      "expected_artifact": [
+        "scenarios.json",
+        "manifest.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "F02",
+      "group": "F",
+      "criterion": "Model/provider/version recorded.",
+      "requirement_controls": [
+        "FR-009",
+        "NFR-005",
+        "NFR-006",
+        "ADR-007",
+        "Human review/history (canonical FR ID unavailable)"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/scenarios.json",
+        "src/privilab/application/provenance.py",
+        "src/privilab/application/run_review.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Current collector metadata and nine-table snapshots; no-replay guards; separate synthetic reviews and actual pending human release.",
+      "expected_artifact": [
+        "scenarios.json",
+        "manifest.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "F03",
+      "group": "F",
+      "criterion": "Sources identifiable.",
+      "requirement_controls": [
+        "FR-009",
+        "NFR-005",
+        "NFR-006",
+        "ADR-007",
+        "Human review/history (canonical FR ID unavailable)"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/scenarios.json",
+        "src/privilab/application/provenance.py",
+        "src/privilab/application/run_review.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Current collector metadata and nine-table snapshots; no-replay guards; separate synthetic reviews and actual pending human release.",
+      "expected_artifact": [
+        "scenarios.json",
+        "manifest.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "F04",
+      "group": "F",
+      "criterion": "Permission decision recorded.",
+      "requirement_controls": [
+        "FR-009",
+        "NFR-005",
+        "NFR-006",
+        "ADR-007",
+        "Human review/history (canonical FR ID unavailable)"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/scenarios.json",
+        "src/privilab/application/provenance.py",
+        "src/privilab/application/run_review.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Current collector metadata and nine-table snapshots; no-replay guards; separate synthetic reviews and actual pending human release.",
+      "expected_artifact": [
+        "scenarios.json",
+        "manifest.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "F05",
+      "group": "F",
+      "criterion": "Rubric/evaluator version recorded.",
+      "requirement_controls": [
+        "FR-009",
+        "NFR-005",
+        "NFR-006",
+        "ADR-007",
+        "Human review/history (canonical FR ID unavailable)"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/scenarios.json",
+        "src/privilab/application/provenance.py",
+        "src/privilab/application/run_review.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Current collector metadata and nine-table snapshots; no-replay guards; separate synthetic reviews and actual pending human release.",
+      "expected_artifact": [
+        "scenarios.json",
+        "manifest.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "F06",
+      "group": "F",
+      "criterion": "Human review/release recorded.",
+      "requirement_controls": [
+        "FR-009",
+        "NFR-005",
+        "NFR-006",
+        "ADR-007",
+        "Human review/history (canonical FR ID unavailable)"
+      ],
+      "evidence_classification": "ANDREW_DECISION_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/scenarios.json",
+        "src/privilab/application/provenance.py",
+        "src/privilab/application/run_review.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Current collector metadata and nine-table snapshots; no-replay guards; separate synthetic reviews and actual pending human release.",
+      "expected_artifact": [
+        "scenarios.json",
+        "manifest.json"
+      ],
+      "owner": "Andrew Tsintsiruk",
+      "status": "PENDING ANDREW",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "F07",
+      "group": "F",
+      "criterion": "Latency and cost/usage captured where available.",
+      "requirement_controls": [
+        "FR-009",
+        "NFR-005",
+        "NFR-006",
+        "ADR-007",
+        "Human review/history (canonical FR ID unavailable)"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/scenarios.json",
+        "src/privilab/application/provenance.py",
+        "src/privilab/application/run_review.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Current collector metadata and nine-table snapshots; no-replay guards; separate synthetic reviews and actual pending human release.",
+      "expected_artifact": [
+        "scenarios.json",
+        "manifest.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "F08",
+      "group": "F",
+      "criterion": "No unnecessary sensitive content retention.",
+      "requirement_controls": [
+        "FR-009",
+        "NFR-005",
+        "NFR-006",
+        "ADR-007",
+        "Human review/history (canonical FR ID unavailable)"
+      ],
+      "evidence_classification": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/scenarios.json",
+        "src/privilab/application/provenance.py",
+        "src/privilab/application/run_review.py"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Current collector metadata and nine-table snapshots; no-replay guards; separate synthetic reviews and actual pending human release.",
+      "expected_artifact": [
+        "scenarios.json",
+        "manifest.json"
+      ],
+      "owner": "Codex engineering",
+      "status": "CURRENT_CANDIDATE_EVIDENCE_REQUIRED",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "G01",
+      "group": "G",
+      "criterion": "10–15 minute script reviewed.",
+      "requirement_controls": [
+        "NFR-001",
+        "ADR-008",
+        "Claims and human rehearsal"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/demo-materials.md",
+        "docs/product/evidence/gate5/claims-and-limitations.md",
+        "README.md"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Candidate-bound scripts/FAQ/claims matrix; current-source queue; actual human rehearsal and accepted backup media.",
+      "expected_artifact": [
+        "demo-materials.md",
+        "claims-and-limitations.md",
+        "current-source-queue.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "G02",
+      "group": "G",
+      "criterion": "3-minute script reviewed.",
+      "requirement_controls": [
+        "NFR-001",
+        "ADR-008",
+        "Claims and human rehearsal"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/demo-materials.md",
+        "docs/product/evidence/gate5/claims-and-limitations.md",
+        "README.md"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Candidate-bound scripts/FAQ/claims matrix; current-source queue; actual human rehearsal and accepted backup media.",
+      "expected_artifact": [
+        "demo-materials.md",
+        "claims-and-limitations.md",
+        "current-source-queue.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "G03",
+      "group": "G",
+      "criterion": "Architecture one-pager reviewed.",
+      "requirement_controls": [
+        "NFR-001",
+        "ADR-008",
+        "Claims and human rehearsal"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/demo-materials.md",
+        "docs/product/evidence/gate5/claims-and-limitations.md",
+        "README.md"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Candidate-bound scripts/FAQ/claims matrix; current-source queue; actual human rehearsal and accepted backup media.",
+      "expected_artifact": [
+        "demo-materials.md",
+        "claims-and-limitations.md",
+        "current-source-queue.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "G04",
+      "group": "G",
+      "criterion": "Eval/result one-pager reviewed.",
+      "requirement_controls": [
+        "NFR-001",
+        "ADR-008",
+        "Claims and human rehearsal"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/demo-materials.md",
+        "docs/product/evidence/gate5/claims-and-limitations.md",
+        "README.md"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Candidate-bound scripts/FAQ/claims matrix; current-source queue; actual human rehearsal and accepted backup media.",
+      "expected_artifact": [
+        "demo-materials.md",
+        "claims-and-limitations.md",
+        "current-source-queue.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "G05",
+      "group": "G",
+      "criterion": "Technical FAQ reviewed.",
+      "requirement_controls": [
+        "NFR-001",
+        "ADR-008",
+        "Claims and human rehearsal"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/demo-materials.md",
+        "docs/product/evidence/gate5/claims-and-limitations.md",
+        "README.md"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Candidate-bound scripts/FAQ/claims matrix; current-source queue; actual human rehearsal and accepted backup media.",
+      "expected_artifact": [
+        "demo-materials.md",
+        "claims-and-limitations.md",
+        "current-source-queue.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "G06",
+      "group": "G",
+      "criterion": "Known limitations reviewed.",
+      "requirement_controls": [
+        "NFR-001",
+        "ADR-008",
+        "Claims and human rehearsal"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/demo-materials.md",
+        "docs/product/evidence/gate5/claims-and-limitations.md",
+        "README.md"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Candidate-bound scripts/FAQ/claims matrix; current-source queue; actual human rehearsal and accepted backup media.",
+      "expected_artifact": [
+        "demo-materials.md",
+        "claims-and-limitations.md",
+        "current-source-queue.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "G07",
+      "group": "G",
+      "criterion": "Mutable vendor/model/framework facts refreshed.",
+      "requirement_controls": [
+        "NFR-001",
+        "ADR-008",
+        "Claims and human rehearsal"
+      ],
+      "evidence_classification": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/demo-materials.md",
+        "docs/product/evidence/gate5/claims-and-limitations.md",
+        "README.md"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Candidate-bound scripts/FAQ/claims matrix; current-source queue; actual human rehearsal and accepted backup media.",
+      "expected_artifact": [
+        "demo-materials.md",
+        "claims-and-limitations.md",
+        "current-source-queue.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated external researcher",
+      "status": "PENDING EXTERNAL",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "G08",
+      "group": "G",
+      "criterion": "No prohibited/unsupported claim remains.",
+      "requirement_controls": [
+        "NFR-001",
+        "ADR-008",
+        "Claims and human rehearsal"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/demo-materials.md",
+        "docs/product/evidence/gate5/claims-and-limitations.md",
+        "README.md"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Candidate-bound scripts/FAQ/claims matrix; current-source queue; actual human rehearsal and accepted backup media.",
+      "expected_artifact": [
+        "demo-materials.md",
+        "claims-and-limitations.md",
+        "current-source-queue.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "G09",
+      "group": "G",
+      "criterion": "Full demo successfully rehearsed.",
+      "requirement_controls": [
+        "NFR-001",
+        "ADR-008",
+        "Claims and human rehearsal"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/demo-materials.md",
+        "docs/product/evidence/gate5/claims-and-limitations.md",
+        "README.md"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Candidate-bound scripts/FAQ/claims matrix; current-source queue; actual human rehearsal and accepted backup media.",
+      "expected_artifact": [
+        "demo-materials.md",
+        "claims-and-limitations.md",
+        "current-source-queue.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "G10",
+      "group": "G",
+      "criterion": "Compressed demo successfully rehearsed.",
+      "requirement_controls": [
+        "NFR-001",
+        "ADR-008",
+        "Claims and human rehearsal"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/demo-materials.md",
+        "docs/product/evidence/gate5/claims-and-limitations.md",
+        "README.md"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Candidate-bound scripts/FAQ/claims matrix; current-source queue; actual human rehearsal and accepted backup media.",
+      "expected_artifact": [
+        "demo-materials.md",
+        "claims-and-limitations.md",
+        "current-source-queue.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "G11",
+      "group": "G",
+      "criterion": "Backup materials match qualified candidate/configuration.",
+      "requirement_controls": [
+        "NFR-001",
+        "ADR-008",
+        "Claims and human rehearsal"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/product/evidence/gate5/demo-materials.md",
+        "docs/product/evidence/gate5/claims-and-limitations.md",
+        "README.md"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Candidate-bound scripts/FAQ/claims matrix; current-source queue; actual human rehearsal and accepted backup media.",
+      "expected_artifact": [
+        "demo-materials.md",
+        "claims-and-limitations.md",
+        "current-source-queue.json",
+        "handoffs.md"
+      ],
+      "owner": "Andrew-designated qualified reviewer",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "H01",
+      "group": "H",
+      "criterion": "Independent AI/code/security review complete.",
+      "requirement_controls": [
+        "ADR-009",
+        "Non-author review",
+        "Andrew Gate 5 authority"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/review/code_review.md",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Separate independent review of final HEAD against frozen product base, then non-author approval and Andrew decision.",
+      "expected_artifact": [
+        "independent-review.md",
+        "handoffs.md",
+        "manifest.json"
+      ],
+      "owner": "Separate independent reviewer / non-author human",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "H02",
+      "group": "H",
+      "criterion": "No unresolved Critical/High qualification finding.",
+      "requirement_controls": [
+        "ADR-009",
+        "Non-author review",
+        "Andrew Gate 5 authority"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/review/code_review.md",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Separate independent review of final HEAD against frozen product base, then non-author approval and Andrew decision.",
+      "expected_artifact": [
+        "independent-review.md",
+        "handoffs.md",
+        "manifest.json"
+      ],
+      "owner": "Separate independent reviewer / non-author human",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "H03",
+      "group": "H",
+      "criterion": "Appropriate non-author human review complete.",
+      "requirement_controls": [
+        "ADR-009",
+        "Non-author review",
+        "Andrew Gate 5 authority"
+      ],
+      "evidence_classification": "QUALIFIED_HUMAN_REVIEW_REQUIRED",
+      "existing_evidence": [
+        "docs/review/code_review.md",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Separate independent review of final HEAD against frozen product base, then non-author approval and Andrew decision.",
+      "expected_artifact": [
+        "independent-review.md",
+        "handoffs.md",
+        "manifest.json"
+      ],
+      "owner": "Separate independent reviewer / non-author human",
+      "status": "PENDING HUMAN",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "H04",
+      "group": "H",
+      "criterion": "Evidence package reconstructs release decision.",
+      "requirement_controls": [
+        "ADR-009",
+        "Non-author review",
+        "Andrew Gate 5 authority"
+      ],
+      "evidence_classification": "ANDREW_DECISION_REQUIRED",
+      "existing_evidence": [
+        "docs/review/code_review.md",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Separate independent review of final HEAD against frozen product base, then non-author approval and Andrew decision.",
+      "expected_artifact": [
+        "independent-review.md",
+        "handoffs.md",
+        "manifest.json"
+      ],
+      "owner": "Andrew Tsintsiruk",
+      "status": "PENDING ANDREW",
+      "evidence": [],
+      "limitation": null
+    },
+    {
+      "id": "H05",
+      "group": "H",
+      "criterion": "Andrew records final Gate 5 decision.",
+      "requirement_controls": [
+        "ADR-009",
+        "Non-author review",
+        "Andrew Gate 5 authority"
+      ],
+      "evidence_classification": "ANDREW_DECISION_REQUIRED",
+      "existing_evidence": [
+        "docs/review/code_review.md",
+        "docs/product/evidence/gate5/manifest.json"
+      ],
+      "existing_candidate_sha": "8d4bad1833431452bd6e99d2c238f5aa51cebbf5",
+      "current_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+      "dsl153_invalidated_existing_execution_evidence": true,
+      "dsl153_impact": "Historical execution is support only after toolchain/container changes; static definitions require identity comparison. Human approvals do not transfer.",
+      "refresh_required": true,
+      "execution_method": "Separate independent review of final HEAD against frozen product base, then non-author approval and Andrew decision.",
+      "expected_artifact": [
+        "independent-review.md",
+        "handoffs.md",
+        "manifest.json"
+      ],
+      "owner": "Andrew Tsintsiruk",
+      "status": "PENDING ANDREW",
+      "evidence": [],
+      "limitation": null
+    }
+  ]
+}

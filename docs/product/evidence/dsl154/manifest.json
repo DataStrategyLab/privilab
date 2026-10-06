@@ -1,0 +1,82 @@
+{
+  "schema_version": "1",
+  "package_id": "dsl-154-prospect-demo",
+  "package_version": "1.0.0",
+  "product_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+  "evidence_tooling_head_sha": null,
+  "fresh_checkout_sha": null,
+  "build_checkout_sha": null,
+  "final_evidence_commit_sha": null,
+  "final_head_binding": "Final execution handoff; avoid self-referential commit identity",
+  "engineering_status": "NOT_RUN",
+  "environment": {
+    "classification": "FRESH_CHECKOUT_CACHE_BACKED",
+    "execution_status": "PENDING",
+    "limitation": "Cache-backed installation is not independent network retrieval."
+  },
+  "qualification": null,
+  "artifacts": [],
+  "live_model": {
+    "status": "NOT_RUN",
+    "configured_alias": "gpt-5.6-terra",
+    "resolved_snapshot": null
+  },
+  "llm_judge": "N/A",
+  "runtime_mcp_tools": "N/A",
+  "holdout": {
+    "validation_performed": false,
+    "status": "PENDING_ANDREW_OPTION_B",
+    "version": null,
+    "owner": null
+  },
+  "human_gates": {
+    "substantive_review": {
+      "status": "PENDING",
+      "reviewer": null,
+      "timestamp": null,
+      "evidence": null
+    },
+    "current_source_verification": {
+      "status": "PENDING",
+      "reviewer": null,
+      "timestamp": null,
+      "evidence": null
+    },
+    "human_rehearsal": {
+      "status": "PENDING",
+      "reviewer": null,
+      "timestamp": null,
+      "evidence": null
+    },
+    "backup_acceptance": {
+      "status": "PENDING",
+      "reviewer": null,
+      "timestamp": null,
+      "evidence": null
+    },
+    "independent_review": {
+      "status": "PENDING",
+      "reviewer": null,
+      "timestamp": null,
+      "evidence": null
+    },
+    "non_author_review": {
+      "status": "PENDING",
+      "reviewer": null,
+      "timestamp": null,
+      "evidence": null
+    },
+    "drive_promotion": {
+      "status": "PENDING",
+      "reviewer": null,
+      "timestamp": null,
+      "evidence": null
+    },
+    "andrew_gate5": {
+      "status": "PENDING",
+      "reviewer": null,
+      "timestamp": null,
+      "evidence": null
+    }
+  }
+}

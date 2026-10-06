@@ -90,10 +90,19 @@ ADR-010 remain controlling.
    evidence and recommend the smallest bounded corrective issue/PR. Do not expand
    DSL-154 into product implementation. A material correction creates a new
    candidate identity and invalidates only affected evidence.
-9. After engineering evidence is complete, run a dedicated configured GPT-6 Astra
-   Codex `/review`. Resolve Critical/High findings and explicitly disposition
-   remaining Medium/Low findings before non-author human review.
-10. Recommend DSL-154 In Review only when engineering evidence and independent AI
+9. Freeze DSL-154 tooling in commit T, then qualify from a fresh local checkout
+   of exact T with no copied virtualenv/database/evidence. Approved local tool,
+   interpreter, and dependency caches are permitted; label this environment
+   FRESH_CHECKOUT_CACHE_BACKED, not independent network retrieval. Keep the
+   product candidate, execution checkout, dependency identity, and limitation
+   separate. Historical docs/product/evidence/gate5/ is read-only throughout.
+10. Commit the engineering package as H and verify it from a fresh checkout.
+    Finish the author session with a clean tree and READY FOR INDEPENDENT CODEX
+    REVIEW or NOT READY FOR INDEPENDENT CODEX REVIEW. Do not launch review here.
+    Prepare a separate configured GPT-6 Astra reviewer to inspect final H against
+    f19f5542105661614c225691c3df780264de8262, including unchanged candidate
+    behavior and all DSL-154 tooling/tests/evidence/claims/handoff logic.
+11. Recommend DSL-154 In Review only when engineering evidence and independent AI
     review are complete. Prospect-demo release still requires required substantive
     review, holdout disposition, claims/current-fact verification, human rehearsal,
     durable release record, non-author/CODEOWNER review as applicable, and Andrew's
