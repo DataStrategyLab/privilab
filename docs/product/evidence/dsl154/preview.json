@@ -1,0 +1,1346 @@
+{
+  "backup_media": {
+    "drive_url": null,
+    "sha256": null,
+    "status": "NOT_CREATED_OR_ACCEPTED"
+  },
+  "candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+  "checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+  "classification": "AUTOMATED_LOCALHOST_BROWSER_VERIFICATION",
+  "command": "make preview",
+  "environment_overrides": {
+    "PRIVILAB_HOST": "127.0.0.1",
+    "PRIVILAB_PORT": "8000",
+    "PRIVILAB_PREVIEW_DB": "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/preview-02.sqlite3"
+  },
+  "history_after": {
+    "human_reviews": {
+      "row_count": 3,
+      "sha256": "sha256:68eb2d89f800268a33f008c796a714e2f57ca31232db2b2f12029a879f28b15b"
+    },
+    "model_executions": {
+      "row_count": 7,
+      "sha256": "sha256:717fc88f0cd99df95b0daa60f41129bb50250517aece04f8a2fbb2ca577f3e0d"
+    },
+    "model_telemetry": {
+      "row_count": 0,
+      "sha256": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "run_chunks": {
+      "row_count": 7,
+      "sha256": "sha256:978e9a77fba565048aaec38b199010788476c493d1792a5dcf59a90486b35bfe"
+    },
+    "run_configurations": {
+      "row_count": 10,
+      "sha256": "sha256:e4619d96148cfbad4fb99ecb265de8041f44373e9bc141d6142e7317d2bcca5e"
+    },
+    "run_evaluations": {
+      "row_count": 10,
+      "sha256": "sha256:a2f1eb020bf2bec9123829748c2037f7c2e7f746578a015c502128439b98881c"
+    },
+    "run_permission_conditions": {
+      "row_count": 1,
+      "sha256": "sha256:2e299ac1f07f5802df4d9bfd513d126db43bf4f61792ac779c1cf473174f3640"
+    },
+    "run_sources": {
+      "row_count": 7,
+      "sha256": "sha256:e5d4c7e097fc2c0d5105ccd95e56ce6ec30e91443a5545327402429c8fb85d6c"
+    },
+    "runs": {
+      "row_count": 10,
+      "sha256": "sha256:b919f8581c33aa3f44496492e78cd2ac1e0c334d18ae48e4149c6bacf6a25e57"
+    }
+  },
+  "history_before": {
+    "human_reviews": {
+      "row_count": 3,
+      "sha256": "sha256:68eb2d89f800268a33f008c796a714e2f57ca31232db2b2f12029a879f28b15b"
+    },
+    "model_executions": {
+      "row_count": 7,
+      "sha256": "sha256:717fc88f0cd99df95b0daa60f41129bb50250517aece04f8a2fbb2ca577f3e0d"
+    },
+    "model_telemetry": {
+      "row_count": 0,
+      "sha256": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "run_chunks": {
+      "row_count": 7,
+      "sha256": "sha256:978e9a77fba565048aaec38b199010788476c493d1792a5dcf59a90486b35bfe"
+    },
+    "run_configurations": {
+      "row_count": 10,
+      "sha256": "sha256:e4619d96148cfbad4fb99ecb265de8041f44373e9bc141d6142e7317d2bcca5e"
+    },
+    "run_evaluations": {
+      "row_count": 10,
+      "sha256": "sha256:a2f1eb020bf2bec9123829748c2037f7c2e7f746578a015c502128439b98881c"
+    },
+    "run_permission_conditions": {
+      "row_count": 1,
+      "sha256": "sha256:2e299ac1f07f5802df4d9bfd513d126db43bf4f61792ac779c1cf473174f3640"
+    },
+    "run_sources": {
+      "row_count": 7,
+      "sha256": "sha256:e5d4c7e097fc2c0d5105ccd95e56ce6ec30e91443a5545327402429c8fb85d6c"
+    },
+    "runs": {
+      "row_count": 10,
+      "sha256": "sha256:b919f8581c33aa3f44496492e78cd2ac1e0c334d18ae48e4149c6bacf6a25e57"
+    }
+  },
+  "history_persistence_unchanged": true,
+  "human_rehearsal": {
+    "reviewer": null,
+    "status": "PENDING",
+    "timestamp": null
+  },
+  "observed_dom": {
+    "landing_and_synthetic_disclosures": true,
+    "permission_stopped_gate_display": "No Critical gate label in observed stopped-page AX; stored BLOCK is reported separately in provenance.",
+    "reopened_approval_visible": true,
+    "reopened_draft_and_citation_work_area_absent": true,
+    "reopened_run_id": "41d72111-a464-419f-ae8c-3939c86b819c",
+    "six_trade_tasks_and_unknown_conditional": true,
+    "synthetic_approve_reject_revision": true
+  },
+  "recorded_at": "2026-10-06T18:50:24.138190+00:00",
+  "run_count": 10,
+  "sandbox_attempt": "preview-01: loopback bind denied",
+  "schema_version": "1",
+  "status": "PASS",
+  "stored_runs": [
+    {
+      "chunk_ids": [
+        "synthetic-trade-notice-chunk-001"
+      ],
+      "completed_at": "2026-10-06T18:49:31.209202+00:00",
+      "configuration_hash": "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.grounded-happy-path",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "GROUNDED_HAPPY_PATH",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "context": {
+        "client_id": "synthetic-client-001",
+        "matter_id": "synthetic-matter-001",
+        "role_id": "synthetic-researcher",
+        "synthetic": true,
+        "user_id": "synthetic-user-001",
+        "workflow_id": "synthetic-workflow-001"
+      },
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-06T18:49:31.212166+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "failure_stage": null,
+      "latency_usage_cost": {
+        "cost": null,
+        "provider_latency_ns": null,
+        "run_elapsed_seconds": 0.000497,
+        "status": "N/A_FIXTURE_NO_PROVIDER_TELEMETRY",
+        "usage": null
+      },
+      "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+      "model_id": "model-output.trade-regulatory-grounded.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "PASS",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "PASS",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "REQUEST_REVISION",
+        "run_status": "GENERATED"
+      },
+      "permission": {
+        "policy_id": "policy.trade-regulatory-fixture.001",
+        "policy_schema_version": 1,
+        "policy_version": "1.0.0",
+        "state": "ALLOW",
+        "unresolved_condition_ids": []
+      },
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "retrieval_configuration": {
+        "limit": 10,
+        "provider_id": "sqlite-fts5",
+        "provider_version": "1"
+      },
+      "run_id": "3eddc711-12f7-42b2-b331-9d30a37aba24",
+      "source_ids": [
+        "synthetic-trade-notice-001"
+      ],
+      "source_metadata": [
+        {
+          "chunks": [
+            {
+              "chunk_id": "synthetic-trade-notice-chunk-001",
+              "ordinal": 0,
+              "retrieval_position": 0
+            }
+          ],
+          "source_id": "synthetic-trade-notice-001",
+          "source_version": "1.0.0"
+        }
+      ],
+      "started_at": "2026-10-06T18:49:31.208705+00:00",
+      "stop_reason": null,
+      "synthetic_demo_decision": {
+        "classification": "AUTOMATED_SYNTHETIC_DEMO_DECISION",
+        "decision": "REQUEST_REVISION",
+        "operator_role": "codex-engineering-evidence",
+        "reviewed_at": "2026-10-06T18:49:31.465513+00:00",
+        "reviewer_id": "synthetic-local-reviewer",
+        "run_id": "3eddc711-12f7-42b2-b331-9d30a37aba24"
+      }
+    },
+    {
+      "chunk_ids": [
+        "synthetic-trade-notice-chunk-001"
+      ],
+      "completed_at": "2026-10-06T18:49:30.350479+00:00",
+      "configuration_hash": "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.grounded-happy-path",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "GROUNDED_HAPPY_PATH",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "context": {
+        "client_id": "synthetic-client-001",
+        "matter_id": "synthetic-matter-001",
+        "role_id": "synthetic-researcher",
+        "synthetic": true,
+        "user_id": "synthetic-user-001",
+        "workflow_id": "synthetic-workflow-001"
+      },
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-06T18:49:30.354198+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "failure_stage": null,
+      "latency_usage_cost": {
+        "cost": null,
+        "provider_latency_ns": null,
+        "run_elapsed_seconds": 0.00058,
+        "status": "N/A_FIXTURE_NO_PROVIDER_TELEMETRY",
+        "usage": null
+      },
+      "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+      "model_id": "model-output.trade-regulatory-grounded.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "PASS",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "PASS",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "REJECT",
+        "run_status": "GENERATED"
+      },
+      "permission": {
+        "policy_id": "policy.trade-regulatory-fixture.001",
+        "policy_schema_version": 1,
+        "policy_version": "1.0.0",
+        "state": "ALLOW",
+        "unresolved_condition_ids": []
+      },
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "retrieval_configuration": {
+        "limit": 10,
+        "provider_id": "sqlite-fts5",
+        "provider_version": "1"
+      },
+      "run_id": "42f1542f-2ae9-4510-a9bc-f4365993b3b7",
+      "source_ids": [
+        "synthetic-trade-notice-001"
+      ],
+      "source_metadata": [
+        {
+          "chunks": [
+            {
+              "chunk_id": "synthetic-trade-notice-chunk-001",
+              "ordinal": 0,
+              "retrieval_position": 0
+            }
+          ],
+          "source_id": "synthetic-trade-notice-001",
+          "source_version": "1.0.0"
+        }
+      ],
+      "started_at": "2026-10-06T18:49:30.349899+00:00",
+      "stop_reason": null,
+      "synthetic_demo_decision": {
+        "classification": "AUTOMATED_SYNTHETIC_DEMO_DECISION",
+        "decision": "REJECT",
+        "operator_role": "codex-engineering-evidence",
+        "reviewed_at": "2026-10-06T18:49:30.681881+00:00",
+        "reviewer_id": "synthetic-local-reviewer",
+        "run_id": "42f1542f-2ae9-4510-a9bc-f4365993b3b7"
+      }
+    },
+    {
+      "chunk_ids": [],
+      "completed_at": "2026-10-06T18:49:07.865133+00:00",
+      "configuration_hash": "sha256:a4ca619832bff3c25826b69aae3e5081bd0915a22e705bb888bc0a1a1d6c90db",
+      "configuration_id": "p0-synthetic-preview",
+      "configuration_options": {
+        "scenario": "conditional-role"
+      },
+      "configuration_version": "1.1.0",
+      "context": {
+        "client_id": "synthetic-client-001",
+        "matter_id": "synthetic-matter-001",
+        "role_id": "synthetic-conditional",
+        "synthetic": true,
+        "user_id": "synthetic-user-001",
+        "workflow_id": "synthetic-workflow-001"
+      },
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "UNKNOWN"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "UNKNOWN"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-06T18:49:07.870728+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "failure_stage": null,
+      "latency_usage_cost": {
+        "cost": null,
+        "provider_latency_ns": null,
+        "run_elapsed_seconds": 3.1e-05,
+        "status": "N/A_FIXTURE_NO_PROVIDER_TELEMETRY",
+        "usage": null
+      },
+      "model_content_hash": "sha256:2ab22be190a2fdcf63d790c942cf7f3f91f7883b38e7f5a60a9fcc0100e80c2a",
+      "model_id": "model-output.synthetic-happy-path.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [],
+        "criteria": {
+          "authorized-source": "UNKNOWN",
+          "citation-resolution": "UNKNOWN",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": false,
+        "permission_state": "CONDITIONAL",
+        "retrieval_called": false,
+        "review_state": "NOT REVIEWABLE",
+        "run_status": "PERMISSION_STOPPED"
+      },
+      "permission": {
+        "policy_id": "policy.synthetic-preview.001",
+        "policy_schema_version": 1,
+        "policy_version": "1.1.0",
+        "state": "CONDITIONAL",
+        "unresolved_condition_ids": [
+          "condition-synthetic-001"
+        ]
+      },
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "retrieval_configuration": {
+        "limit": 10,
+        "provider_id": "sqlite-fts5",
+        "provider_version": "1"
+      },
+      "run_id": "f80cffcb-5381-45f7-8360-421bee6a6a5f",
+      "source_ids": [],
+      "source_metadata": [],
+      "started_at": "2026-10-06T18:49:07.865102+00:00",
+      "stop_reason": "UNRESOLVED_CONDITIONS",
+      "synthetic_demo_decision": null
+    },
+    {
+      "chunk_ids": [],
+      "completed_at": "2026-10-06T18:49:07.401909+00:00",
+      "configuration_hash": "sha256:054a85d10b60f9daa8f63580da8a829f0a8b6ac7589dfce445657acb0007541d",
+      "configuration_id": "p0-synthetic-preview",
+      "configuration_options": {
+        "scenario": "missing-workflow"
+      },
+      "configuration_version": "1.1.0",
+      "context": {
+        "client_id": "synthetic-client-001",
+        "matter_id": "synthetic-matter-001",
+        "role_id": "synthetic-researcher",
+        "synthetic": true,
+        "user_id": "synthetic-user-001",
+        "workflow_id": null
+      },
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "UNKNOWN"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "UNKNOWN"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-06T18:49:07.405084+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "failure_stage": null,
+      "latency_usage_cost": {
+        "cost": null,
+        "provider_latency_ns": null,
+        "run_elapsed_seconds": 0.000323,
+        "status": "N/A_FIXTURE_NO_PROVIDER_TELEMETRY",
+        "usage": null
+      },
+      "model_content_hash": "sha256:2ab22be190a2fdcf63d790c942cf7f3f91f7883b38e7f5a60a9fcc0100e80c2a",
+      "model_id": "model-output.synthetic-happy-path.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [],
+        "criteria": {
+          "authorized-source": "UNKNOWN",
+          "citation-resolution": "UNKNOWN",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": false,
+        "permission_state": "UNKNOWN",
+        "retrieval_called": false,
+        "review_state": "NOT REVIEWABLE",
+        "run_status": "PERMISSION_STOPPED"
+      },
+      "permission": {
+        "policy_id": "policy.synthetic-preview.001",
+        "policy_schema_version": 1,
+        "policy_version": "1.1.0",
+        "state": "UNKNOWN",
+        "unresolved_condition_ids": []
+      },
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "retrieval_configuration": {
+        "limit": 10,
+        "provider_id": "sqlite-fts5",
+        "provider_version": "1"
+      },
+      "run_id": "9f3c7a99-9618-43a1-b2f3-9fe0fb824065",
+      "source_ids": [],
+      "source_metadata": [],
+      "started_at": "2026-10-06T18:49:07.401586+00:00",
+      "stop_reason": "UNKNOWN",
+      "synthetic_demo_decision": null
+    },
+    {
+      "chunk_ids": [
+        "synthetic-injection-chunk-001"
+      ],
+      "completed_at": "2026-10-06T18:49:06.707882+00:00",
+      "configuration_hash": "sha256:ba0066b4dfc333c805de9c36e3ce51861df990b407a2cab458b2f2b8868d5306",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.malicious-source-injection",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "MALICIOUS_SOURCE_INJECTION",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "context": {
+        "client_id": "synthetic-client-001",
+        "matter_id": "synthetic-matter-001",
+        "role_id": "synthetic-researcher",
+        "synthetic": true,
+        "user_id": "synthetic-user-001",
+        "workflow_id": "synthetic-workflow-001"
+      },
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "FAIL"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "FAIL"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-06T18:49:06.731811+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "failure_stage": null,
+      "latency_usage_cost": {
+        "cost": null,
+        "provider_latency_ns": null,
+        "run_elapsed_seconds": 0.005832,
+        "status": "N/A_FIXTURE_NO_PROVIDER_TELEMETRY",
+        "usage": null
+      },
+      "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+      "model_id": "model-output.trade-regulatory-grounded.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "FAIL",
+          "citation-resolution": "FAIL",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "permission": {
+        "policy_id": "policy.trade-regulatory-fixture.001",
+        "policy_schema_version": 1,
+        "policy_version": "1.0.0",
+        "state": "ALLOW",
+        "unresolved_condition_ids": []
+      },
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "retrieval_configuration": {
+        "limit": 10,
+        "provider_id": "sqlite-fts5",
+        "provider_version": "1"
+      },
+      "run_id": "88f2ed75-236f-4367-9dcd-e8a303029d68",
+      "source_ids": [
+        "synthetic-injection-001"
+      ],
+      "source_metadata": [
+        {
+          "chunks": [
+            {
+              "chunk_id": "synthetic-injection-chunk-001",
+              "ordinal": 0,
+              "retrieval_position": 0
+            }
+          ],
+          "source_id": "synthetic-injection-001",
+          "source_version": "1.0.0"
+        }
+      ],
+      "started_at": "2026-10-06T18:49:06.702050+00:00",
+      "stop_reason": null,
+      "synthetic_demo_decision": null
+    },
+    {
+      "chunk_ids": [
+        "synthetic-trade-notice-chunk-001"
+      ],
+      "completed_at": "2026-10-06T18:49:05.691983+00:00",
+      "configuration_hash": "sha256:ef458dac8a9988f0493689499b2b9f526f49548a944374e01ba021fffd7de734",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.citation-grounding-challenge",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "CITATION_GROUNDING_CHALLENGE",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "context": {
+        "client_id": "synthetic-client-001",
+        "matter_id": "synthetic-matter-001",
+        "role_id": "synthetic-researcher",
+        "synthetic": true,
+        "user_id": "synthetic-user-001",
+        "workflow_id": "synthetic-workflow-001"
+      },
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "FAIL"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-06T18:49:05.695269+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "failure_stage": null,
+      "latency_usage_cost": {
+        "cost": null,
+        "provider_latency_ns": null,
+        "run_elapsed_seconds": 0.000489,
+        "status": "N/A_FIXTURE_NO_PROVIDER_TELEMETRY",
+        "usage": null
+      },
+      "model_content_hash": "sha256:df2bc34d6da7ff229481a8dd10dae0e2586db4c767dd3271213f39e2ad29e975",
+      "model_id": "model-output.trade-regulatory-missing-chunk.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "FAIL",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "permission": {
+        "policy_id": "policy.trade-regulatory-fixture.001",
+        "policy_schema_version": 1,
+        "policy_version": "1.0.0",
+        "state": "ALLOW",
+        "unresolved_condition_ids": []
+      },
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "retrieval_configuration": {
+        "limit": 10,
+        "provider_id": "sqlite-fts5",
+        "provider_version": "1"
+      },
+      "run_id": "45de8f88-ec0b-4e2e-8a7b-e0aec7f6e63d",
+      "source_ids": [
+        "synthetic-trade-notice-001"
+      ],
+      "source_metadata": [
+        {
+          "chunks": [
+            {
+              "chunk_id": "synthetic-trade-notice-chunk-001",
+              "ordinal": 0,
+              "retrieval_position": 0
+            }
+          ],
+          "source_id": "synthetic-trade-notice-001",
+          "source_version": "1.0.0"
+        }
+      ],
+      "started_at": "2026-10-06T18:49:05.691494+00:00",
+      "stop_reason": null,
+      "synthetic_demo_decision": null
+    },
+    {
+      "chunk_ids": [
+        "synthetic-trade-notice-chunk-001"
+      ],
+      "completed_at": "2026-10-06T18:49:05.207070+00:00",
+      "configuration_hash": "sha256:82b84f847949471b505de71c98f61cf588e387f45cda149f2e2b73e2606c52a4",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.critical-eval-failure",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "CRITICAL_EVAL_FAILURE",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "context": {
+        "client_id": "synthetic-client-001",
+        "matter_id": "synthetic-matter-001",
+        "role_id": "synthetic-researcher",
+        "synthetic": true,
+        "user_id": "synthetic-user-001",
+        "workflow_id": "synthetic-workflow-001"
+      },
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "UNKNOWN"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "UNKNOWN"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-06T18:49:05.210523+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "failure_stage": null,
+      "latency_usage_cost": {
+        "cost": null,
+        "provider_latency_ns": null,
+        "run_elapsed_seconds": 0.000523,
+        "status": "N/A_FIXTURE_NO_PROVIDER_TELEMETRY",
+        "usage": null
+      },
+      "model_content_hash": "sha256:05ac503ca8cdf05d702087d5062349765fb4636cee8cde27754985f809163aec",
+      "model_id": "model-output.trade-regulatory-missing-citation.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "UNKNOWN",
+          "citation-resolution": "UNKNOWN",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "permission": {
+        "policy_id": "policy.trade-regulatory-fixture.001",
+        "policy_schema_version": 1,
+        "policy_version": "1.0.0",
+        "state": "ALLOW",
+        "unresolved_condition_ids": []
+      },
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "retrieval_configuration": {
+        "limit": 10,
+        "provider_id": "sqlite-fts5",
+        "provider_version": "1"
+      },
+      "run_id": "805fdf41-6bd1-4b65-b54b-1dcfd6ab3049",
+      "source_ids": [
+        "synthetic-trade-notice-001"
+      ],
+      "source_metadata": [
+        {
+          "chunks": [
+            {
+              "chunk_id": "synthetic-trade-notice-chunk-001",
+              "ordinal": 0,
+              "retrieval_position": 0
+            }
+          ],
+          "source_id": "synthetic-trade-notice-001",
+          "source_version": "1.0.0"
+        }
+      ],
+      "started_at": "2026-10-06T18:49:05.206547+00:00",
+      "stop_reason": null,
+      "synthetic_demo_decision": null
+    },
+    {
+      "chunk_ids": [],
+      "completed_at": "2026-10-06T18:49:04.738866+00:00",
+      "configuration_hash": "sha256:963f517ba47ecb12fe393915ed8dab8f30349bd5d99bf40cc9f080e2a12d51bb",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.permission-block",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "PERMISSION_BLOCK",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "context": {
+        "client_id": "synthetic-client-001",
+        "matter_id": "synthetic-matter-001",
+        "role_id": "synthetic-blocked",
+        "synthetic": true,
+        "user_id": "synthetic-user-001",
+        "workflow_id": "synthetic-workflow-001"
+      },
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "UNKNOWN"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "UNKNOWN"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-06T18:49:04.742163+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "failure_stage": null,
+      "latency_usage_cost": {
+        "cost": null,
+        "provider_latency_ns": null,
+        "run_elapsed_seconds": 2.5e-05,
+        "status": "N/A_FIXTURE_NO_PROVIDER_TELEMETRY",
+        "usage": null
+      },
+      "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+      "model_id": "model-output.trade-regulatory-grounded.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [],
+        "criteria": {
+          "authorized-source": "UNKNOWN",
+          "citation-resolution": "UNKNOWN",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "BLOCK",
+        "model_called": false,
+        "permission_state": "BLOCK",
+        "retrieval_called": false,
+        "review_state": "NOT REVIEWABLE",
+        "run_status": "PERMISSION_STOPPED"
+      },
+      "permission": {
+        "policy_id": "policy.trade-regulatory-fixture.001",
+        "policy_schema_version": 1,
+        "policy_version": "1.0.0",
+        "state": "BLOCK",
+        "unresolved_condition_ids": []
+      },
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "retrieval_configuration": {
+        "limit": 10,
+        "provider_id": "sqlite-fts5",
+        "provider_version": "1"
+      },
+      "run_id": "a5e384e4-d10c-4625-9e55-9bc295f29abb",
+      "source_ids": [],
+      "source_metadata": [],
+      "started_at": "2026-10-06T18:49:04.738841+00:00",
+      "stop_reason": "BLOCK",
+      "synthetic_demo_decision": null
+    },
+    {
+      "chunk_ids": [
+        "synthetic-trade-notice-chunk-001"
+      ],
+      "completed_at": "2026-10-06T18:49:04.212913+00:00",
+      "configuration_hash": "sha256:4e577664b66a18d5d5a3ea716f8a1952466d2bf7f066a57e2f69f9e5332a3ac8",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.insufficient-source",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "INSUFFICIENT_SOURCE",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "context": {
+        "client_id": "synthetic-client-001",
+        "matter_id": "synthetic-matter-001",
+        "role_id": "synthetic-researcher",
+        "synthetic": true,
+        "user_id": "synthetic-user-001",
+        "workflow_id": "synthetic-workflow-001"
+      },
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-06T18:49:04.217676+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "failure_stage": null,
+      "latency_usage_cost": {
+        "cost": null,
+        "provider_latency_ns": null,
+        "run_elapsed_seconds": 0.000666,
+        "status": "N/A_FIXTURE_NO_PROVIDER_TELEMETRY",
+        "usage": null
+      },
+      "model_content_hash": "sha256:437c9d9391093c6c4765624bd64921e6524f578ae0490ff2d3681c87ecb641f8",
+      "model_id": "model-output.trade-regulatory-insufficient-source.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [
+          "APPROVE",
+          "REJECT",
+          "REQUEST_REVISION"
+        ],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "PASS",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "PASS",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "PENDING",
+        "run_status": "GENERATED"
+      },
+      "permission": {
+        "policy_id": "policy.trade-regulatory-fixture.001",
+        "policy_schema_version": 1,
+        "policy_version": "1.0.0",
+        "state": "ALLOW",
+        "unresolved_condition_ids": []
+      },
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "retrieval_configuration": {
+        "limit": 10,
+        "provider_id": "sqlite-fts5",
+        "provider_version": "1"
+      },
+      "run_id": "6e674530-3416-48f3-9779-f73d1cba21a6",
+      "source_ids": [
+        "synthetic-trade-notice-001"
+      ],
+      "source_metadata": [
+        {
+          "chunks": [
+            {
+              "chunk_id": "synthetic-trade-notice-chunk-001",
+              "ordinal": 0,
+              "retrieval_position": 0
+            }
+          ],
+          "source_id": "synthetic-trade-notice-001",
+          "source_version": "1.0.0"
+        }
+      ],
+      "started_at": "2026-10-06T18:49:04.212247+00:00",
+      "stop_reason": null,
+      "synthetic_demo_decision": null
+    },
+    {
+      "chunk_ids": [
+        "synthetic-trade-notice-chunk-001"
+      ],
+      "completed_at": "2026-10-06T18:48:42.241351+00:00",
+      "configuration_hash": "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+      "configuration_id": "trade-regulatory-fixture",
+      "configuration_options": {
+        "domain_task_id": "trade-regulatory.grounded-happy-path",
+        "domain_task_version": "1.0.0",
+        "scenario_class": "GROUNDED_HAPPY_PATH",
+        "task_pack_id": "trade-regulatory-research",
+        "task_pack_version": "1.0.0"
+      },
+      "configuration_version": "1.0.0",
+      "context": {
+        "client_id": "synthetic-client-001",
+        "matter_id": "synthetic-matter-001",
+        "role_id": "synthetic-researcher",
+        "synthetic": true,
+        "user_id": "synthetic-user-001",
+        "workflow_id": "synthetic-workflow-001"
+      },
+      "evaluation": {
+        "criteria": [
+          {
+            "criterion_id": "authorized-source",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "authorized-source",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "citation-resolution",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "citation-resolution",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "permission-boundary",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "permission-boundary",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          },
+          {
+            "criterion_id": "provenance-completeness",
+            "criterion_version": "1.0.0",
+            "criticality": "CRITICAL",
+            "evaluator_kind": "provenance-completeness",
+            "evaluator_version": "1.0.0",
+            "status": "PASS"
+          }
+        ],
+        "evaluated_at": "2026-10-06T18:48:42.245400+00:00",
+        "rubric_id": "p0-deterministic-critical-gate",
+        "rubric_version": "1.0.0",
+        "task_id": "p0-source-grounded-output",
+        "task_version": "1.0.0"
+      },
+      "failure_stage": null,
+      "latency_usage_cost": {
+        "cost": null,
+        "provider_latency_ns": null,
+        "run_elapsed_seconds": 0.000637,
+        "status": "N/A_FIXTURE_NO_PROVIDER_TELEMETRY",
+        "usage": null
+      },
+      "model_content_hash": "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+      "model_id": "model-output.trade-regulatory-grounded.001",
+      "model_version": "1.0.0",
+      "observed": {
+        "allowed_decisions": [],
+        "criteria": {
+          "authorized-source": "PASS",
+          "citation-resolution": "PASS",
+          "permission-boundary": "PASS",
+          "provenance-completeness": "PASS"
+        },
+        "gate": "PASS",
+        "model_called": true,
+        "permission_state": "ALLOW",
+        "retrieval_called": true,
+        "review_state": "APPROVE",
+        "run_status": "GENERATED"
+      },
+      "permission": {
+        "policy_id": "policy.trade-regulatory-fixture.001",
+        "policy_schema_version": 1,
+        "policy_version": "1.0.0",
+        "state": "ALLOW",
+        "unresolved_condition_ids": []
+      },
+      "provider_id": "fixture-model-provider",
+      "provider_version": "1",
+      "retrieval_configuration": {
+        "limit": 10,
+        "provider_id": "sqlite-fts5",
+        "provider_version": "1"
+      },
+      "run_id": "41d72111-a464-419f-ae8c-3939c86b819c",
+      "source_ids": [
+        "synthetic-trade-notice-001"
+      ],
+      "source_metadata": [
+        {
+          "chunks": [
+            {
+              "chunk_id": "synthetic-trade-notice-chunk-001",
+              "ordinal": 0,
+              "retrieval_position": 0
+            }
+          ],
+          "source_id": "synthetic-trade-notice-001",
+          "source_version": "1.0.0"
+        }
+      ],
+      "started_at": "2026-10-06T18:48:42.240714+00:00",
+      "stop_reason": null,
+      "synthetic_demo_decision": {
+        "classification": "AUTOMATED_SYNTHETIC_DEMO_DECISION",
+        "decision": "APPROVE",
+        "operator_role": "codex-engineering-evidence",
+        "reviewed_at": "2026-10-06T18:48:50.479800+00:00",
+        "reviewer_id": "synthetic-local-reviewer",
+        "run_id": "41d72111-a464-419f-ae8c-3939c86b819c"
+      }
+    }
+  ],
+  "successful_attempt": "preview-02: approved loopback-only exception; repository network settings unchanged; no external requests",
+  "url": "http://127.0.0.1:8000"
+}

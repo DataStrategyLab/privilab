@@ -1,0 +1,16 @@
+{
+  "all_captures_passed": true,
+  "captures": 3,
+  "classification": "DETERMINISTIC_FIXTURE_REPEATABILITY",
+  "distinct_run_ids": 36,
+  "executions": 36,
+  "limitation": "Fixed fixture consistency is not live-model stability.",
+  "material_projections_equal": true,
+  "passed": true,
+  "same_execution_identity": true,
+  "stable_projection_sha256": [
+    "sha256:70fb23c9c8bdfc51ab43dcc553279a4ad0db8b2d67d077fc08969e72b88d8588",
+    "sha256:70fb23c9c8bdfc51ab43dcc553279a4ad0db8b2d67d077fc08969e72b88d8588",
+    "sha256:70fb23c9c8bdfc51ab43dcc553279a4ad0db8b2d67d077fc08969e72b88d8588"
+  ]
+}

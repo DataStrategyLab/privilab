@@ -1,0 +1,29 @@
+{
+  "branch": "andrew/dsl-154-p1-01-qualify-post-dsl-153-privilab-candidate-for-prospect",
+  "codex_configuration": "review_model = \"gpt-6-astra\"\napproval_policy = \"on-request\"\nsandbox_mode = \"workspace-write\"\nweb_search = \"disabled\"\n\n[sandbox_workspace_write]\nnetwork_access = false\n\n[features]\nmulti_agent = false\n",
+  "head": "22207a9b07d351aca44a7e91a7ec1d36ebdc0372",
+  "historical_gate5_current_hashes": {
+    "docs/product/evidence/gate5/README.md": "0ccff8a8fe71a941072c8c7c780938798cca8eb7df5d2f52d966479fe8a666b8",
+    "docs/product/evidence/gate5/claims-and-limitations.md": "f651fb588346ef80aa1fa31ad0fbaf21cf49e1985ca0db2d064501b4d694f33e",
+    "docs/product/evidence/gate5/demo-materials.md": "c5800143f1c603b299adbafad68e595b88156d31cfc90dc6032d7fc61456493c",
+    "docs/product/evidence/gate5/manifest.json": "6e9e0a689762988075bda5ee058ba6a3ab875258b99301e3ce41baba7c05581a",
+    "docs/product/evidence/gate5/scenarios.json": "258391aab299321e648b75ca99e985c233084672c144a3797074b2345248610a"
+  },
+  "historical_gate5_unchanged": true,
+  "historical_hashes": {
+    "docs/product/evidence/gate5/README.md": "0ccff8a8fe71a941072c8c7c780938798cca8eb7df5d2f52d966479fe8a666b8",
+    "docs/product/evidence/gate5/claims-and-limitations.md": "f651fb588346ef80aa1fa31ad0fbaf21cf49e1985ca0db2d064501b4d694f33e",
+    "docs/product/evidence/gate5/demo-materials.md": "c5800143f1c603b299adbafad68e595b88156d31cfc90dc6032d7fc61456493c",
+    "docs/product/evidence/gate5/manifest.json": "6e9e0a689762988075bda5ee058ba6a3ab875258b99301e3ce41baba7c05581a",
+    "docs/product/evidence/gate5/scenarios.json": "258391aab299321e648b75ca99e985c233084672c144a3797074b2345248610a"
+  },
+  "initial_diff": "PLANS.md only; 56 additions",
+  "initial_state_checked_before_edits": true,
+  "initial_status": "",
+  "initial_uv_mismatch_resolution": "Provisioned approved pinned uv 0.12.23 from checksum-matching existing DSL-153 archive; no network retrieval.",
+  "lock_sha256": "e74fcbc8645afae6a11009c448c0ded74225d75a75a069470c128bac2ac0dd87",
+  "merge_base": "f19f5542105661614c225691c3df780264de8262",
+  "product_candidate": "f19f5542105661614c225691c3df780264de8262",
+  "python": "3.13.15",
+  "uv": "uv 0.12.6 (7938ca5d5 2026-08-25 aarch64-apple-darwin)"
+}

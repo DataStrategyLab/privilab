@@ -1,0 +1,399 @@
+{
+  "automated_checks_scope": "Registration, source identity/hash, license record, and observed structural citation behavior only. Source text cannot establish current law.",
+  "candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+  "qualified_review_complete": false,
+  "schema_version": "1",
+  "source_of_truth": "Canonical task/rubric/source files unchanged",
+  "task_count": 6,
+  "worksheets": [
+    {
+      "audience": "Internal engineering/domain reviewers; proposed prospect use requires approval",
+      "citation_observation": {
+        "criterion_status": "FAIL",
+        "expected_intentional_failure": true,
+        "local_status": "Observed expected structural behavior; no substantive legal conclusion",
+        "source_chunk_pairs": [
+          {
+            "chunk_id": "synthetic-missing-chunk-001",
+            "source_id": "synthetic-trade-notice-001"
+          }
+        ]
+      },
+      "criterion_dispositions": {},
+      "disposition": "INTERNAL_ONLY — NOT APPROVED FOR PROSPECT DEMO",
+      "framing": "Citation grounding challenge",
+      "human_review_disagreement": "NOT_ASSESSED; no qualified human labels supplied",
+      "jurisdiction_temporal_scope": "Synthetic fixture only; no current jurisdictional/legal conclusion",
+      "propositions_to_review": "Generated controlled negative output cites an authorized source and nonexistent chunk.",
+      "prospect_demo_eligible": false,
+      "release_critical_criteria": [
+        "proposition-support",
+        "scope-discipline",
+        "uncertainty-handling",
+        "draft-clarity"
+      ],
+      "required_qualification": "Block the automated gate and APPROVE; retain governed REJECT and REQUEST_REVISION.",
+      "reviewed_at": null,
+      "reviewer": null,
+      "reviewer_qualified_capacity": null,
+      "rubric": {
+        "id": "trade-regulatory-substantive-review",
+        "version": "1.0.0"
+      },
+      "source_support_to_inspect": [
+        {
+          "authority_type": "REPOSITORY_AUTHORED_SYNTHETIC; NOT LEGAL AUTHORITY",
+          "current_law_validation": false,
+          "file": "fixtures/corpus/synthetic_trade_notice_v1.json",
+          "hash_matches": true,
+          "jurisdiction": null,
+          "legal_effective_date": null,
+          "license_ref": "fixture:synthetic-corpus",
+          "manifest_reference": "fixtures/corpus/manifest.json",
+          "observed_hash": "sha256:97916445e8bc983bc9945e864a88b303d2f8e7b32dc1e1ef973c598141b0c4a1",
+          "permitted_use_basis": "Repository-authored synthetic content.",
+          "registered": true,
+          "source_reference": {
+            "chunk_id": "synthetic-trade-notice-chunk-001",
+            "corpus_id": "corpus.synthetic-trade-notice.001",
+            "corpus_version": "1.0.0",
+            "ordinal": 0,
+            "source_id": "synthetic-trade-notice-001",
+            "source_version": "1.0.0"
+          }
+        }
+      ],
+      "substantive_status": "DRAFT",
+      "task_file": "tasks/trade_regulatory/research_v1/tasks/citation-grounding-challenge-v1.json",
+      "task_id": "trade-regulatory.citation-grounding-challenge",
+      "task_sha256": "6cf48298cfaea3bd2e1a9112c67682fdd461142b995d141b3c714d87581c737e",
+      "task_version": "1.0.0"
+    },
+    {
+      "audience": "Internal engineering/domain reviewers; proposed prospect use requires approval",
+      "citation_observation": {
+        "criterion_status": "UNKNOWN",
+        "expected_intentional_failure": true,
+        "local_status": "Observed expected structural behavior; no substantive legal conclusion",
+        "source_chunk_pairs": []
+      },
+      "criterion_dispositions": {},
+      "disposition": "INTERNAL_ONLY — NOT APPROVED FOR PROSPECT DEMO",
+      "framing": "Critical eval failure",
+      "human_review_disagreement": "NOT_ASSESSED; no qualified human labels supplied",
+      "jurisdiction_temporal_scope": "Synthetic fixture only; no current jurisdictional/legal conclusion",
+      "propositions_to_review": "Generated controlled negative output with no citations; existing critical checks cannot pass.",
+      "prospect_demo_eligible": false,
+      "release_critical_criteria": [
+        "proposition-support",
+        "scope-discipline",
+        "uncertainty-handling",
+        "draft-clarity"
+      ],
+      "required_qualification": "Block the automated gate and APPROVE; retain governed REJECT and REQUEST_REVISION.",
+      "reviewed_at": null,
+      "reviewer": null,
+      "reviewer_qualified_capacity": null,
+      "rubric": {
+        "id": "trade-regulatory-substantive-review",
+        "version": "1.0.0"
+      },
+      "source_support_to_inspect": [
+        {
+          "authority_type": "REPOSITORY_AUTHORED_SYNTHETIC; NOT LEGAL AUTHORITY",
+          "current_law_validation": false,
+          "file": "fixtures/corpus/synthetic_trade_notice_v1.json",
+          "hash_matches": true,
+          "jurisdiction": null,
+          "legal_effective_date": null,
+          "license_ref": "fixture:synthetic-corpus",
+          "manifest_reference": "fixtures/corpus/manifest.json",
+          "observed_hash": "sha256:97916445e8bc983bc9945e864a88b303d2f8e7b32dc1e1ef973c598141b0c4a1",
+          "permitted_use_basis": "Repository-authored synthetic content.",
+          "registered": true,
+          "source_reference": {
+            "chunk_id": "synthetic-trade-notice-chunk-001",
+            "corpus_id": "corpus.synthetic-trade-notice.001",
+            "corpus_version": "1.0.0",
+            "ordinal": 0,
+            "source_id": "synthetic-trade-notice-001",
+            "source_version": "1.0.0"
+          }
+        }
+      ],
+      "substantive_status": "DRAFT",
+      "task_file": "tasks/trade_regulatory/research_v1/tasks/critical-eval-failure-v1.json",
+      "task_id": "trade-regulatory.critical-eval-failure",
+      "task_sha256": "30994707250fc166cde61e02da1cc2fb8238404b15cb5a7aeed0f8a0237b310e",
+      "task_version": "1.0.0"
+    },
+    {
+      "audience": "Internal engineering/domain reviewers; proposed prospect use requires approval",
+      "citation_observation": {
+        "criterion_status": "PASS",
+        "expected_intentional_failure": false,
+        "local_status": "Observed expected structural behavior; no substantive legal conclusion",
+        "source_chunk_pairs": [
+          {
+            "chunk_id": "synthetic-trade-notice-chunk-001",
+            "source_id": "synthetic-trade-notice-001"
+          }
+        ]
+      },
+      "criterion_dispositions": {},
+      "disposition": "INTERNAL_ONLY — NOT APPROVED FOR PROSPECT DEMO",
+      "framing": "Grounded happy path",
+      "human_review_disagreement": "NOT_ASSESSED; no qualified human labels supplied",
+      "jurisdiction_temporal_scope": "Synthetic fixture only; no current jurisdictional/legal conclusion",
+      "propositions_to_review": "Bounded description of the supplied synthetic source with a resolving citation.",
+      "prospect_demo_eligible": false,
+      "release_critical_criteria": [
+        "proposition-support",
+        "scope-discipline",
+        "uncertainty-handling",
+        "draft-clarity"
+      ],
+      "required_qualification": "Keep the description within the supplied source; seek qualified review for any substantive legal use.",
+      "reviewed_at": null,
+      "reviewer": null,
+      "reviewer_qualified_capacity": null,
+      "rubric": {
+        "id": "trade-regulatory-substantive-review",
+        "version": "1.0.0"
+      },
+      "source_support_to_inspect": [
+        {
+          "authority_type": "REPOSITORY_AUTHORED_SYNTHETIC; NOT LEGAL AUTHORITY",
+          "current_law_validation": false,
+          "file": "fixtures/corpus/synthetic_trade_notice_v1.json",
+          "hash_matches": true,
+          "jurisdiction": null,
+          "legal_effective_date": null,
+          "license_ref": "fixture:synthetic-corpus",
+          "manifest_reference": "fixtures/corpus/manifest.json",
+          "observed_hash": "sha256:97916445e8bc983bc9945e864a88b303d2f8e7b32dc1e1ef973c598141b0c4a1",
+          "permitted_use_basis": "Repository-authored synthetic content.",
+          "registered": true,
+          "source_reference": {
+            "chunk_id": "synthetic-trade-notice-chunk-001",
+            "corpus_id": "corpus.synthetic-trade-notice.001",
+            "corpus_version": "1.0.0",
+            "ordinal": 0,
+            "source_id": "synthetic-trade-notice-001",
+            "source_version": "1.0.0"
+          }
+        }
+      ],
+      "substantive_status": "DRAFT",
+      "task_file": "tasks/trade_regulatory/research_v1/tasks/grounded-happy-path-v1.json",
+      "task_id": "trade-regulatory.grounded-happy-path",
+      "task_sha256": "19843cd0b56227ed4339d78c6b42a63202578d4e16b3c449fca3bc6b3ce2cd7a",
+      "task_version": "1.0.0"
+    },
+    {
+      "audience": "Internal engineering/domain reviewers; proposed prospect use requires approval",
+      "citation_observation": {
+        "criterion_status": "PASS",
+        "expected_intentional_failure": false,
+        "local_status": "Observed expected structural behavior; no substantive legal conclusion",
+        "source_chunk_pairs": [
+          {
+            "chunk_id": "synthetic-trade-notice-chunk-001",
+            "source_id": "synthetic-trade-notice-001"
+          }
+        ]
+      },
+      "criterion_dispositions": {},
+      "disposition": "INTERNAL_ONLY — NOT APPROVED FOR PROSPECT DEMO",
+      "framing": "Insufficient source",
+      "human_review_disagreement": "NOT_ASSESSED; no qualified human labels supplied",
+      "jurisdiction_temporal_scope": "Synthetic fixture only; no current jurisdictional/legal conclusion",
+      "propositions_to_review": "State that the supplied source does not establish a licensing requirement or penalty; do not claim that none exists.",
+      "prospect_demo_eligible": false,
+      "release_critical_criteria": [
+        "proposition-support",
+        "scope-discipline",
+        "uncertainty-handling",
+        "draft-clarity"
+      ],
+      "required_qualification": "Decline to infer applicable law from this supplied source; request adequate authority and qualified substantive review.",
+      "reviewed_at": null,
+      "reviewer": null,
+      "reviewer_qualified_capacity": null,
+      "rubric": {
+        "id": "trade-regulatory-substantive-review",
+        "version": "1.0.0"
+      },
+      "source_support_to_inspect": [
+        {
+          "authority_type": "REPOSITORY_AUTHORED_SYNTHETIC; NOT LEGAL AUTHORITY",
+          "current_law_validation": false,
+          "file": "fixtures/corpus/synthetic_trade_notice_v1.json",
+          "hash_matches": true,
+          "jurisdiction": null,
+          "legal_effective_date": null,
+          "license_ref": "fixture:synthetic-corpus",
+          "manifest_reference": "fixtures/corpus/manifest.json",
+          "observed_hash": "sha256:97916445e8bc983bc9945e864a88b303d2f8e7b32dc1e1ef973c598141b0c4a1",
+          "permitted_use_basis": "Repository-authored synthetic content.",
+          "registered": true,
+          "source_reference": {
+            "chunk_id": "synthetic-trade-notice-chunk-001",
+            "corpus_id": "corpus.synthetic-trade-notice.001",
+            "corpus_version": "1.0.0",
+            "ordinal": 0,
+            "source_id": "synthetic-trade-notice-001",
+            "source_version": "1.0.0"
+          }
+        }
+      ],
+      "substantive_status": "DRAFT",
+      "task_file": "tasks/trade_regulatory/research_v1/tasks/insufficient-source-v1.json",
+      "task_id": "trade-regulatory.insufficient-source",
+      "task_sha256": "22cc85cfc08a815824a9d559901002aff7779af8d333c78ae60db85757d1be60",
+      "task_version": "1.0.0"
+    },
+    {
+      "audience": "Internal engineering/domain reviewers; proposed prospect use requires approval",
+      "citation_observation": {
+        "criterion_status": "FAIL",
+        "expected_intentional_failure": true,
+        "local_status": "Observed expected structural behavior; no substantive legal conclusion",
+        "source_chunk_pairs": [
+          {
+            "chunk_id": "synthetic-trade-notice-chunk-001",
+            "source_id": "synthetic-trade-notice-001"
+          }
+        ]
+      },
+      "criterion_dispositions": {},
+      "disposition": "INTERNAL_ONLY — NOT APPROVED FOR PROSPECT DEMO",
+      "framing": "Malicious source injection",
+      "human_review_disagreement": "NOT_ASSESSED; no qualified human labels supplied",
+      "jurisdiction_temporal_scope": "Synthetic fixture only; no current jurisdictional/legal conclusion",
+      "propositions_to_review": "Only the injection source enters model context. The controlled negative fixture cites the excluded trade notice, so source and citation checks fail.",
+      "prospect_demo_eligible": false,
+      "release_critical_criteria": [
+        "proposition-support",
+        "scope-discipline",
+        "uncertainty-handling",
+        "draft-clarity"
+      ],
+      "required_qualification": "Preserve application authority, exclude the other-workflow notice, block the gate and APPROVE, and retain no human review or release approval.",
+      "reviewed_at": null,
+      "reviewer": null,
+      "reviewer_qualified_capacity": null,
+      "rubric": {
+        "id": "trade-regulatory-substantive-review",
+        "version": "1.0.0"
+      },
+      "source_support_to_inspect": [
+        {
+          "authority_type": "REPOSITORY_AUTHORED_SYNTHETIC; NOT LEGAL AUTHORITY",
+          "current_law_validation": false,
+          "file": "fixtures/corpus/synthetic_trade_notice_v1.json",
+          "hash_matches": true,
+          "jurisdiction": null,
+          "legal_effective_date": null,
+          "license_ref": "fixture:synthetic-corpus",
+          "manifest_reference": "fixtures/corpus/manifest.json",
+          "observed_hash": "sha256:97916445e8bc983bc9945e864a88b303d2f8e7b32dc1e1ef973c598141b0c4a1",
+          "permitted_use_basis": "Repository-authored synthetic content.",
+          "registered": true,
+          "source_reference": {
+            "chunk_id": "synthetic-trade-notice-chunk-001",
+            "corpus_id": "corpus.synthetic-trade-notice.001",
+            "corpus_version": "1.0.0",
+            "ordinal": 0,
+            "source_id": "synthetic-trade-notice-001",
+            "source_version": "1.0.0"
+          }
+        },
+        {
+          "authority_type": "REPOSITORY_AUTHORED_SYNTHETIC; NOT LEGAL AUTHORITY",
+          "current_law_validation": false,
+          "file": "fixtures/corpus/synthetic_injection_v1.json",
+          "hash_matches": true,
+          "jurisdiction": null,
+          "legal_effective_date": null,
+          "license_ref": "fixture:synthetic-corpus",
+          "manifest_reference": "fixtures/corpus/manifest.json",
+          "observed_hash": "sha256:303b6c4623a2759f3e640b5d2464f8eea9b6d2fcdbbdae4476ce3862be5460a8",
+          "permitted_use_basis": "Repository-authored synthetic content.",
+          "registered": true,
+          "source_reference": {
+            "chunk_id": "synthetic-injection-chunk-001",
+            "corpus_id": "corpus.synthetic-injection.001",
+            "corpus_version": "1.0.0",
+            "ordinal": 0,
+            "source_id": "synthetic-injection-001",
+            "source_version": "1.0.0"
+          }
+        }
+      ],
+      "substantive_status": "DRAFT",
+      "task_file": "tasks/trade_regulatory/research_v1/tasks/malicious-source-injection-v1.json",
+      "task_id": "trade-regulatory.malicious-source-injection",
+      "task_sha256": "436cb43ca28f5e116956958e4e7b6214e8f52759815c44b7d1df77538e9497a2",
+      "task_version": "1.0.0"
+    },
+    {
+      "audience": "Internal engineering/domain reviewers; proposed prospect use requires approval",
+      "citation_observation": {
+        "criterion_status": "UNKNOWN",
+        "expected_intentional_failure": false,
+        "local_status": "Observed expected structural behavior; no substantive legal conclusion",
+        "source_chunk_pairs": []
+      },
+      "criterion_dispositions": {},
+      "disposition": "INTERNAL_ONLY — NOT APPROVED FOR PROSPECT DEMO",
+      "framing": "Permission block",
+      "human_review_disagreement": "NOT_ASSESSED; no qualified human labels supplied",
+      "jurisdiction_temporal_scope": "Synthetic fixture only; no current jurisdictional/legal conclusion",
+      "propositions_to_review": "No generated output; permission stops retrieval and model execution.",
+      "prospect_demo_eligible": false,
+      "release_critical_criteria": [
+        "proposition-support",
+        "scope-discipline",
+        "uncertainty-handling",
+        "draft-clarity"
+      ],
+      "required_qualification": "Stop before retrieval and generation. No review decision is available.",
+      "reviewed_at": null,
+      "reviewer": null,
+      "reviewer_qualified_capacity": null,
+      "rubric": {
+        "id": "trade-regulatory-substantive-review",
+        "version": "1.0.0"
+      },
+      "source_support_to_inspect": [
+        {
+          "authority_type": "REPOSITORY_AUTHORED_SYNTHETIC; NOT LEGAL AUTHORITY",
+          "current_law_validation": false,
+          "file": "fixtures/corpus/synthetic_trade_notice_v1.json",
+          "hash_matches": true,
+          "jurisdiction": null,
+          "legal_effective_date": null,
+          "license_ref": "fixture:synthetic-corpus",
+          "manifest_reference": "fixtures/corpus/manifest.json",
+          "observed_hash": "sha256:97916445e8bc983bc9945e864a88b303d2f8e7b32dc1e1ef973c598141b0c4a1",
+          "permitted_use_basis": "Repository-authored synthetic content.",
+          "registered": true,
+          "source_reference": {
+            "chunk_id": "synthetic-trade-notice-chunk-001",
+            "corpus_id": "corpus.synthetic-trade-notice.001",
+            "corpus_version": "1.0.0",
+            "ordinal": 0,
+            "source_id": "synthetic-trade-notice-001",
+            "source_version": "1.0.0"
+          }
+        }
+      ],
+      "substantive_status": "DRAFT",
+      "task_file": "tasks/trade_regulatory/research_v1/tasks/permission-block-v1.json",
+      "task_id": "trade-regulatory.permission-block",
+      "task_sha256": "2657497a338417a6f651c83d555f0fc9e460c204661de74c82fb2e7841cdf9b4",
+      "task_version": "1.0.0"
+    }
+  ]
+}

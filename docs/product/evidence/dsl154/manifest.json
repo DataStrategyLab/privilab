@@ -1,82 +1,452 @@
 {
-  "schema_version": "1",
-  "package_id": "dsl-154-prospect-demo",
-  "package_version": "1.0.0",
-  "product_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
-  "evidence_tooling_head_sha": null,
-  "fresh_checkout_sha": null,
-  "build_checkout_sha": null,
-  "final_evidence_commit_sha": null,
-  "final_head_binding": "Final execution handoff; avoid self-referential commit identity",
-  "engineering_status": "NOT_RUN",
+  "acceptance_matrix": "acceptance-matrix.json",
+  "application": {
+    "name": "privilab",
+    "src_git_tree": "0ba3114da1f2d3d665195dcd3ad2a4cc05c6e8ef",
+    "version": "0.1.0"
+  },
+  "artifacts": [
+    {
+      "path": "README.md",
+      "sha256": "7143877ab25d63058236d53b0381c190aff912074a6cf91cb31d4d62b5cdaf40"
+    },
+    {
+      "path": "acceptance-matrix.json",
+      "sha256": "61b4a4bc38236bfd94d8943593bd4df610074bb0b03e508114b85e9d9a3944f2"
+    },
+    {
+      "path": "claims-and-limitations.md",
+      "sha256": "a25a77f97bff02ad416e8656ef6f9bcee2b53fab22dc2b6df47a7c1ecfe44b18"
+    },
+    {
+      "path": "current-source-queue.json",
+      "sha256": "5db7bc27e3285b084938e7d2f9b7e9944c381db576e34409a79379a42ace3a9c"
+    },
+    {
+      "path": "demo-materials.md",
+      "sha256": "d8ff5a8e5795ea62c46cccf4f41aa88c45a2d5c6c39c7964f319082281692cc9"
+    },
+    {
+      "path": "findings.json",
+      "sha256": "4ec8e9c63a4c764969e5cce44b4d94e5622ef1747fa292f733aca3303f25a162"
+    },
+    {
+      "path": "handoffs.md",
+      "sha256": "9c4622a85fd25f39821a52ebec3f8ed3ad9f804c6434366db57c980351b938ef"
+    },
+    {
+      "path": "independent-review.md",
+      "sha256": "0b7b1e8dcf064904529fb927d8264db9c6344fea42dfb6a56093c546efa5c630"
+    },
+    {
+      "path": "preflight.json",
+      "sha256": "ad693ff46d47df1a3d30473f48277992000574714e77114886c4efced9241a89"
+    },
+    {
+      "path": "preview.json",
+      "sha256": "634e4542ef08cb2a3489c669a1adeba14e6e31845ab196e0170715397ffdefad"
+    },
+    {
+      "path": "repeatability.json",
+      "sha256": "a637fc75714d05b9cf2fee84b8692e0fc9ba24019993a0e4400ebbec51e9d930"
+    },
+    {
+      "path": "sbom.cdx.json",
+      "sha256": "cde39f6c56176d642c9ee26ca95be527ef381eef834cda627b30678ce8337965"
+    },
+    {
+      "path": "scenarios.json",
+      "sha256": "5eb8c921166d2ce7ad27d2bcec21ab161f2831df10f0aead0b63ebe170184b1b"
+    },
+    {
+      "path": "security-evidence.json",
+      "sha256": "89c340fd3463cbc2c654a2b459c3cdccc0d4971a2a0c030f4f6bfa8411277bd1"
+    },
+    {
+      "path": "substantive-review.json",
+      "sha256": "9503a5e54a57198f99971374c8faa4e726ec61489f77a7a771f749d3b0a5ab56"
+    },
+    {
+      "path": "supply-chain.json",
+      "sha256": "6f532c9c49a2575b85d5088b43329b6473e2a38096acc5f36109e9b478287a91"
+    },
+    {
+      "path": "verification.json",
+      "sha256": "a32064911ff06c57930e2ca9986bd3b6a4907ed87a463e627f10fd3b53f56a78"
+    }
+  ],
+  "build_checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+  "configuration_bundle_sha256": "3d0493246fcf3fa0204e71595b0c44be6de2ecb8907dd6a12aaca01c78695fb6",
+  "configuration_hash_method": "SHA-256 of UTF-8 sorted compact JSON configuration_identity plus newline; excludes evidence timing and approval fields. Existing per-run application configuration hashes are separately preserved.",
+  "configuration_identity": {
+    "application_src_tree": "0ba3114da1f2d3d665195dcd3ad2a4cc05c6e8ef",
+    "identity_file_hashes": {
+      ".codex/config.toml": "a037657150774b289f0d4f09da384527d0338717731aaf8211cf5d456a49c102",
+      "Dockerfile": "ae0e6be12a2f9d797560b315a1756c9bea80ee91c4adc6dad6c8a1aa5e2bd299",
+      "evals/golden/trade_regulatory_v1/cases.json": "86ba7df867928f822ebc58238d3e3c71fb6ae227e0473431089f509c7104f117",
+      "evals/holdout/README.md": "6e293bf7448dda6651075e871e5c0ee227984622cf10444c62b60b6a839847d4",
+      "fixtures/contexts/manifest.json": "0a961aa7ed985059a721e7697641adf1f380543ceb40a0a254447e68ae9118ab",
+      "fixtures/corpus/manifest.json": "c9db4f7edca27d833b96b57d0b37a4d17aa71c2a20254a07938f1d671fbd364b",
+      "fixtures/permissions/manifest.json": "8b20b0bbcd64ad38dd890d88e7b19bc55274efe7b3ce9ea1cb0abc3df810cd5e",
+      "licenses/registry.yaml": "3db9fd32f38e3fc82ef4b885b4dcb56e04879deef9ad879c3f3c0728a72ec95f",
+      "pyproject.toml": "6fb2a89d756c6df3cb2f30ddeb8b3683315be153da3f9ef31da1269320dfff6c",
+      "src/privilab/adapters/models/openai.py": "2085f8c6a9f5b9c4daab552f45fead1c97b2c27e17c56a0627033fa607129764",
+      "src/privilab/adapters/models/resources/governed_fixtures/manifest.json": "e14d740b2227495bd97d89a3db15429f4db8546254074439feaaf6ad13ddcd4a",
+      "src/privilab/adapters/models/resources/governed_fixtures/synthetic_citation_failure_v1.json": "bd9626aa62c34dc9ff9e9214da45e27e9ed729f1d27edb346d2c41996d00a9e5",
+      "src/privilab/adapters/models/resources/governed_fixtures/synthetic_happy_path_v1.json": "2ab22be190a2fdcf63d790c942cf7f3f91f7883b38e7f5a60a9fcc0100e80c2a",
+      "src/privilab/adapters/models/resources/governed_fixtures/synthetic_malformed_output_v1.json": "9c76518a2801a74c5be99949b0213f2acf385970cde073207f08a9bd78312816",
+      "src/privilab/adapters/models/resources/governed_fixtures/trade_regulatory_grounded_v1.json": "b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+      "src/privilab/adapters/models/resources/governed_fixtures/trade_regulatory_insufficient_source_v1.json": "437c9d9391093c6c4765624bd64921e6524f578ae0490ff2d3681c87ecb641f8",
+      "src/privilab/adapters/models/resources/governed_fixtures/trade_regulatory_missing_chunk_v1.json": "df2bc34d6da7ff229481a8dd10dae0e2586db4c767dd3271213f39e2ad29e975",
+      "src/privilab/adapters/models/resources/governed_fixtures/trade_regulatory_missing_citation_v1.json": "05ac503ca8cdf05d702087d5062349765fb4636cee8cde27754985f809163aec",
+      "src/privilab/evals/contracts.py": "931af4f9586b3512b33e0f71ca91e8630700457e3e6cc4f9a861cb07f1263d0d",
+      "src/privilab/evals/evaluators.py": "35a15cafc638bfbaaaf61e6bb7db54781abd67461014070b05b952b665b91383",
+      "src/privilab/evals/runner.py": "ab8327fba120addf024c1bd08d7547f1a0a77c14c2eca8188831ea24b0e56c50",
+      "src/privilab/evals/trade_regulatory.py": "d953e9028c16c0f332933ee09a92307eafec91cc914ed60f7092ea1c796e50d9",
+      "src/privilab/web/preview.py": "ec3bb58789eca5824d2afdd71a10db250a9b674974effaac5eb093cccee7176f",
+      "tasks/trade_regulatory/research_v1/manifest.json": "04c61f482feadbc5c9dccf7376e971a727b8d2b5215107d4dbc17b6bec887b9b",
+      "tasks/trade_regulatory/research_v1/rubrics/substantive-review-v1.json": "e720b7dc2fc335b8b57111d2485fcf8bf4189bc9aaebafa9e470ba32c4e8c405",
+      "tasks/trade_regulatory/research_v1/tasks/citation-grounding-challenge-v1.json": "6cf48298cfaea3bd2e1a9112c67682fdd461142b995d141b3c714d87581c737e",
+      "tasks/trade_regulatory/research_v1/tasks/critical-eval-failure-v1.json": "30994707250fc166cde61e02da1cc2fb8238404b15cb5a7aeed0f8a0237b310e",
+      "tasks/trade_regulatory/research_v1/tasks/grounded-happy-path-v1.json": "19843cd0b56227ed4339d78c6b42a63202578d4e16b3c449fca3bc6b3ce2cd7a",
+      "tasks/trade_regulatory/research_v1/tasks/insufficient-source-v1.json": "22cc85cfc08a815824a9d559901002aff7779af8d333c78ae60db85757d1be60",
+      "tasks/trade_regulatory/research_v1/tasks/malicious-source-injection-v1.json": "436cb43ca28f5e116956958e4e7b6214e8f52759815c44b7d1df77538e9497a2",
+      "tasks/trade_regulatory/research_v1/tasks/permission-block-v1.json": "2657497a338417a6f651c83d555f0fc9e460c204661de74c82fb2e7841cdf9b4",
+      "uv.lock": "e74fcbc8645afae6a11009c448c0ded74225d75a75a069470c128bac2ac0dd87"
+    },
+    "llm_judge": "N/A",
+    "product_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+    "provider_path": "fixture",
+    "python": "3.13.15",
+    "python_executable_sha256": "b321b81dcd3f55809357bdf672f2dfffe01293e272dec798c13a435cc33f687e",
+    "run_configuration_hashes": [
+      "sha256:054a85d10b60f9daa8f63580da8a829f0a8b6ac7589dfce445657acb0007541d",
+      "sha256:4e577664b66a18d5d5a3ea716f8a1952466d2bf7f066a57e2f69f9e5332a3ac8",
+      "sha256:82b84f847949471b505de71c98f61cf588e387f45cda149f2e2b73e2606c52a4",
+      "sha256:963f517ba47ecb12fe393915ed8dab8f30349bd5d99bf40cc9f080e2a12d51bb",
+      "sha256:a0979182d63b07c5ad93e25b3d51918e0b67636988f536000577ed4493dcd9a0",
+      "sha256:a4ca619832bff3c25826b69aae3e5081bd0915a22e705bb888bc0a1a1d6c90db",
+      "sha256:ba0066b4dfc333c805de9c36e3ce51861df990b407a2cab458b2f2b8868d5306",
+      "sha256:ef458dac8a9988f0493689499b2b9f526f49548a944374e01ba021fffd7de734"
+    ],
+    "runtime_tools_mcp": "N/A",
+    "uv": "0.12.23",
+    "uv_build_requirement": "0.12.23"
+  },
+  "container": {
+    "base_references": [
+      "ghcr.io/astral-sh/uv:0.12.23@sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21 AS uv",
+      "python:3.13.15-slim-bookworm@sha256:c45a22ea000adfd9cda29364bbe7edd23001ce5cc2ad15857cfbf7766943b9ca"
+    ],
+    "build_exit": 2,
+    "handoff": "handoffs.md",
+    "image_id": null,
+    "limitation": "Declared immutable bases are recorded; no current image build or OS SBOM is asserted.",
+    "preview_status": "NOT_RUN",
+    "runtime_digest": null,
+    "status": "BLOCKED_BY_ENVIRONMENT"
+  },
+  "engineering_status": "QUALIFICATION_CAPTURE_COMPLETE; FINAL_H_VERIFICATION_BOUND_IN_AUTHOR_HANDOFF",
   "environment": {
+    "architecture": "arm64",
+    "build_backend_evidence": "pyproject.toml pinned requirement and successful pinned-uv offline build; no separately installed backend distribution inferred.",
+    "cache_record": "verification.json cache_provisioning",
     "classification": "FRESH_CHECKOUT_CACHE_BACKED",
-    "execution_status": "PENDING",
-    "limitation": "Cache-backed installation is not independent network retrieval."
+    "fresh_virtualenv_created_by_bootstrap": true,
+    "limitation": "Cache-backed installation is not independent network retrieval.",
+    "os": "Darwin",
+    "os_release": "27.0.0",
+    "python_version": "3.13.15",
+    "separate_uv_build_distribution_installed": null,
+    "uv_build_requirement": "0.12.23",
+    "uv_lock_sha256": "e74fcbc8645afae6a11009c448c0ded74225d75a75a069470c128bac2ac0dd87",
+    "uv_version": "uv 0.12.23 (46b84fd0b 2026-10-03 aarch64-apple-darwin)"
   },
-  "qualification": null,
-  "artifacts": [],
-  "live_model": {
-    "status": "NOT_RUN",
-    "configured_alias": "gpt-5.6-terra",
-    "resolved_snapshot": null
+  "evaluation": {
+    "criteria_and_evaluators": [
+      {
+        "criterion_id": "authorized-source",
+        "criterion_version": "1.0.0",
+        "criticality": "CRITICAL",
+        "evaluator_kind": "authorized-source",
+        "evaluator_version": "1.0.0",
+        "status": "PASS"
+      },
+      {
+        "criterion_id": "citation-resolution",
+        "criterion_version": "1.0.0",
+        "criticality": "CRITICAL",
+        "evaluator_kind": "citation-resolution",
+        "evaluator_version": "1.0.0",
+        "status": "PASS"
+      },
+      {
+        "criterion_id": "permission-boundary",
+        "criterion_version": "1.0.0",
+        "criticality": "CRITICAL",
+        "evaluator_kind": "permission-boundary",
+        "evaluator_version": "1.0.0",
+        "status": "PASS"
+      },
+      {
+        "criterion_id": "provenance-completeness",
+        "criterion_version": "1.0.0",
+        "criticality": "CRITICAL",
+        "evaluator_kind": "provenance-completeness",
+        "evaluator_version": "1.0.0",
+        "status": "PASS"
+      }
+    ],
+    "critical_policy": "All defined critical criteria must PASS; errors/unknown/fail and ineligible output block. Human review is separate.",
+    "llm_judge": "N/A",
+    "rubric_id": "p0-deterministic-critical-gate",
+    "rubric_version": "1.0.0",
+    "task_id": "p0-source-grounded-output",
+    "task_version": "1.0.0"
   },
-  "llm_judge": "N/A",
-  "runtime_mcp_tools": "N/A",
+  "evidence_tooling_head_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+  "feature_flags": {
+    "demo_path": "local reference fixture",
+    "host": "127.0.0.1",
+    "live_eval": false,
+    "other_demo_feature_flags": "N/A",
+    "port": 8000
+  },
+  "final_evidence_commit_sha": null,
+  "final_head_binding": "Author-session final handoff binds final H; separate review must inspect H, not only P or T. Final-H CI is recorded there without self-referential committed SHA.",
+  "fresh_checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+  "gate5": {
+    "decided_at": null,
+    "decided_by": null,
+    "status": "PENDING",
+    "verdict": null
+  },
+  "golden_set": {
+    "case_version": "1.0.0",
+    "cases": 6,
+    "path": "evals/golden/trade_regulatory_v1/cases.json",
+    "sha256": "86ba7df867928f822ebc58238d3e3c71fb6ae227e0473431089f509c7104f117"
+  },
+  "historical_gate5_unchanged": true,
   "holdout": {
-    "validation_performed": false,
+    "andrew_decision": null,
+    "authorized_owner": null,
+    "evidence": "evals/holdout/README.md",
+    "proposed_condition": "No protected holdout validation; evidence limited to disclosed synthetic/golden scenarios.",
     "status": "PENDING_ANDREW_OPTION_B",
-    "version": null,
-    "owner": null
+    "validation_performed": false,
+    "version": null
   },
   "human_gates": {
-    "substantive_review": {
-      "status": "PENDING",
+    "andrew_gate5": {
+      "evidence": null,
       "reviewer": null,
-      "timestamp": null,
-      "evidence": null
-    },
-    "current_source_verification": {
       "status": "PENDING",
-      "reviewer": null,
-      "timestamp": null,
-      "evidence": null
-    },
-    "human_rehearsal": {
-      "status": "PENDING",
-      "reviewer": null,
-      "timestamp": null,
-      "evidence": null
+      "timestamp": null
     },
     "backup_acceptance": {
-      "status": "PENDING",
+      "evidence": null,
       "reviewer": null,
-      "timestamp": null,
-      "evidence": null
+      "status": "PENDING",
+      "timestamp": null
     },
-    "independent_review": {
-      "status": "PENDING",
+    "claims_approval": {
+      "evidence": null,
       "reviewer": null,
-      "timestamp": null,
-      "evidence": null
+      "status": "PENDING",
+      "timestamp": null
     },
-    "non_author_review": {
-      "status": "PENDING",
+    "current_source_verification": {
+      "evidence": null,
       "reviewer": null,
-      "timestamp": null,
-      "evidence": null
+      "status": "PENDING",
+      "timestamp": null
     },
     "drive_promotion": {
-      "status": "PENDING",
+      "evidence": null,
       "reviewer": null,
-      "timestamp": null,
-      "evidence": null
+      "status": "PENDING",
+      "timestamp": null
     },
-    "andrew_gate5": {
-      "status": "PENDING",
+    "human_rehearsal": {
+      "evidence": null,
       "reviewer": null,
-      "timestamp": null,
-      "evidence": null
+      "status": "PENDING",
+      "timestamp": null
+    },
+    "independent_review": {
+      "evidence": null,
+      "reviewer": null,
+      "status": "PENDING",
+      "timestamp": null
+    },
+    "non_author_review": {
+      "evidence": null,
+      "reviewer": null,
+      "status": "PENDING",
+      "timestamp": null
     }
-  }
+  },
+  "independent_review": {
+    "actual_model": null,
+    "base_sha": "f19f5542105661614c225691c3df780264de8262",
+    "command": "codex review --base f19f5542105661614c225691c3df780264de8262",
+    "configured_model": "gpt-6-astra",
+    "reference": "independent-review.md",
+    "reviewed_head_sha": null,
+    "scope": "Final committed DSL-154 H, unchanged candidate behavior, collector/tests/manifest/evidence/claims/handoff logic.",
+    "status": "PENDING_SEPARATE_CONTEXT"
+  },
+  "known_limitations": "claims-and-limitations.md; findings.json; handoffs.md",
+  "linear": {
+    "issue": "DSL-154",
+    "no_in_review_recommendation_before_independent_review": true,
+    "recommended_transition": null,
+    "status": "In Progress"
+  },
+  "package_artifacts": [
+    {
+      "build_checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+      "bytes": 1,
+      "local_path": "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/dist/.gitignore",
+      "name": ".gitignore",
+      "sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1"
+    },
+    {
+      "build_checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+      "bytes": 170087,
+      "local_path": "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/dist/privilab-0.1.0-py3-none-any.whl",
+      "name": "privilab-0.1.0-py3-none-any.whl",
+      "sha256": "a3273fc728f16a7d74f66c7ae85bd89ddf2211a60995498bc56c441ec74f9df7"
+    },
+    {
+      "build_checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+      "bytes": 154632,
+      "local_path": "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/dist/privilab-0.1.0.tar.gz",
+      "name": "privilab-0.1.0.tar.gz",
+      "sha256": "117bbe0633c089af4a1b67b650b227d18d5bd828720780d9a51f394c52f648de"
+    }
+  ],
+  "package_id": "dsl-154-prospect-demo",
+  "package_version": "1.0.0",
+  "permission_configuration": {
+    "context_dimensions": [
+      "user_id",
+      "role_id",
+      "client_id",
+      "matter_id",
+      "workflow_id"
+    ],
+    "identity": "Per-run configuration hash and source-file hashes; unchanged application-owned policies.",
+    "policy_ids": [
+      "policy.synthetic-preview.001@1.1.0",
+      "policy.trade-regulatory-fixture.001@1.0.0"
+    ],
+    "states": [
+      "ALLOW",
+      "CONDITIONAL",
+      "BLOCK",
+      "UNKNOWN"
+    ]
+  },
+  "product_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+  "prompts": {
+    "agent_framework": "N/A",
+    "fixture_task_instruction_identity": "Per-task files/hashes plus src/privilab/web/preview.py hash in configuration_identity; bodies not duplicated here."
+  },
+  "provider": {
+    "active": "fixture-model-provider",
+    "fixture_content_hashes": [
+      "sha256:05ac503ca8cdf05d702087d5062349765fb4636cee8cde27754985f809163aec",
+      "sha256:2ab22be190a2fdcf63d790c942cf7f3f91f7883b38e7f5a60a9fcc0100e80c2a",
+      "sha256:437c9d9391093c6c4765624bd64921e6524f578ae0490ff2d3681c87ecb641f8",
+      "sha256:b73d98934509f50823287c125bfd15b0a230420b533054840db6138425bab0ef",
+      "sha256:df2bc34d6da7ff229481a8dd10dae0e2586db4c767dd3271213f39e2ad29e975"
+    ],
+    "fixture_models": [
+      "model-output.synthetic-happy-path.001@1.0.0",
+      "model-output.trade-regulatory-grounded.001@1.0.0",
+      "model-output.trade-regulatory-insufficient-source.001@1.0.0",
+      "model-output.trade-regulatory-missing-chunk.001@1.0.0",
+      "model-output.trade-regulatory-missing-citation.001@1.0.0"
+    ],
+    "historical_live_evidence": "DSL-116 / PR #28 only; historical support, no current fixture-candidate live evidence.",
+    "live_model_status": "NOT_RUN",
+    "openai_adapter": {
+      "active_for_qualification": false,
+      "configured_alias": "gpt-5.6-terra",
+      "external_current_source_status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "instruction_sha256": "40475ff224780310283516fb2e7013b7d1dce698df8e5f842c89305a768439f6",
+      "request_controls": "store=false; stream=false; background=false; tools=[]; tool_choice=none; truncation=disabled",
+      "request_version": "openai-responses-v1",
+      "resolved_snapshot": null,
+      "schema_version": "research-result-v1",
+      "sdk_version": "3.19.2"
+    },
+    "version": "1"
+  },
+  "recorded_at": "2026-10-06T18:53:51.099559+00:00",
+  "requalification_triggers": [
+    "application/runtime source",
+    "dependency/lock/toolchain",
+    "container/base image",
+    "provider/model/resolved version",
+    "prompt/instructions/workflow configuration",
+    "corpus/source/legal authority",
+    "permissions/retrieval configuration",
+    "tools/MCP capability",
+    "task/golden/holdout/rubric/evaluator/judge",
+    "material security finding",
+    "externally used mutable claim",
+    "collector/evidence semantics require affected evidence refresh"
+  ],
+  "runtime_candidate_changed": false,
+  "runtime_tools_mcp": "N/A; user-level Linear is engineering integration only",
+  "schema_version": "1",
+  "substantive_review": {
+    "evidence": "substantive-review.json",
+    "prospect_demo_eligible": false,
+    "reviewed_at": null,
+    "reviewer": null,
+    "status": "DRAFT",
+    "task_count": 6
+  },
+  "task_pack": {
+    "id": "trade-regulatory-research",
+    "tasks": [
+      {
+        "id": "trade-regulatory.citation-grounding-challenge",
+        "sha256": "6cf48298cfaea3bd2e1a9112c67682fdd461142b995d141b3c714d87581c737e",
+        "version": "1.0.0"
+      },
+      {
+        "id": "trade-regulatory.critical-eval-failure",
+        "sha256": "30994707250fc166cde61e02da1cc2fb8238404b15cb5a7aeed0f8a0237b310e",
+        "version": "1.0.0"
+      },
+      {
+        "id": "trade-regulatory.grounded-happy-path",
+        "sha256": "19843cd0b56227ed4339d78c6b42a63202578d4e16b3c449fca3bc6b3ce2cd7a",
+        "version": "1.0.0"
+      },
+      {
+        "id": "trade-regulatory.insufficient-source",
+        "sha256": "22cc85cfc08a815824a9d559901002aff7779af8d333c78ae60db85757d1be60",
+        "version": "1.0.0"
+      },
+      {
+        "id": "trade-regulatory.malicious-source-injection",
+        "sha256": "436cb43ca28f5e116956958e4e7b6214e8f52759815c44b7d1df77538e9497a2",
+        "version": "1.0.0"
+      },
+      {
+        "id": "trade-regulatory.permission-block",
+        "sha256": "2657497a338417a6f651c83d555f0fc9e460c204661de74c82fb2e7841cdf9b4",
+        "version": "1.0.0"
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "timezone": "America/New_York",
+  "verification": "verification.json"
 }

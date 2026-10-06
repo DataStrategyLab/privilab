@@ -1,0 +1,762 @@
+{
+  "schema_version": "1",
+  "network_verification_performed": false,
+  "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+  "items": [
+    {
+      "id": "model-availability",
+      "exact_fact_to_verify": "Configured OpenAI alias gpt-5.6-terra remains available and correctly named.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "OpenAI official model documentation: https://platform.openai.com/docs/models",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 172,
+          "wording": "- approved `OpenAIProvider` for `gpt-5.6-terra`, verified with offline SDK tests;"
+        },
+        {
+          "path": "README.md",
+          "line": 437,
+          "wording": "`gpt-5.6-terra`. `RunService.from_openai(...)` constructs the provider and governed"
+        }
+      ],
+      "consequence_if_unverified": "No live-provider availability claim; fixture-only demonstration.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "sdk-api",
+      "exact_fact_to_verify": "Responses API/SDK behavior relied on in any external explanation remains current.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "OpenAI API reference and pinned SDK upstream: https://platform.openai.com/docs/api-reference/responses ; https://github.com/openai/openai-python",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 436,
+          "wording": "`OpenAIProvider` uses the official OpenAI Python SDK and Responses API for exactly"
+        }
+      ],
+      "consequence_if_unverified": "Describe only local adapter/request configuration and offline tests; no current service guarantee.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "retention-privacy",
+      "exact_fact_to_verify": "Any provider retention, ZDR, privacy or confidentiality representation.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "OpenAI official data controls and applicable contract: https://platform.openai.com/docs/guides/your-data",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 447,
+          "wording": "Retention, privacy, confidentiality, privilege, compliance, or security guarantee."
+        },
+        {
+          "path": "README.md",
+          "line": 686,
+          "wording": "- a guarantee of confidentiality, privilege, accuracy, security, or zero hallucinations;"
+        }
+      ],
+      "consequence_if_unverified": "No ZDR/zero-retention/privacy/confidentiality assurance. store=false alone proves none.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "provider-security",
+      "exact_fact_to_verify": "Any current provider security or certification statement.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "Official provider trust/security materials and applicable audit scope: https://trust.openai.com/",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 182,
+          "wording": "This allows security boundaries, retrieval behavior, tests, and evaluation contracts to be exercised without requiring production credentials or sensitive data."
+        },
+        {
+          "path": "README.md",
+          "line": 266,
+          "wording": "The verification contract includes repository, fixture, license, software, and security checks appropriate to the currently implemented P0 capabilities."
+        },
+        {
+          "path": "README.md",
+          "line": 447,
+          "wording": "Retention, privacy, confidentiality, privilege, compliance, or security guarantee."
+        },
+        {
+          "path": "README.md",
+          "line": 684,
+          "wording": "- a cybersecurity certification;"
+        },
+        {
+          "path": "README.md",
+          "line": 686,
+          "wording": "- a guarantee of confidentiality, privilege, accuracy, security, or zero hallucinations;"
+        },
+        {
+          "path": "README.md",
+          "line": 691,
+          "wording": "Organizations remain responsible for determining the legal, contractual, security, professional, operational, and policy requirements applicable to their own deployments."
+        },
+        {
+          "path": "README.md",
+          "line": 717,
+          "wording": "AI-generated code receives the same architectural, security, testing, data, licensing, and review requirements as human-generated code."
+        },
+        {
+          "path": "README.md",
+          "line": 723,
+          "wording": "PriviLAB is intended to become a useful implementation reference for engineers, legal technologists, AI researchers, security practitioners, knowledge-management teams, and organizations building controlled AI systems."
+        },
+        {
+          "path": "README.md",
+          "line": 737,
+          "wording": "- security improvements."
+        },
+        {
+          "path": "README.md",
+          "line": 744,
+          "wording": "- [`SECURITY.md`](SECURITY.md)"
+        },
+        {
+          "path": "README.md",
+          "line": 749,
+          "wording": "## Security"
+        },
+        {
+          "path": "README.md",
+          "line": 755,
+          "wording": "Follow the reporting process described in [`SECURITY.md`](SECURITY.md)."
+        }
+      ],
+      "consequence_if_unverified": "Remove unsupported certification/security claims; describe bounded local regressions only.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "pricing",
+      "exact_fact_to_verify": "Any current model pricing, billing equivalence, or savings comparison.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "Official price schedule: https://openai.com/api/pricing/ plus date/currency/mode and applicable billing evidence",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 133,
+          "wording": "latency / cost where available"
+        },
+        {
+          "path": "README.md",
+          "line": 180,
+          "wording": "Development began with deterministic fixtures and controlled local behavior before introducing the approved OpenAI adapter. The preview and CI remain fixture-based. DSL-116 adds separately gated local `make eval-live` execution with reconstructable usage, latency, and conditional cost evidence; see the [live smoke instructions](docs/architecture/live-eval.md)."
+        },
+        {
+          "path": "README.md",
+          "line": 468,
+          "wording": "pricing, and cost integration/persistence. DSL-115 tests require neither a live"
+        }
+      ],
+      "consequence_if_unverified": "No price, savings or invoice-accuracy claim; fixture usage/cost N/A.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "fireworks",
+      "exact_fact_to_verify": "Fireworks capabilities or availability mentioned as roadmap research.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "Official Fireworks documentation: https://docs.fireworks.ai/ and written relationship evidence if claimed",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 471,
+          "wording": "### Open-weight models and Fireworks AI"
+        },
+        {
+          "path": "README.md",
+          "line": 473,
+          "wording": "A planned research and implementation track will evaluate [Fireworks AI](https://fireworks.ai/) for hosted open-weight inference, model evaluation, dedicated deployments, and workflow-specific fine-tuning."
+        },
+        {
+          "path": "README.md",
+          "line": 495,
+          "wording": "Fireworks integration and model fine-tuning are **roadmap capabilities, not current production features**."
+        },
+        {
+          "path": "README.md",
+          "line": 664,
+          "wording": "Fireworks / open-weight provider"
+        }
+      ],
+      "consequence_if_unverified": "Roadmap only; no implemented provider, compatibility, availability or endorsement claim.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "harvey-lab",
+      "exact_fact_to_verify": "Harvey LAB project status, task availability, license and permitted reuse.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "Canonical referenced repository and exact license/tag: https://github.com/harveyai/harvey-labs",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 1,
+          "wording": "# PriviLAB"
+        },
+        {
+          "path": "README.md",
+          "line": 5,
+          "wording": "PriviLAB is an implementation-oriented framework for exploring how organizations can build AI workflows that are **grounded, permission-aware, evaluated, human-reviewed, traceable, and portable across model providers**."
+        },
+        {
+          "path": "README.md",
+          "line": 7,
+          "wording": "Created by **Data Strategy Lab (DSL)**, PriviLAB is designed first for legal technology, where AI systems must operate within demanding data, access, review, and evidentiary boundaries. The same architectural patterns are relevant to adjacent regulated and high-trust environments including government contracting, financial services, insurance, healthcare administration, compliance, investigations, and enterprise knowledge systems."
+        },
+        {
+          "path": "README.md",
+          "line": 9,
+          "wording": "PriviLAB is not another generic chatbot or thin RAG demo."
+        },
+        {
+          "path": "README.md",
+          "line": 15,
+          "wording": "## Why PriviLAB"
+        },
+        {
+          "path": "README.md",
+          "line": 33,
+          "wording": "PriviLAB treats those questions as **software architecture**, not as after-the-fact governance documentation."
+        },
+        {
+          "path": "README.md",
+          "line": 35,
+          "wording": "## The PriviLAB control loop"
+        },
+        {
+          "path": "README.md",
+          "line": 37,
+          "wording": "The target PriviLAB workflow is:"
+        },
+        {
+          "path": "README.md",
+          "line": 65,
+          "wording": "PriviLAB is therefore designed to make scenarios such as these first-class:"
+        },
+        {
+          "path": "README.md",
+          "line": 89,
+          "wording": "## What makes PriviLAB different"
+        },
+        {
+          "path": "README.md",
+          "line": 99,
+          "wording": "PriviLAB is being designed around task-specific evaluation rather than generic model benchmarks."
+        },
+        {
+          "path": "README.md",
+          "line": 116,
+          "wording": "PriviLAB's architecture treats provenance as a core system capability."
+        },
+        {
+          "path": "README.md",
+          "line": 133,
+          "wording": "latency / cost where available"
+        },
+        {
+          "path": "README.md",
+          "line": 141,
+          "wording": "PriviLAB separates model execution behind provider contracts."
+        },
+        {
+          "path": "README.md",
+          "line": 156,
+          "wording": "PriviLAB does not assume that an AI system should independently release consequential work."
+        },
+        {
+          "path": "README.md",
+          "line": 162,
+          "wording": "PriviLAB is under active development."
+        },
+        {
+          "path": "README.md",
+          "line": 186,
+          "wording": "PriviLAB currently uses a small Python modular-monolith architecture:"
+        },
+        {
+          "path": "README.md",
+          "line": 231,
+          "wording": "PriviLAB currently targets:"
+        },
+        {
+          "path": "README.md",
+          "line": 280,
+          "wording": "The **PriviLAB Reference Demo** uses a compact synthetic-scenario selector and an"
+        },
+        {
+          "path": "README.md",
+          "line": 297,
+          "wording": "   REJECT and REQUEST_REVISION remain available."
+        },
+        {
+          "path": "README.md",
+          "line": 302,
+          "wording": "   and an untrusted-fixture label, never the retrieved text. This demonstrates"
+        },
+        {
+          "path": "README.md",
+          "line": 313,
+          "wording": "run's authorized source/chunk metadata. Other pairs display **Reference unavailable**;"
+        },
+        {
+          "path": "README.md",
+          "line": 331,
+          "wording": "| `PRIVILAB_PREVIEW_DB` | Source-checkout `.local/preview/provenance.sqlite3`; optional absolute database path. |"
+        },
+        {
+          "path": "README.md",
+          "line": 332,
+          "wording": "| `PRIVILAB_PREVIEW_CORPUS_ROOT` | Source-checkout `fixtures/corpus/`, anchored to the resolved location of `config.py`; optional non-empty absolute corpus path. |"
+        },
+        {
+          "path": "README.md",
+          "line": 350,
+          "wording": "Choose a new absolute `PRIVILAB_PREVIEW_DB` path when testing an older checkout's"
+        },
+        {
+          "path": "README.md",
+          "line": 355,
+          "wording": "An optional container workflow is also available:"
+        },
+        {
+          "path": "README.md",
+          "line": 363,
+          "wording": "`PRIVILAB_PREVIEW_CORPUS_ROOT=/app/fixtures/corpus` and"
+        },
+        {
+          "path": "README.md",
+          "line": 364,
+          "wording": "`PRIVILAB_PREVIEW_DB=/app/.local/preview/provenance.sqlite3`. The existing container"
+        },
+        {
+          "path": "README.md",
+          "line": 371,
+          "wording": "One of PriviLAB's foundational design rules is:"
+        },
+        {
+          "path": "README.md",
+          "line": 397,
+          "wording": "The reusable PriviLAB repository is designed around:"
+        },
+        {
+          "path": "README.md",
+          "line": 406,
+          "wording": "PriviLAB is **not** intended to become a repository for client matters, privileged material, work product, identifiable outside-counsel restrictions, restricted legal databases, credentials, or sensitive production data."
+        },
+        {
+          "path": "README.md",
+          "line": 412,
+          "wording": "PriviLAB uses provider abstractions so workflow logic is not tightly coupled to one model platform."
+        },
+        {
+          "path": "README.md",
+          "line": 440,
+          "wording": "`privilab.adapters.models.openai`; it does not accept arbitrary provider identities,"
+        },
+        {
+          "path": "README.md",
+          "line": 475,
+          "wording": "Potential PriviLAB experiments include:"
+        },
+        {
+          "path": "README.md",
+          "line": 480,
+          "wording": "PriviLAB workflow evals"
+        },
+        {
+          "path": "README.md",
+          "line": 491,
+          "wording": "This creates an opportunity to evaluate whether smaller or specialized open-weight models can perform particular legal or regulated-industry tasks efficiently while preserving PriviLAB's permission, evaluation, provenance, and human-review controls."
+        },
+        {
+          "path": "README.md",
+          "line": 501,
+          "wording": "PriviLAB's evaluation architecture is intended to examine behavior at the task and criterion level."
+        },
+        {
+          "path": "README.md",
+          "line": 530,
+          "wording": "## PriviLAB and the legal-AI evaluation ecosystem"
+        },
+        {
+          "path": "README.md",
+          "line": 532,
+          "wording": "PriviLAB is complementary to emerging open legal-AI benchmarking projects such as [Harvey's Legal Agent Benchmark (LAB)](https://github.com/harveyai/harvey-labs)."
+        },
+        {
+          "path": "README.md",
+          "line": 534,
+          "wording": "LAB focuses on evaluating agents against realistic legal tasks and structured rubrics."
+        },
+        {
+          "path": "README.md",
+          "line": 536,
+          "wording": "PriviLAB explores a different but related problem:"
+        },
+        {
+          "path": "README.md",
+          "line": 542,
+          "wording": "For example, future PriviLAB research may evaluate compatible public benchmark tasks or task-design patterns while preserving PriviLAB's own permission, provenance, deployment, and release architecture."
+        },
+        {
+          "path": "README.md",
+          "line": 544,
+          "wording": "PriviLAB is an independent Data Strategy Lab project and is not affiliated with or endorsed by Harvey."
+        },
+        {
+          "path": "README.md",
+          "line": 584,
+          "wording": "PriviLAB patterns can also apply to systems where:"
+        },
+        {
+          "path": "README.md",
+          "line": 640,
+          "wording": "PriviLAB is being developed incrementally rather than attempting to build a complete enterprise legal-AI platform in one release."
+        },
+        {
+          "path": "README.md",
+          "line": 675,
+          "wording": "## What PriviLAB is not"
+        },
+        {
+          "path": "README.md",
+          "line": 677,
+          "wording": "PriviLAB is not:"
+        },
+        {
+          "path": "README.md",
+          "line": 689,
+          "wording": "PriviLAB demonstrates technical controls and implementation patterns."
+        },
+        {
+          "path": "README.md",
+          "line": 695,
+          "wording": "PriviLAB is developed using an evidence-driven engineering process:"
+        },
+        {
+          "path": "README.md",
+          "line": 723,
+          "wording": "PriviLAB is intended to become a useful implementation reference for engineers, legal technologists, AI researchers, security practitioners, knowledge-management teams, and organizations building controlled AI systems."
+        },
+        {
+          "path": "README.md",
+          "line": 759,
+          "wording": "PriviLAB is currently under active development and is being prepared for a future public open-source release."
+        },
+        {
+          "path": "README.md",
+          "line": 767,
+          "wording": "## Built by Data Strategy Lab"
+        },
+        {
+          "path": "README.md",
+          "line": 769,
+          "wording": "**Data Strategy Lab LLC** builds AI, software, data, and implementation systems for organizations operating in complex or high-trust environments."
+        },
+        {
+          "path": "README.md",
+          "line": 771,
+          "wording": "PriviLAB is DSL's reference implementation for exploring a simple idea:"
+        },
+        {
+          "path": "README.md",
+          "line": 790,
+          "wording": "**PriviLAB is an implementation reference, not a certification or legal determination.**"
+        }
+      ],
+      "consequence_if_unverified": "No dependency/reuse/benchmark-comparability claim; repository mention alone is not current verification.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "imanage",
+      "exact_fact_to_verify": "Any iManage integration, interoperability or relationship statement.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "Official iManage documentation https://imanage.com/ and Andrew-held agreement/approval for relationship assertions",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 668,
+          "wording": "iManage / NetDocuments patterns"
+        }
+      ],
+      "consequence_if_unverified": "No implemented integration, partnership or endorsement claim.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "netdocuments",
+      "exact_fact_to_verify": "Any NetDocuments integration, interoperability or relationship statement.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "Official NetDocuments documentation https://www.netdocuments.com/ and Andrew-held agreement/approval for relationship assertions",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 668,
+          "wording": "iManage / NetDocuments patterns"
+        }
+      ],
+      "consequence_if_unverified": "No implemented integration, partnership or endorsement claim.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "oss-status-license",
+      "exact_fact_to_verify": "Current upstream maintenance, licensing and notice requirements for material OSS components.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "Exact pinned upstream distributions/licenses listed in licenses/registry.yaml; official maintainer release records",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 175,
+          "wording": "- source and license metadata validation;"
+        },
+        {
+          "path": "README.md",
+          "line": 266,
+          "wording": "The verification contract includes repository, fixture, license, software, and security checks appropriate to the currently implemented P0 capabilities."
+        },
+        {
+          "path": "README.md",
+          "line": 402,
+          "wording": "- properly licensed materials."
+        },
+        {
+          "path": "README.md",
+          "line": 404,
+          "wording": "Fixtures are versioned and registered with provenance and license metadata."
+        },
+        {
+          "path": "README.md",
+          "line": 493,
+          "wording": "Where licensing, deployment requirements, and benchmark evidence support it, this may include evaluation of U.S.-developed open-weight models."
+        },
+        {
+          "path": "README.md",
+          "line": 717,
+          "wording": "AI-generated code receives the same architectural, security, testing, data, licensing, and review requirements as human-generated code."
+        },
+        {
+          "path": "README.md",
+          "line": 757,
+          "wording": "## Open-source status and licensing"
+        },
+        {
+          "path": "README.md",
+          "line": 759,
+          "wording": "PriviLAB is currently under active development and is being prepared for a future public open-source release."
+        },
+        {
+          "path": "README.md",
+          "line": 761,
+          "wording": "The public licensing model and final open-source boundary must be established before release."
+        },
+        {
+          "path": "README.md",
+          "line": 763,
+          "wording": "Until an explicit repository license is published, do not assume that the absence of a license grants permission to copy, modify, redistribute, or commercially reuse repository contents."
+        },
+        {
+          "path": "README.md",
+          "line": 765,
+          "wording": "Third-party dependencies, datasets, benchmark materials, and fixtures may have their own licenses or usage conditions and are tracked separately where applicable."
+        },
+        {
+          "path": "README.md",
+          "line": 784,
+          "wording": "| **Data posture** | Public / synthetic / anonymized / redacted / properly licensed materials only |"
+        }
+      ],
+      "consequence_if_unverified": "Local version/license inventory is not a current upstream-status or legal-IP clearance determination.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "partnerships",
+      "exact_fact_to_verify": "Any OpenAI/Fireworks/Harvey/iManage/NetDocuments partnership, approval or endorsement.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "Applicable signed agreement or written authorization confirmed by Andrew and relevant named party",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 544,
+          "wording": "PriviLAB is an independent Data Strategy Lab project and is not affiliated with or endorsed by Harvey."
+        }
+      ],
+      "consequence_if_unverified": "No partnership or endorsement is established by this package.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "benchmark-comparison",
+      "exact_fact_to_verify": "Any current benchmark ranking, comparability or superiority statement.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "Original benchmark task/harness/rubric/environment/results with date and actual licenses",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 99,
+          "wording": "PriviLAB is being designed around task-specific evaluation rather than generic model benchmarks."
+        },
+        {
+          "path": "README.md",
+          "line": 493,
+          "wording": "Where licensing, deployment requirements, and benchmark evidence support it, this may include evaluation of U.S.-developed open-weight models."
+        },
+        {
+          "path": "README.md",
+          "line": 532,
+          "wording": "PriviLAB is complementary to emerging open legal-AI benchmarking projects such as [Harvey's Legal Agent Benchmark (LAB)](https://github.com/harveyai/harvey-labs)."
+        },
+        {
+          "path": "README.md",
+          "line": 542,
+          "wording": "For example, future PriviLAB research may evaluate compatible public benchmark tasks or task-design patterns while preserving PriviLAB's own permission, provenance, deployment, and release architecture."
+        },
+        {
+          "path": "README.md",
+          "line": 687,
+          "wording": "- a claim that an AI benchmark establishes production fitness."
+        },
+        {
+          "path": "README.md",
+          "line": 747,
+          "wording": "All contributed data, fixtures, benchmarks, and third-party assets must have a documented source and permitted-use basis."
+        },
+        {
+          "path": "README.md",
+          "line": 765,
+          "wording": "Third-party dependencies, datasets, benchmark materials, and fixtures may have their own licenses or usage conditions and are tracked separately where applicable."
+        }
+      ],
+      "consequence_if_unverified": "No general superiority or comparable-score claim from six synthetic cases.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "advisories",
+      "exact_fact_to_verify": "Current vulnerability/malware/advisory posture of pinned dependencies, uv/build backend and base images.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "Official upstream security advisories; GitHub advisory database https://github.com/advisories ; Python package advisory records; image vendor advisories",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 156,
+          "wording": "PriviLAB does not assume that an AI system should independently release consequential work."
+        },
+        {
+          "path": "README.md",
+          "line": 171,
+          "wording": "- `FixtureModelProvider` for safe model-independent development;"
+        },
+        {
+          "path": "README.md",
+          "line": 249,
+          "wording": "Bootstrap is the only normal step permitted to download the pinned toolchain and locked Python dependencies."
+        },
+        {
+          "path": "README.md",
+          "line": 323,
+          "wording": "revision workflow or lineage; another execution gets an independent run ID. No"
+        },
+        {
+          "path": "README.md",
+          "line": 544,
+          "wording": "PriviLAB is an independent Data Strategy Lab project and is not affiliated with or endorsed by Harvey."
+        },
+        {
+          "path": "README.md",
+          "line": 708,
+          "wording": "independent review"
+        },
+        {
+          "path": "README.md",
+          "line": 765,
+          "wording": "Third-party dependencies, datasets, benchmark materials, and fixtures may have their own licenses or usage conditions and are tracked separately where applicable."
+        }
+      ],
+      "consequence_if_unverified": "No clean vulnerability-scan assertion. Material findings require private bounded triage and Andrew disposition.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    },
+    {
+      "id": "legal-currentness",
+      "exact_fact_to_verify": "Any claim that a displayed legal/regulatory proposition states current law.",
+      "why_it_matters": "Prevents an externally presented mutable fact from exceeding evidence or approved scope.",
+      "preferred_primary_source": "Qualified reviewer selects primary issuing authority, jurisdiction, effective date and currentness source before any substantive-law statement",
+      "required_freshness": "Current as of proposed prospect demonstration; verify before script approval and recheck after material change.",
+      "current_repository_wording": [
+        {
+          "path": "README.md",
+          "line": 17,
+          "wording": "Large language models are increasingly capable of legal research, document analysis, knowledge retrieval, drafting, extraction, and multi-step reasoning."
+        }
+      ],
+      "consequence_if_unverified": "Synthetic notice has no legal authority. No current-law assertion is authorized.",
+      "owner": "Andrew-designated external researcher",
+      "status": "EXTERNAL_CURRENT_SOURCE_REQUIRED",
+      "verified_at": null,
+      "verification_source": null,
+      "result": null
+    }
+  ]
+}
