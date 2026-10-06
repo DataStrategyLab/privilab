@@ -25,5 +25,13 @@
   "merge_base": "f19f5542105661614c225691c3df780264de8262",
   "product_candidate": "f19f5542105661614c225691c3df780264de8262",
   "python": "3.13.15",
+  "remediation_start": {
+    "head": "c1001ffa0477771848f47f5fffd37893983843c3",
+    "historical_gate5_unchanged": true,
+    "product_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+    "source": "Author pre-edit git inspection",
+    "superseded_tooling_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+    "working_tree_clean": true
+  },
   "uv": "uv 0.12.6 (7938ca5d5 2026-08-25 aarch64-apple-darwin)"
 }

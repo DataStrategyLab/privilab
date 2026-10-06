@@ -37,6 +37,7 @@
       "id": "A01",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-004",
@@ -48,7 +49,7 @@
         "ADR-008"
       ],
       "status": "PASS",
-      "status_basis": "Current candidate evidence is recorded; actual human/external approval remains separate."
+      "status_basis": "Refreshed from exact T2 557fb5d5d8f9f14c134577001fb1ccc41633ec4f; composite baseline/final history evidence and replay-masking regressions pass. See verification.json, findings.json and scenarios.json. Human/external gates remain separate."
     },
     {
       "criterion": "AI Release Candidate Manifest complete.",
@@ -76,6 +77,7 @@
       "id": "A02",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-004",
@@ -87,7 +89,7 @@
         "ADR-008"
       ],
       "status": "PASS",
-      "status_basis": "Current candidate evidence is recorded; actual human/external approval remains separate."
+      "status_basis": "Refreshed from exact T2 557fb5d5d8f9f14c134577001fb1ccc41633ec4f; composite baseline/final history evidence and replay-masking regressions pass. See verification.json, findings.json and scenarios.json. Human/external gates remain separate."
     },
     {
       "criterion": "Runtime/dependency state recorded.",
@@ -115,6 +117,7 @@
       "id": "A03",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-004",
@@ -154,6 +157,7 @@
       "id": "A04",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-004",
@@ -193,6 +197,7 @@
       "id": "A05",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-004",
@@ -232,6 +237,7 @@
       "id": "A06",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-004",
@@ -271,6 +277,7 @@
       "id": "A07",
       "limitation": "No runtime MCP/model-controlled tools. User-level Linear is engineering-only.",
       "owner": "Codex engineering records absence",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": false,
       "requirement_controls": [
         "FR-004",
@@ -310,6 +317,7 @@
       "id": "A08",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-004",
@@ -321,7 +329,7 @@
         "ADR-008"
       ],
       "status": "BLOCKED BY ENVIRONMENT",
-      "status_basis": "Fresh bootstrap/build/CI passed; current container image/build is unverified because Docker socket access is denied. Declared base digests are recorded."
+      "status_basis": "New T2 local checks are recorded where applicable; container execution remains unqualified. Original prior-T Docker denial is retained with its original SHA; no T2 container rerun is asserted."
     },
     {
       "criterion": "Fresh setup succeeds.",
@@ -349,6 +357,7 @@
       "id": "A09",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-004",
@@ -360,7 +369,7 @@
         "ADR-008"
       ],
       "status": "PASS",
-      "status_basis": "Current candidate evidence is recorded; actual human/external approval remains separate."
+      "status_basis": "Refreshed from exact T2 557fb5d5d8f9f14c134577001fb1ccc41633ec4f; composite baseline/final history evidence and replay-masking regressions pass. See verification.json, findings.json and scenarios.json. Human/external gates remain separate."
     },
     {
       "criterion": "`make ci` passes.",
@@ -388,6 +397,7 @@
       "id": "A10",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-004",
@@ -399,7 +409,7 @@
         "ADR-008"
       ],
       "status": "PASS",
-      "status_basis": "Current candidate evidence is recorded; actual human/external approval remains separate."
+      "status_basis": "Refreshed from exact T2 557fb5d5d8f9f14c134577001fb1ccc41633ec4f; composite baseline/final history evidence and replay-masking regressions pass. See verification.json, findings.json and scenarios.json. Human/external gates remain separate."
     },
     {
       "criterion": "DSL-153 dependency/bootstrap/container behavior verified.",
@@ -428,6 +438,7 @@
       "id": "B01",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "NFR-001",
@@ -436,7 +447,7 @@
         "NFR-010"
       ],
       "status": "BLOCKED BY ENVIRONMENT",
-      "status_basis": "Fresh bootstrap/build/CI passed; current container image/build is unverified because Docker socket access is denied. Declared base digests are recorded."
+      "status_basis": "New T2 local checks are recorded where applicable; container execution remains unqualified. Original prior-T Docker denial is retained with its original SHA; no T2 container rerun is asserted."
     },
     {
       "criterion": "SBOM generated/exported where supported.",
@@ -465,6 +476,7 @@
       "id": "B02",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "NFR-001",
@@ -502,6 +514,7 @@
       "id": "B03",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "NFR-001",
@@ -539,6 +552,7 @@
       "id": "B04",
       "limitation": null,
       "owner": "Andrew-designated external researcher",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "NFR-001",
@@ -576,6 +590,7 @@
       "id": "B05",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "NFR-001",
@@ -584,7 +599,7 @@
         "NFR-010"
       ],
       "status": "BLOCKED BY ENVIRONMENT",
-      "status_basis": "Fresh bootstrap/build/CI passed; current container image/build is unverified because Docker socket access is denied. Declared base digests are recorded."
+      "status_basis": "New T2 local checks are recorded where applicable; container execution remains unqualified. Original prior-T Docker denial is retained with its original SHA; no T2 container rerun is asserted."
     },
     {
       "criterion": "Build provenance/attestation captured where supported.",
@@ -613,6 +628,7 @@
       "id": "B06",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "NFR-001",
@@ -650,6 +666,7 @@
       "id": "B07",
       "limitation": null,
       "owner": "Andrew-designated external researcher",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "NFR-001",
@@ -687,6 +704,7 @@
       "id": "B08",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "NFR-001",
@@ -724,6 +742,7 @@
       "id": "C01",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-006",
@@ -731,7 +750,7 @@
         "ADR-006"
       ],
       "status": "PASS",
-      "status_basis": "Current candidate evidence is recorded; actual human/external approval remains separate."
+      "status_basis": "Refreshed from exact T2 557fb5d5d8f9f14c134577001fb1ccc41633ec4f; composite baseline/final history evidence and replay-masking regressions pass. See verification.json, findings.json and scenarios.json. Human/external gates remain separate."
     },
     {
       "criterion": "Critical criteria evaluated separately from aggregate quality.",
@@ -760,6 +779,7 @@
       "id": "C02",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-006",
@@ -796,6 +816,7 @@
       "id": "C03",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-006",
@@ -832,6 +853,7 @@
       "id": "C04",
       "limitation": "No LLM judge/model-based grader; four deterministic evaluators only.",
       "owner": "Codex engineering records absence",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": false,
       "requirement_controls": [
         "FR-006",
@@ -868,6 +890,7 @@
       "id": "C05",
       "limitation": null,
       "owner": "Andrew Tsintsiruk",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-006",
@@ -904,6 +927,7 @@
       "id": "C06",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-006",
@@ -940,6 +964,7 @@
       "id": "C07",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-006",
@@ -947,7 +972,7 @@
         "ADR-006"
       ],
       "status": "PASS",
-      "status_basis": "Current candidate evidence is recorded; actual human/external approval remains separate."
+      "status_basis": "Refreshed from exact T2 557fb5d5d8f9f14c134577001fb1ccc41633ec4f; composite baseline/final history evidence and replay-masking regressions pass. See verification.json, findings.json and scenarios.json. Human/external gates remain separate."
     },
     {
       "criterion": "Material corrections become evals or documented exclusions.",
@@ -976,6 +1001,7 @@
       "id": "C08",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-006",
@@ -983,7 +1009,7 @@
         "ADR-006"
       ],
       "status": "PASS",
-      "status_basis": "No material product defect discovered in covered execution; initial author test assertion and command invocation errors were corrected without product changes. See findings.json."
+      "status_basis": "Refreshed from exact T2 557fb5d5d8f9f14c134577001fb1ccc41633ec4f; composite baseline/final history evidence and replay-masking regressions pass. See verification.json, findings.json and scenarios.json. Human/external gates remain separate."
     },
     {
       "criterion": "Every prospect-visible substantive task has an explicit review disposition.",
@@ -1248,6 +1274,7 @@
       "id": "E01",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-002",
@@ -1286,6 +1313,7 @@
       "id": "E02",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-002",
@@ -1324,6 +1352,7 @@
       "id": "E03",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-002",
@@ -1362,6 +1391,7 @@
       "id": "E04",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-002",
@@ -1400,6 +1430,7 @@
       "id": "E05",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-002",
@@ -1438,6 +1469,7 @@
       "id": "E06",
       "limitation": "No runtime MCP/model tools or LLM judge is implemented. This does not validate a hypothetical capability.",
       "owner": "Codex engineering records absence",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": false,
       "requirement_controls": [
         "FR-002",
@@ -1476,6 +1508,7 @@
       "id": "E07",
       "limitation": "No runtime MCP/model tools or LLM judge is implemented. This does not validate a hypothetical capability.",
       "owner": "Codex engineering records absence",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": false,
       "requirement_controls": [
         "FR-002",
@@ -1514,6 +1547,7 @@
       "id": "E08",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-002",
@@ -1552,6 +1586,7 @@
       "id": "E09",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-002",
@@ -1590,6 +1625,7 @@
       "id": "E10",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-002",
@@ -1628,6 +1664,7 @@
       "id": "F01",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-009",
@@ -1637,7 +1674,7 @@
         "Human review/history (canonical FR ID unavailable)"
       ],
       "status": "PASS",
-      "status_basis": "Current candidate evidence is recorded; actual human/external approval remains separate."
+      "status_basis": "Refreshed from exact T2 557fb5d5d8f9f14c134577001fb1ccc41633ec4f; composite baseline/final history evidence and replay-masking regressions pass. See verification.json, findings.json and scenarios.json. Human/external gates remain separate."
     },
     {
       "criterion": "Model/provider/version recorded.",
@@ -1664,6 +1701,7 @@
       "id": "F02",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-009",
@@ -1700,6 +1738,7 @@
       "id": "F03",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-009",
@@ -1736,6 +1775,7 @@
       "id": "F04",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-009",
@@ -1772,6 +1812,7 @@
       "id": "F05",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-009",
@@ -1808,6 +1849,7 @@
       "id": "F06",
       "limitation": null,
       "owner": "Andrew Tsintsiruk",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-009",
@@ -1844,6 +1886,7 @@
       "id": "F07",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-009",
@@ -1880,6 +1923,7 @@
       "id": "F08",
       "limitation": null,
       "owner": "Codex engineering",
+      "qualification_tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "refresh_required": true,
       "requirement_controls": [
         "FR-009",
@@ -1889,7 +1933,7 @@
         "Human review/history (canonical FR ID unavailable)"
       ],
       "status": "PASS",
-      "status_basis": "Current candidate evidence is recorded; actual human/external approval remains separate."
+      "status_basis": "Refreshed from exact T2 557fb5d5d8f9f14c134577001fb1ccc41633ec4f; composite baseline/final history evidence and replay-masking regressions pass. See verification.json, findings.json and scenarios.json. Human/external gates remain separate."
     },
     {
       "criterion": "10–15 minute script reviewed.",
@@ -2342,7 +2386,7 @@
         "Andrew Gate 5 authority"
       ],
       "status": "PENDING HUMAN",
-      "status_basis": "Separate reviewer context has not run; no author self-approval, non-author approval or final Andrew decision is recorded."
+      "status_basis": "Prior-H independent review reported one P2, now resolved by author regression/T2 requalification proof. Separate review of new final H2, non-author approval and Andrew decisions remain pending as applicable."
     },
     {
       "criterion": "No unresolved Critical/High qualification finding.",
@@ -2377,7 +2421,7 @@
         "Andrew Gate 5 authority"
       ],
       "status": "PENDING HUMAN",
-      "status_basis": "Separate reviewer context has not run; no author self-approval, non-author approval or final Andrew decision is recorded."
+      "status_basis": "Prior-H independent review reported one P2, now resolved by author regression/T2 requalification proof. Separate review of new final H2, non-author approval and Andrew decisions remain pending as applicable."
     },
     {
       "criterion": "Appropriate non-author human review complete.",
@@ -2412,7 +2456,7 @@
         "Andrew Gate 5 authority"
       ],
       "status": "PENDING HUMAN",
-      "status_basis": "Separate reviewer context has not run; no author self-approval, non-author approval or final Andrew decision is recorded."
+      "status_basis": "Prior-H independent review reported one P2, now resolved by author regression/T2 requalification proof. Separate review of new final H2, non-author approval and Andrew decisions remain pending as applicable."
     },
     {
       "criterion": "Evidence package reconstructs release decision.",
@@ -2447,7 +2491,7 @@
         "Andrew Gate 5 authority"
       ],
       "status": "PENDING ANDREW",
-      "status_basis": "Separate reviewer context has not run; no author self-approval, non-author approval or final Andrew decision is recorded."
+      "status_basis": "Prior-H independent review reported one P2, now resolved by author regression/T2 requalification proof. Separate review of new final H2, non-author approval and Andrew decisions remain pending as applicable."
     },
     {
       "criterion": "Andrew records final Gate 5 decision.",
@@ -2482,7 +2526,7 @@
         "Andrew Gate 5 authority"
       ],
       "status": "PENDING ANDREW",
-      "status_basis": "Separate reviewer context has not run; no author self-approval, non-author approval or final Andrew decision is recorded."
+      "status_basis": "Prior-H independent review reported one P2, now resolved by author regression/T2 requalification proof. Separate review of new final H2, non-author approval and Andrew decisions remain pending as applicable."
     }
   ],
   "final_status_recorded_at": "2026-10-06T18:53:51.066068+00:00",
@@ -2534,6 +2578,18 @@
   "inventory_created_before_capture": true,
   "inventory_date": "2026-10-06",
   "issue": "DSL-154",
+  "remediation_qualification": {
+    "finding_id": "DSL154-P2-HISTORY-FAILURE-MASKING",
+    "supersedes": {
+      "final_evidence_sha": "c1001ffa0477771848f47f5fffd37893983843c3",
+      "original_package_reference": "c1001ffa0477771848f47f5fffd37893983843c3:docs/product/evidence/dsl154/",
+      "original_verification_sha256": "a32064911ff06c57930e2ca9986bd3b6a4907ed87a463e627f10fd3b53f56a78",
+      "reason": "Independent-review P2: final history observation masked baseline replay failure. Collector semantics corrected; affected qualification regenerated from T2.",
+      "status": "SUPERSEDED_FOR_FINAL_QUALIFICATION",
+      "tooling_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
+    },
+    "tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
+  },
   "reuse_rule": "Source/license/task/rubric identities CAN_BE_REUSED_IF_IDENTITY_UNCHANGED; present-time execution, external freshness, and human approval require separate evidence.",
   "schema_version": "1",
   "source_url": "https://linear.app/rohic/issue/DSL-154/p1-01-qualify-post-dsl-153-privilab-candidate-for-prospect-demo"

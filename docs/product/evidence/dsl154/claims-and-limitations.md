@@ -15,7 +15,7 @@ repository text alone has not freshly verified any external fact.
 | Authorization-scoped | Qualified | cross-context tests; source IDs | SQLite filtering before model input | None for local observation | DMS/SSO enforcement or universal isolation proof |
 | Source-grounded | Qualified | source worksheets; positive/negative cases | Structural synthetic source/chunk checks | Current law if separately asserted | Substantive truth or complete legal authority |
 | Evaluated | Qualified | CI; six golden cases; four critical criteria | Versioned deterministic checks | Benchmark facts if separately asserted | Broad legal benchmark or holdout validation |
-| Traceable | Qualified | run IDs/config hashes; history snapshots | Metadata reconstructs identity/disposition, not answer replay | None for local observation | Full forensic audit or retained-content replay |
+| Traceable | Qualified | run IDs/config hashes; baseline and final history snapshots | Metadata reconstructs identity/disposition, not answer replay | None for local observation | Full forensic audit or retained-content replay |
 | Human-reviewed | Only with actual evidence | synthetic decisions; pending worksheets | UI supports decisions; automated clicks are simulations | Named reviewer evidence | Lawyer/domain approval inferred from APPROVE |
 | Provider-portable | Architecture qualification only | provider contract; offline adapter tests | Fixture path qualified; alternate outcomes not established | Model/API/provider availability | Validated cross-vendor interchangeability |
 | Private | Not established | local execution boundary | Locality is deployment evidence only | Provider data controls/contracts | Guaranteed privacy or confidentiality |
@@ -63,5 +63,9 @@ local decisions are synthetic exercises. The sentence is not a guarantee or rele
   access and any resulting operator verification are recorded separately.
 - Metadata/history cannot reproduce an answer. Hashes establish identity, not truth.
 - Automated preview checks do not replace human keyboard/zoom/visual acceptance.
-- Independent review, non-author approval, current facts, substantive review,
+- Prior-H review found a P2 collector aggregation defect; corrected composite
+  history evidence requires both observations to pass. See findings.json for
+  regression/requalification proof. Unaffected prior-T browser/container evidence
+  retains its original identity and is not new T2 execution.
+- Independent review of new H2, non-author approval, current facts, substantive review,
   rehearsal, accepted backup media, Drive promotion and final Gate 5 remain pending.

@@ -1,6 +1,7 @@
 {
   "automated_checks_scope": "Registration, source identity/hash, license record, and observed structural citation behavior only. Source text cannot establish current law.",
   "candidate_sha": "f19f5542105661614c225691c3df780264de8262",
+  "observation_execution_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
   "qualified_review_complete": false,
   "schema_version": "1",
   "source_of_truth": "Canonical task/rubric/source files unchanged",
@@ -10,8 +11,10 @@
       "audience": "Internal engineering/domain reviewers; proposed prospect use requires approval",
       "citation_observation": {
         "criterion_status": "FAIL",
+        "execution_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
         "expected_intentional_failure": true,
         "local_status": "Observed expected structural behavior; no substantive legal conclusion",
+        "run_id": "63b372ce-c469-4188-8ef1-993895304bd4",
         "source_chunk_pairs": [
           {
             "chunk_id": "synthetic-missing-chunk-001",
@@ -73,8 +76,10 @@
       "audience": "Internal engineering/domain reviewers; proposed prospect use requires approval",
       "citation_observation": {
         "criterion_status": "UNKNOWN",
+        "execution_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
         "expected_intentional_failure": true,
         "local_status": "Observed expected structural behavior; no substantive legal conclusion",
+        "run_id": "48b41269-2c7b-42bb-975b-4e3d907f574a",
         "source_chunk_pairs": []
       },
       "criterion_dispositions": {},
@@ -131,8 +136,10 @@
       "audience": "Internal engineering/domain reviewers; proposed prospect use requires approval",
       "citation_observation": {
         "criterion_status": "PASS",
+        "execution_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
         "expected_intentional_failure": false,
         "local_status": "Observed expected structural behavior; no substantive legal conclusion",
+        "run_id": "f5f329b9-5089-4b09-aef2-8aeb6b4ff20d",
         "source_chunk_pairs": [
           {
             "chunk_id": "synthetic-trade-notice-chunk-001",
@@ -194,8 +201,10 @@
       "audience": "Internal engineering/domain reviewers; proposed prospect use requires approval",
       "citation_observation": {
         "criterion_status": "PASS",
+        "execution_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
         "expected_intentional_failure": false,
         "local_status": "Observed expected structural behavior; no substantive legal conclusion",
+        "run_id": "3c47489e-6043-4c03-ac6f-ac8f68051beb",
         "source_chunk_pairs": [
           {
             "chunk_id": "synthetic-trade-notice-chunk-001",
@@ -257,8 +266,10 @@
       "audience": "Internal engineering/domain reviewers; proposed prospect use requires approval",
       "citation_observation": {
         "criterion_status": "FAIL",
+        "execution_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
         "expected_intentional_failure": true,
         "local_status": "Observed expected structural behavior; no substantive legal conclusion",
+        "run_id": "633263b2-0322-415c-af4a-f8f99a085d18",
         "source_chunk_pairs": [
           {
             "chunk_id": "synthetic-trade-notice-chunk-001",
@@ -341,8 +352,10 @@
       "audience": "Internal engineering/domain reviewers; proposed prospect use requires approval",
       "citation_observation": {
         "criterion_status": "UNKNOWN",
+        "execution_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
         "expected_intentional_failure": false,
         "local_status": "Observed expected structural behavior; no substantive legal conclusion",
+        "run_id": "2079f1e5-654f-4c84-a2c3-965c673d62f4",
         "source_chunk_pairs": []
       },
       "criterion_dispositions": {},

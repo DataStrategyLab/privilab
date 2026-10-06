@@ -8,15 +8,15 @@
   "artifacts": [
     {
       "path": "README.md",
-      "sha256": "7143877ab25d63058236d53b0381c190aff912074a6cf91cb31d4d62b5cdaf40"
+      "sha256": "dd62f524855762c99ff4196bf42348a6975894bf67fe04152016027849d533d5"
     },
     {
       "path": "acceptance-matrix.json",
-      "sha256": "61b4a4bc38236bfd94d8943593bd4df610074bb0b03e508114b85e9d9a3944f2"
+      "sha256": "6e704b82f029ed7b88834a5f6754798814b76b3847538937b1f8da4dea2149ff"
     },
     {
       "path": "claims-and-limitations.md",
-      "sha256": "a25a77f97bff02ad416e8656ef6f9bcee2b53fab22dc2b6df47a7c1ecfe44b18"
+      "sha256": "ec3692863f6f66daa1809248c5cc60f834ebb370db37913232d599cd302ffd48"
     },
     {
       "path": "current-source-queue.json",
@@ -24,23 +24,23 @@
     },
     {
       "path": "demo-materials.md",
-      "sha256": "d8ff5a8e5795ea62c46cccf4f41aa88c45a2d5c6c39c7964f319082281692cc9"
+      "sha256": "cb9ff1ecf148cc86aeb28cc6f9406b5b0af8c74c4b85efd514b460e0e6e2014f"
     },
     {
       "path": "findings.json",
-      "sha256": "4ec8e9c63a4c764969e5cce44b4d94e5622ef1747fa292f733aca3303f25a162"
+      "sha256": "daebca32e97f644db6f961036f28f3a2fb74e189af4f194a5bafd29ce293babe"
     },
     {
       "path": "handoffs.md",
-      "sha256": "9c4622a85fd25f39821a52ebec3f8ed3ad9f804c6434366db57c980351b938ef"
+      "sha256": "a187cda0ff74cf23c45f1503624d85aee7d2c44a957f5e84036f2ba180fc972a"
     },
     {
       "path": "independent-review.md",
-      "sha256": "0b7b1e8dcf064904529fb927d8264db9c6344fea42dfb6a56093c546efa5c630"
+      "sha256": "db2e85bbb5916d7c49b815f232f0684acaf89dc1682cfebdc6a66c7bd3f23632"
     },
     {
       "path": "preflight.json",
-      "sha256": "ad693ff46d47df1a3d30473f48277992000574714e77114886c4efced9241a89"
+      "sha256": "1469eccad59704b4b79c827aa907e5945bfed7b697cb8e44cca5791df3c0cd07"
     },
     {
       "path": "preview.json",
@@ -48,34 +48,50 @@
     },
     {
       "path": "repeatability.json",
-      "sha256": "a637fc75714d05b9cf2fee84b8692e0fc9ba24019993a0e4400ebbec51e9d930"
+      "sha256": "0924aa855fc9a6b10ed2d92a3ac07a7c7b55c1a5ff9b0071fc4e074809d68c9f"
     },
     {
       "path": "sbom.cdx.json",
-      "sha256": "cde39f6c56176d642c9ee26ca95be527ef381eef834cda627b30678ce8337965"
+      "sha256": "1a1da079c54cd1ad2e12cda384dbc0794c30b1d286a610660214acb3f53e9b09"
     },
     {
       "path": "scenarios.json",
-      "sha256": "5eb8c921166d2ce7ad27d2bcec21ab161f2831df10f0aead0b63ebe170184b1b"
+      "sha256": "a1df626648d06f163d1f3773598d42c7dac713f203c385bf94b6185ea3a10be6"
     },
     {
       "path": "security-evidence.json",
-      "sha256": "89c340fd3463cbc2c654a2b459c3cdccc0d4971a2a0c030f4f6bfa8411277bd1"
+      "sha256": "a5ee20af974bdc5a5459ccd25bea946fa374c19f5c86ce4254213626f4df6e2f"
     },
     {
       "path": "substantive-review.json",
-      "sha256": "9503a5e54a57198f99971374c8faa4e726ec61489f77a7a771f749d3b0a5ab56"
+      "sha256": "a18879982344654134a099bf7f4979a78b707ac75d100032fd23911b109e0985"
     },
     {
       "path": "supply-chain.json",
-      "sha256": "6f532c9c49a2575b85d5088b43329b6473e2a38096acc5f36109e9b478287a91"
+      "sha256": "3787872d309996ed4225466ffeafe5738f06ddba46e4a423cb75f61b4e0aae30"
     },
     {
       "path": "verification.json",
-      "sha256": "a32064911ff06c57930e2ca9986bd3b6a4907ed87a463e627f10fd3b53f56a78"
+      "sha256": "460a4d06ee2d82effb0a48c36e189f208a9c929285e53452807ecb6833f2ccc3"
     }
   ],
-  "build_checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+  "build_checkout_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
+  "carried_forward_evidence": {
+    "browser": {
+      "basis": "Product source, routes, configuration and historical helper remain byte-identical; only DSL-154 collector aggregation/tests changed.",
+      "execution_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+      "path": "preview.json",
+      "scope": "Unaffected actual localhost browser observations; prior T execution only, not a T2 browser rerun or human rehearsal.",
+      "sha256": "634e4542ef08cb2a3489c669a1adeba14e6e31845ab196e0170715397ffdefad"
+    },
+    "container": {
+      "current_T2_execution": "NOT_RUN_UNAFFECTED_SCOPE",
+      "execution_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+      "scope": "Prior Docker socket denial retained with original identity; no new container qualification asserted.",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "verification_reference": "c1001ffa0477771848f47f5fffd37893983843c3:docs/product/evidence/dsl154/verification.json#container-build"
+    }
+  },
   "configuration_bundle_sha256": "3d0493246fcf3fa0204e71595b0c44be6de2ecb8907dd6a12aaca01c78695fb6",
   "configuration_hash_method": "SHA-256 of UTF-8 sorted compact JSON configuration_identity plus newline; excludes evidence timing and approval fields. Existing per-run application configuration hashes are separately preserved.",
   "configuration_identity": {
@@ -139,14 +155,18 @@
       "python:3.13.15-slim-bookworm@sha256:c45a22ea000adfd9cda29364bbe7edd23001ce5cc2ad15857cfbf7766943b9ca"
     ],
     "build_exit": 2,
+    "current_T2_execution": "NOT_RUN_UNAFFECTED_SCOPE",
+    "execution_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
     "handoff": "handoffs.md",
     "image_id": null,
     "limitation": "Declared immutable bases are recorded; no current image build or OS SBOM is asserted.",
     "preview_status": "NOT_RUN",
     "runtime_digest": null,
-    "status": "BLOCKED_BY_ENVIRONMENT"
+    "scope": "Prior Docker socket denial retained with original identity; no new container qualification asserted.",
+    "status": "BLOCKED_BY_ENVIRONMENT",
+    "verification_reference": "c1001ffa0477771848f47f5fffd37893983843c3:docs/product/evidence/dsl154/verification.json#container-build"
   },
-  "engineering_status": "QUALIFICATION_CAPTURE_COMPLETE; FINAL_H_VERIFICATION_BOUND_IN_AUTHOR_HANDOFF",
+  "engineering_status": "CORRECTED_T2_QUALIFICATION_COMPLETE; FINAL_H2_VERIFICATION_BOUND_IN_AUTHOR_HANDOFF",
   "environment": {
     "architecture": "arm64",
     "build_backend_evidence": "pyproject.toml pinned requirement and successful pinned-uv offline build; no separately installed backend distribution inferred.",
@@ -204,7 +224,7 @@
     "task_id": "p0-source-grounded-output",
     "task_version": "1.0.0"
   },
-  "evidence_tooling_head_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+  "evidence_tooling_head_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
   "feature_flags": {
     "demo_path": "local reference fixture",
     "host": "127.0.0.1",
@@ -213,8 +233,8 @@
     "port": 8000
   },
   "final_evidence_commit_sha": null,
-  "final_head_binding": "Author-session final handoff binds final H; separate review must inspect H, not only P or T. Final-H CI is recorded there without self-referential committed SHA.",
-  "fresh_checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+  "final_head_binding": "Author-session final handoff binds concrete final H2 and fresh-H2 verification; T2 is the qualification execution identity.",
+  "fresh_checkout_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
   "gate5": {
     "decided_at": null,
     "decided_by": null,
@@ -228,6 +248,15 @@
     "sha256": "86ba7df867928f822ebc58238d3e3c71fb6ae227e0473431089f509c7104f117"
   },
   "historical_gate5_unchanged": true,
+  "history_observation_contract": {
+    "aggregation": "Both required observations complete and passing; any failed/missing/duplicate/incomplete/interrupted observation fails qualification.",
+    "metadata_only": true,
+    "required_phases": [
+      "baseline",
+      "final"
+    ],
+    "scenario_id": "history-reopen"
+  },
   "holdout": {
     "andrew_decision": null,
     "authorized_owner": null,
@@ -292,10 +321,11 @@
     "base_sha": "f19f5542105661614c225691c3df780264de8262",
     "command": "codex review --base f19f5542105661614c225691c3df780264de8262",
     "configured_model": "gpt-6-astra",
+    "prior_review_reference": "findings.json: prior_independent_review",
     "reference": "independent-review.md",
     "reviewed_head_sha": null,
-    "scope": "Final committed DSL-154 H, unchanged candidate behavior, collector/tests/manifest/evidence/claims/handoff logic.",
-    "status": "PENDING_SEPARATE_CONTEXT"
+    "scope": "Final committed DSL-154 H2, unchanged candidate behavior, collector/tests/manifest/evidence/claims/handoff logic.",
+    "status": "PENDING_SEPARATE_CONTEXT_FOR_H2"
   },
   "known_limitations": "claims-and-limitations.md; findings.json; handoffs.md",
   "linear": {
@@ -306,16 +336,16 @@
   },
   "package_artifacts": [
     {
-      "build_checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+      "build_checkout_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "bytes": 170087,
-      "local_path": "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/dist/privilab-0.1.0-py3-none-any.whl",
+      "local_path": "/private/tmp/privilab-dsl154-T2-557fb5d/.local/dsl154/dist/privilab-0.1.0-py3-none-any.whl",
       "name": "privilab-0.1.0-py3-none-any.whl",
       "sha256": "a3273fc728f16a7d74f66c7ae85bd89ddf2211a60995498bc56c441ec74f9df7"
     },
     {
-      "build_checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+      "build_checkout_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
       "bytes": 154632,
-      "local_path": "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/dist/privilab-0.1.0.tar.gz",
+      "local_path": "/private/tmp/privilab-dsl154-T2-557fb5d/.local/dsl154/dist/privilab-0.1.0.tar.gz",
       "name": "privilab-0.1.0.tar.gz",
       "sha256": "117bbe0633c089af4a1b67b650b227d18d5bd828720780d9a51f394c52f648de"
     }
@@ -378,7 +408,22 @@
     },
     "version": "1"
   },
-  "recorded_at": "2026-10-06T18:53:51.099559+00:00",
+  "qualification_summary": {
+    "carried_forward_browser_runs": 10,
+    "collector_checks": 42,
+    "collector_distinct_runs": 36,
+    "contract": 52,
+    "current_browser_runs": 0,
+    "dsl154_collector_tests": 43,
+    "golden_cases": 6,
+    "history_observations": 6,
+    "smoke_cases": 5,
+    "unit_integration_security": 2233
+  },
+  "recorded_at": "2026-10-06T21:16:21.065736+00:00",
+  "remediated_finding_ids": [
+    "DSL154-P2-HISTORY-FAILURE-MASKING"
+  ],
   "requalification_triggers": [
     "application/runtime source",
     "dependency/lock/toolchain",
@@ -403,6 +448,14 @@
     "reviewer": null,
     "status": "DRAFT",
     "task_count": 6
+  },
+  "supersedes": {
+    "final_evidence_sha": "c1001ffa0477771848f47f5fffd37893983843c3",
+    "original_package_reference": "c1001ffa0477771848f47f5fffd37893983843c3:docs/product/evidence/dsl154/",
+    "original_verification_sha256": "a32064911ff06c57930e2ca9986bd3b6a4907ed87a463e627f10fd3b53f56a78",
+    "reason": "Independent-review P2: final history observation masked baseline replay failure. Collector semantics corrected; affected qualification regenerated from T2.",
+    "status": "SUPERSEDED_FOR_FINAL_QUALIFICATION",
+    "tooling_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
   },
   "task_pack": {
     "id": "trade-regulatory-research",

@@ -1,5 +1,5 @@
 {
-  "classification_scope": "Author engineering observations; not independent-review findings",
+  "classification_scope": "Reported prior independent-review finding and separately identified author remediation evidence; new final-head independent review remains pending.",
   "critical": [],
   "development_remediations": [
     {
@@ -44,10 +44,170 @@
     }
   ],
   "high": [],
-  "independent_review_status": "PENDING",
+  "independent_review_status": "PENDING_SEPARATE_REVIEW_OF_NEW_FINAL_H2",
   "low": [],
   "material_product_defects_discovered": false,
-  "medium": [],
+  "medium": [
+    {
+      "description": "Baseline replay failure was discarded and replaced with a later passing history observation, incorrectly exporting overall PASS.",
+      "id": "DSL154-P2-HISTORY-FAILURE-MASKING",
+      "origin": "Independent review of prior final H, reported directly by the user",
+      "priority": "P2",
+      "product_defect": false,
+      "regression_proof": {
+        "command_evidence": "verification.json#regressions",
+        "content_exclusion": "Existing body/query/source exclusions and failure-path sentinels passed.",
+        "execution_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
+        "focused_count": 43,
+        "passed_nodes": [
+          "tests/integration/test_dsl154_evidence.py::test_scenarios_and_metadata",
+          "tests/integration/test_dsl154_evidence.py::test_content_not_exported",
+          "tests/integration/test_dsl154_evidence.py::test_three_independent_captures",
+          "tests/integration/test_dsl154_evidence.py::test_reused_runs_are_not_independent",
+          "tests/integration/test_dsl154_evidence.py::test_candidate_or_history_drift_refused[src/privilab/main.py]",
+          "tests/integration/test_dsl154_evidence.py::test_candidate_or_history_drift_refused[uv.lock]",
+          "tests/integration/test_dsl154_evidence.py::test_candidate_or_history_drift_refused[scripts/collect_gate5_evidence.py]",
+          "tests/integration/test_dsl154_evidence.py::test_candidate_or_history_drift_refused[docs/product/evidence/gate5/manifest.json]",
+          "tests/integration/test_dsl154_evidence.py::test_dirty_checkout_refused",
+          "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[outside]",
+          "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[database]",
+          "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[output]",
+          "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[same]",
+          "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[symlink]",
+          "tests/integration/test_dsl154_evidence.py::test_partial_failure_keeps_observations",
+          "tests/integration/test_dsl154_evidence.py::test_observations_do_not_copy_expected",
+          "tests/integration/test_dsl154_evidence.py::test_replay_attempt_is_failure",
+          "tests/integration/test_dsl154_evidence.py::test_failed_or_different_identity_not_repeatable",
+          "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[pass-pass]",
+          "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[pass-fail]",
+          "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[fail-pass]",
+          "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[fail-fail]",
+          "tests/integration/test_dsl154_evidence.py::test_required_history_observation_cardinality[missing]",
+          "tests/integration/test_dsl154_evidence.py::test_required_history_observation_cardinality[duplicate]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[run_ids-baseline]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[run_ids-final]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[before-baseline]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[before-final]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[after-baseline]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[after-final]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[persistence_unchanged-baseline]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[persistence_unchanged-final]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[guarded_execution_call_counts-baseline]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[guarded_execution_call_counts-final]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[http_statuses-baseline]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[http_statuses-final]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[draft_and_citation_work_area_absent-baseline]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[draft_and_citation_work_area_absent-final]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[passed-baseline]",
+          "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[passed-final]",
+          "tests/integration/test_dsl154_evidence.py::test_interrupted_history_attempt_is_preserved[baseline]",
+          "tests/integration/test_dsl154_evidence.py::test_interrupted_history_attempt_is_preserved[final]",
+          "tests/integration/test_dsl154_evidence.py::test_history_survives_later_baseline_composition_failure"
+        ],
+        "truth_table": [
+          {
+            "baseline": "PASS",
+            "final": "PASS",
+            "node": "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[pass-pass]",
+            "required_overall": "PASS",
+            "test_status": "PASS"
+          },
+          {
+            "baseline": "PASS",
+            "final": "FAIL",
+            "node": "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[pass-fail]",
+            "required_overall": "FAIL",
+            "test_status": "PASS"
+          },
+          {
+            "baseline": "FAIL",
+            "final": "PASS",
+            "node": "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[fail-pass]",
+            "required_overall": "FAIL",
+            "test_status": "PASS"
+          },
+          {
+            "baseline": "FAIL",
+            "final": "FAIL",
+            "node": "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[fail-fail]",
+            "required_overall": "FAIL",
+            "test_status": "PASS"
+          }
+        ]
+      },
+      "remediation": {
+        "behavior": "One composite history-reopen check retains ordered baseline/final attempts before execution; exact required phases, complete metadata, and every observed control must pass. Exceptions preserve completed metadata and bounded incomplete attempts.",
+        "collector_sha256": "9e7c69803cabae8c618b970c6a5943ce6350043eac4df3b64e3e0abc0d7da17d",
+        "tests_sha256": "fc45102d28dbd0990976b988da836f0fe6e6c910c854106d65fee7aaac334d50",
+        "tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
+      },
+      "reproduction": {
+        "baseline": {
+          "passed": false,
+          "run_replay_attempts": 1
+        },
+        "collector_commit": "c1001ffa0477771848f47f5fffd37893983843c3",
+        "collector_sha256": "c33c48831049cc92f7784896ad7ed5e7956c9516c5cdcf0e04d4efd304daac36",
+        "command": [
+          ".venv/bin/pytest",
+          "-q",
+          "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[fail-pass]"
+        ],
+        "final": {
+          "passed": true,
+          "run_replay_attempts": 0
+        },
+        "incorrect_overall_passed": true,
+        "log_sha256": "afed3adf1e30bbdb003cf3e662dcf57b7c4f019a79f308c5ade5e9005301bbe4",
+        "raw_log_committed": false,
+        "regression_exit_code": 1,
+        "test_node": "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[fail-pass]",
+        "test_state": "New regression added to otherwise prior-H collector before correction; test file was uncommitted."
+      },
+      "requalification": {
+        "all_required_checks_passed": true,
+        "captures": 3,
+        "distinct_runs": 36,
+        "environment_classification": "FRESH_CHECKOUT_CACHE_BACKED",
+        "fresh_checkout_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
+        "history_observations": 6,
+        "references": [
+          "scenarios.json",
+          "repeatability.json",
+          "verification.json",
+          "security-evidence.json"
+        ],
+        "tooling_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
+      },
+      "requirement_controls": [
+        "FR-009",
+        "NFR-005",
+        "NFR-006",
+        "ADR-007",
+        "Human review/history (canonical FR ID unavailable)",
+        "DSL-154 evidence integrity and no-replay qualification"
+      ],
+      "resolved_at": "2026-10-06T21:16:21.063739+00:00",
+      "review_session": null,
+      "reviewed_at": null,
+      "reviewed_head_sha": "c1001ffa0477771848f47f5fffd37893983843c3",
+      "reviewer": null,
+      "severity": "Medium",
+      "source_location": "scripts/collect_dsl154_evidence.py:255",
+      "status": "RESOLVED_BY_REGRESSION_AND_T2_REQUALIFICATION; INDEPENDENT_CONFIRMATION_PENDING"
+    }
+  ],
+  "prior_independent_review": {
+    "actionable_findings_reported": 1,
+    "actual_model": null,
+    "finding_ids": [
+      "DSL154-P2-HISTORY-FAILURE-MASKING"
+    ],
+    "head_sha": "c1001ffa0477771848f47f5fffd37893983843c3",
+    "reviewer": null,
+    "session": null,
+    "source": "User-reported independent review"
+  },
   "schema_version": "1",
   "separate_corrective_issue_created": false
 }

@@ -10,17 +10,28 @@
     "workflow_sha256": "1f0c6f5b71cb6ab78ae80a7dc7c19c0109b1611ae9852ff45cdfa65e1f93ea5b"
   },
   "candidate_sha": "f19f5542105661614c225691c3df780264de8262",
-  "checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+  "carried_forward_container_evidence": {
+    "current_T2_execution": "NOT_RUN_UNAFFECTED_SCOPE",
+    "execution_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+    "scope": "Prior Docker socket denial retained with original identity; no new container qualification asserted.",
+    "status": "BLOCKED_BY_ENVIRONMENT",
+    "verification_reference": "c1001ffa0477771848f47f5fffd37893983843c3:docs/product/evidence/dsl154/verification.json#container-build"
+  },
+  "checkout_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
   "code_license_boundary": "No public PriviLAB license/release is inferred from OSS dependencies.",
   "container_image": {
     "base_references": [
       "ghcr.io/astral-sh/uv:0.12.23@sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21 AS uv",
       "python:3.13.15-slim-bookworm@sha256:c45a22ea000adfd9cda29364bbe7edd23001ce5cc2ad15857cfbf7766943b9ca"
     ],
+    "current_T2_execution": "NOT_RUN_UNAFFECTED_SCOPE",
+    "execution_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
     "image_id": null,
     "limitation": "Declared immutable bases are recorded; no current image build or OS SBOM is asserted.",
     "runtime_digest": null,
-    "status": "BLOCKED_BY_ENVIRONMENT"
+    "scope": "Prior Docker socket denial retained with original identity; no new container qualification asserted.",
+    "status": "BLOCKED_BY_ENVIRONMENT",
+    "verification_reference": "c1001ffa0477771848f47f5fffd37893983843c3:docs/product/evidence/dsl154/verification.json#container-build"
   },
   "installed_locked_packages": 32,
   "installed_versions_match_lock": true,
@@ -942,12 +953,13 @@
   "registry_version_matches": true,
   "sbom": {
     "component_count": 34,
+    "execution_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
     "export_status": "EXPERIMENTAL_UPSTREAM_FEATURE; exact output retained",
     "format": "CycloneDX",
     "matches_lock": true,
     "path": "sbom.cdx.json",
     "scope": "Universal project dependency lock including development/platform-conditional packages; not an installed-only or container OS inventory.",
-    "sha256": "cde39f6c56176d642c9ee26ca95be527ef381eef834cda627b30678ce8337965",
+    "sha256": "1a1da079c54cd1ad2e12cda384dbc0794c30b1d286a610660214acb3f53e9b09",
     "spec_version": "1.5",
     "tool": "uv 0.12.23"
   },

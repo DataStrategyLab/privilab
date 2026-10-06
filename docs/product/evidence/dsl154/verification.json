@@ -1,34 +1,65 @@
 {
   "cache_provisioning": {
-    "checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+    "checkout_command": [
+      "git",
+      "checkout",
+      "--detach",
+      "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
+    ],
+    "checkout_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
+    "clone_command": [
+      "git",
+      "clone",
+      "--local",
+      "--no-hardlinks",
+      "--no-checkout",
+      "/Users/andrewtsintsiruk/privilab",
+      "/private/tmp/privilab-dsl154-T2-557fb5d"
+    ],
     "databases_copied": false,
     "dependency_cache": {
       "bytes": 111204796,
       "file_count": 4516,
-      "method": "sorted relative path, NUL, raw SHA-256 digest; regular non-symlink files",
+      "method": "sorted relative path, NUL, raw SHA-256; symlink targets recorded separately",
       "source_path": "/Users/andrewtsintsiruk/privilab-dsl-153/.local/uv-cache",
       "status": "LOCAL_CACHE_INPUT_NOT_EXTERNAL_FRESHNESS_VERIFICATION",
+      "symlink_count": 33,
+      "symlink_inventory_sha256": "7f2afe876f548436fb46315b5b5795223ef34af874b86dd6eb638427a198e2e4",
       "tree_sha256": "8f1255714ebc07ba0d9d67a7cbb915414d31e18a39a1020fd40dc927ec6d0a53"
     },
     "environment_classification": "FRESH_CHECKOUT_CACHE_BACKED",
+    "fresh_checkout_path": "/private/tmp/privilab-dsl154-T2-557fb5d",
     "gitleaks": {
       "sha256": "ba52fb1bfabbcde42f032afad3d6e0b19dff8ed105229a16e7caa338bbc0e84f",
       "source_path": "/Users/andrewtsintsiruk/privilab-dsl-153/.tools/bin/gitleaks"
     },
     "interpreter_directory": {
+      "bytes": 70319317,
+      "file_count": 1879,
       "fresh_upstream_retrieval": false,
+      "method": "sorted relative path, NUL, raw SHA-256; symlink targets recorded separately",
       "origin_record": "licenses/registry.yaml runtime:python-build-standalone",
       "source_path": "/Users/andrewtsintsiruk/privilab-dsl-153/.local/python/cpython-3.13.15-macos-aarch64-none",
+      "symlink_count": 9,
+      "symlink_inventory_sha256": "66f41845716b5985b8d7c25d9c7d9e44e205c38a43fee7fed2304057dd503978",
+      "tree_sha256": "f95cbef444b8ed701de05aef3e5d9810c9e9b16c58d4056ae9a9e16750da2238",
       "version": "3.13.15"
     },
     "limitation": "Cache-backed installation is not independent network retrieval.",
     "network_retrieval_performed": false,
     "prior_execution_evidence_copied": false,
     "product_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
-    "provisioned_at": "2026-10-06T18:44:11.392751+00:00",
+    "provisioned_at": "2026-10-06T21:12:10.963312+00:00",
     "python_executable": {
       "sha256": "b321b81dcd3f55809357bdf672f2dfffe01293e272dec798c13a435cc33f687e",
       "source_path": "/Users/andrewtsintsiruk/privilab-dsl-153/.local/python/cpython-3.13.15-macos-aarch64-none/bin/python3.13"
+    },
+    "source_repository": "/Users/andrewtsintsiruk/privilab",
+    "stage": "T2",
+    "started_at": "2026-10-06T21:12:06.023194+00:00",
+    "tool_versions": {
+      "gitleaks": "8.30.1",
+      "uv": "uv 0.12.23 (46b84fd0b 2026-10-03 aarch64-apple-darwin)"
     },
     "uv": {
       "sha256": "2f7be1879e3337eef20875c0f80ef033337305d0405efc5d72642d6292f66b3b",
@@ -40,6 +71,22 @@
     },
     "virtualenv_copied": false
   },
+  "carried_forward_evidence": {
+    "browser": {
+      "basis": "Product source, routes, configuration and historical helper remain byte-identical; only DSL-154 collector aggregation/tests changed.",
+      "execution_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+      "path": "preview.json",
+      "scope": "Unaffected actual localhost browser observations; prior T execution only, not a T2 browser rerun or human rehearsal.",
+      "sha256": "634e4542ef08cb2a3489c669a1adeba14e6e31845ab196e0170715397ffdefad"
+    },
+    "container": {
+      "current_T2_execution": "NOT_RUN_UNAFFECTED_SCOPE",
+      "execution_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+      "scope": "Prior Docker socket denial retained with original identity; no new container qualification asserted.",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "verification_reference": "c1001ffa0477771848f47f5fffd37893983843c3:docs/product/evidence/dsl154/verification.json#container-build"
+    }
+  },
   "command_recorder_method": "Python subprocess.run argv with exact cwd; stdout/stderr to exclusive ignored files; UTC times, exit, log digest and git status recorded; original exits preserved even for corrected invocations and intentional preview stop.",
   "command_recorder_sha256": "277d5030579d36748c57d44b6536e170e556de20f0fe6e5b5cd09f2d25387c30",
   "commands": [
@@ -48,7 +95,7 @@
         "./scripts/bootstrap.sh",
         "--ci"
       ],
-      "completed_at": "2026-10-06T18:44:13.216905+00:00",
+      "completed_at": "2026-10-06T21:12:30.254167+00:00",
       "environment_overrides": {
         "UV_NO_PROGRESS": "1",
         "UV_OFFLINE": "1",
@@ -59,12 +106,12 @@
       "identity": {
         "before": "",
         "candidate": "f19f5542105661614c225691c3df780264de8262",
-        "head": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
+        "head": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
       },
-      "log_bytes": 1018,
-      "log_sha256": "e140b5fcdde20e37919299ad021bdf3804aa35a1ae54508f9a192ab16441d457",
+      "log_bytes": 1020,
+      "log_sha256": "fc40869c9b2de0445cc49b9305a6ab0d7b1ff9208c990e91c64279717dc04aaf",
       "qualification_disposition": "PASS",
-      "started_at": "2026-10-06T18:44:11.588653+00:00",
+      "started_at": "2026-10-06T21:12:29.633882+00:00",
       "status": "PASS",
       "summary": [
         "bootstrap complete"
@@ -76,7 +123,7 @@
         "make",
         "ci"
       ],
-      "completed_at": "2026-10-06T18:46:32.206397+00:00",
+      "completed_at": "2026-10-06T21:13:39.487887+00:00",
       "environment_overrides": {
         "UV_NO_PROGRESS": "1",
         "UV_OFFLINE": "1",
@@ -87,22 +134,22 @@
       "identity": {
         "before": "",
         "candidate": "f19f5542105661614c225691c3df780264de8262",
-        "head": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
+        "head": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
       },
-      "log_bytes": 4163,
-      "log_sha256": "e5b272392a69fc031f13bb5beef3c0c85c17917856427618ad5a24abd67868ab",
+      "log_bytes": 4242,
+      "log_sha256": "0df6c88d05d8f7531f0da42b65176ac1d9c57c9b9130288b46c5421f9d31a55e",
       "qualification_disposition": "PASS",
-      "started_at": "2026-10-06T18:45:28.963816+00:00",
+      "started_at": "2026-10-06T21:12:30.312685+00:00",
       "status": "PASS",
       "summary": [
-        "52 passed in 2.68s",
+        "52 passed in 1.81s",
         "fixture validation passed",
         "All checks passed!",
         "Success: no issues found in 85 source files",
-        "Successfully built /var/folders/y6/7w4f2szx1xs7hlpt8x_j6cr80000gn/T/tmp.t3xtRFIZQP/dist/privilab-0.1.0.tar.gz",
-        "Successfully built /var/folders/y6/7w4f2szx1xs7hlpt8x_j6cr80000gn/T/tmp.t3xtRFIZQP/dist/privilab-0.1.0-py3-none-any.whl",
+        "Successfully built /var/folders/y6/7w4f2szx1xs7hlpt8x_j6cr80000gn/T/tmp.XczkcVhwlI/dist/privilab-0.1.0.tar.gz",
+        "Successfully built /var/folders/y6/7w4f2szx1xs7hlpt8x_j6cr80000gn/T/tmp.XczkcVhwlI/dist/privilab-0.1.0-py3-none-any.whl",
         "built package governed-resource smoke passed",
-        "2208 passed in 42.21s",
+        "2233 passed in 53.34s",
         "PASS: 5 deterministic offline smoke cases matched",
         "PASS: 6 DSL-117 tasks and canonical source/license controls validated",
         "PASS: golden.trade-regulatory.grounded-happy-path",
@@ -112,8 +159,8 @@
         "PASS: golden.trade-regulatory.citation-grounding-challenge",
         "PASS: golden.trade-regulatory.malicious-source-injection",
         "PASS: 6 deterministic offline golden cases matched",
-        "2:46PM INF no leaks found",
-        "2:46PM INF no leaks found"
+        "5:13PM INF no leaks found",
+        "5:13PM INF no leaks found"
       ],
       "working_tree_after": ""
     },
@@ -123,7 +170,7 @@
         "diff",
         "--check"
       ],
-      "completed_at": "2026-10-06T18:47:15.247025+00:00",
+      "completed_at": "2026-10-06T21:14:28.704200+00:00",
       "environment_overrides": {
         "UV_NO_PROGRESS": "1",
         "UV_OFFLINE": "1",
@@ -134,12 +181,12 @@
       "identity": {
         "before": "",
         "candidate": "f19f5542105661614c225691c3df780264de8262",
-        "head": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
+        "head": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
       },
       "log_bytes": 0,
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "qualification_disposition": "PASS",
-      "started_at": "2026-10-06T18:47:15.239029+00:00",
+      "started_at": "2026-10-06T21:14:28.696476+00:00",
       "status": "PASS",
       "summary": [],
       "working_tree_after": ""
@@ -149,7 +196,7 @@
         "make",
         "golden-eval"
       ],
-      "completed_at": "2026-10-06T18:47:15.711634+00:00",
+      "completed_at": "2026-10-06T21:14:29.222710+00:00",
       "environment_overrides": {
         "UV_NO_PROGRESS": "1",
         "UV_OFFLINE": "1",
@@ -160,12 +207,12 @@
       "identity": {
         "before": "",
         "candidate": "f19f5542105661614c225691c3df780264de8262",
-        "head": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
+        "head": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
       },
       "log_bytes": 436,
       "log_sha256": "822fac29483a0a350d5a5f4945982dea43678344616353f97b9cf1eeecd21f47",
       "qualification_disposition": "PASS",
-      "started_at": "2026-10-06T18:47:15.306413+00:00",
+      "started_at": "2026-10-06T21:14:28.764729+00:00",
       "status": "PASS",
       "summary": [
         "PASS: 6 DSL-117 tasks and canonical source/license controls validated",
@@ -181,14 +228,86 @@
     },
     {
       "command": [
+        ".venv/bin/pytest",
+        "-vv",
+        "tests/integration/test_dsl154_evidence.py"
+      ],
+      "completed_at": "2026-10-06T21:14:45.222424+00:00",
+      "environment_overrides": {
+        "UV_NO_PROGRESS": "1",
+        "UV_OFFLINE": "1",
+        "UV_PYTHON_DOWNLOADS": "never"
+      },
+      "evidence_id": "regressions",
+      "exit_code": 0,
+      "identity": {
+        "before": "",
+        "candidate": "f19f5542105661614c225691c3df780264de8262",
+        "head": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
+      },
+      "log_bytes": 5392,
+      "log_sha256": "8a0795cbf0d9a7ab3f33f1d185184be102a5ddfe5257653a3d931606b506e40c",
+      "qualification_disposition": "PASS",
+      "started_at": "2026-10-06T21:14:29.278492+00:00",
+      "status": "PASS",
+      "summary": [
+        "tests/integration/test_dsl154_evidence.py::test_scenarios_and_metadata PASSED [  2%]",
+        "tests/integration/test_dsl154_evidence.py::test_content_not_exported PASSED [  4%]",
+        "tests/integration/test_dsl154_evidence.py::test_three_independent_captures PASSED [  6%]",
+        "tests/integration/test_dsl154_evidence.py::test_reused_runs_are_not_independent PASSED [  9%]",
+        "tests/integration/test_dsl154_evidence.py::test_candidate_or_history_drift_refused[src/privilab/main.py] PASSED [ 11%]",
+        "tests/integration/test_dsl154_evidence.py::test_candidate_or_history_drift_refused[uv.lock] PASSED [ 13%]",
+        "tests/integration/test_dsl154_evidence.py::test_candidate_or_history_drift_refused[scripts/collect_gate5_evidence.py] PASSED [ 16%]",
+        "tests/integration/test_dsl154_evidence.py::test_candidate_or_history_drift_refused[docs/product/evidence/gate5/manifest.json] PASSED [ 18%]",
+        "tests/integration/test_dsl154_evidence.py::test_dirty_checkout_refused PASSED [ 20%]",
+        "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[outside] PASSED [ 23%]",
+        "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[database] PASSED [ 25%]",
+        "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[output] PASSED [ 27%]",
+        "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[same] PASSED [ 30%]",
+        "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[symlink] PASSED [ 32%]",
+        "tests/integration/test_dsl154_evidence.py::test_partial_failure_keeps_observations PASSED [ 34%]",
+        "tests/integration/test_dsl154_evidence.py::test_observations_do_not_copy_expected PASSED [ 37%]",
+        "tests/integration/test_dsl154_evidence.py::test_replay_attempt_is_failure PASSED [ 39%]",
+        "tests/integration/test_dsl154_evidence.py::test_failed_or_different_identity_not_repeatable PASSED [ 41%]",
+        "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[pass-pass] PASSED [ 44%]",
+        "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[pass-fail] PASSED [ 46%]",
+        "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[fail-pass] PASSED [ 48%]",
+        "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[fail-fail] PASSED [ 51%]",
+        "tests/integration/test_dsl154_evidence.py::test_required_history_observation_cardinality[missing] PASSED [ 53%]",
+        "tests/integration/test_dsl154_evidence.py::test_required_history_observation_cardinality[duplicate] PASSED [ 55%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[run_ids-baseline] PASSED [ 58%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[run_ids-final] PASSED [ 60%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[before-baseline] PASSED [ 62%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[before-final] PASSED [ 65%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[after-baseline] PASSED [ 67%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[after-final] PASSED [ 69%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[persistence_unchanged-baseline] PASSED [ 72%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[persistence_unchanged-final] PASSED [ 74%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[guarded_execution_call_counts-baseline] PASSED [ 76%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[guarded_execution_call_counts-final] PASSED [ 79%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[http_statuses-baseline] PASSED [ 81%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[http_statuses-final] PASSED [ 83%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[draft_and_citation_work_area_absent-baseline] PASSED [ 86%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[draft_and_citation_work_area_absent-final] PASSED [ 88%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[passed-baseline] PASSED [ 90%]",
+        "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[passed-final] PASSED [ 93%]",
+        "tests/integration/test_dsl154_evidence.py::test_interrupted_history_attempt_is_preserved[baseline] PASSED [ 95%]",
+        "tests/integration/test_dsl154_evidence.py::test_interrupted_history_attempt_is_preserved[final] PASSED [ 97%]",
+        "tests/integration/test_dsl154_evidence.py::test_history_survives_later_baseline_composition_failure PASSED [100%]",
+        "============================= 43 passed in 15.58s =============================="
+      ],
+      "working_tree_after": ""
+    },
+    {
+      "command": [
         ".venv/bin/python",
         "scripts/collect_dsl154_evidence.py",
         "--database",
-        "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/capture-01.sqlite3",
+        "/private/tmp/privilab-dsl154-T2-557fb5d/.local/dsl154/capture-01.sqlite3",
         "--output",
-        "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/capture-01.json"
+        "/private/tmp/privilab-dsl154-T2-557fb5d/.local/dsl154/capture-01.json"
       ],
-      "completed_at": "2026-10-06T18:47:16.684431+00:00",
+      "completed_at": "2026-10-06T21:15:11.089092+00:00",
       "environment_overrides": {
         "UV_NO_PROGRESS": "1",
         "UV_OFFLINE": "1",
@@ -199,12 +318,12 @@
       "identity": {
         "before": "",
         "candidate": "f19f5542105661614c225691c3df780264de8262",
-        "head": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
+        "head": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
       },
       "log_bytes": 63,
       "log_sha256": "1fafb0b33ecdfa6146afe83ba79af4962a661c772c44a1081eccb625ce023ba9",
       "qualification_disposition": "PASS",
-      "started_at": "2026-10-06T18:47:15.765484+00:00",
+      "started_at": "2026-10-06T21:15:10.014793+00:00",
       "status": "PASS",
       "summary": [
         "PASS: 14 DSL-154 checks; 12 executions; metadata-only capture."
@@ -216,11 +335,11 @@
         ".venv/bin/python",
         "scripts/collect_dsl154_evidence.py",
         "--database",
-        "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/capture-02.sqlite3",
+        "/private/tmp/privilab-dsl154-T2-557fb5d/.local/dsl154/capture-02.sqlite3",
         "--output",
-        "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/capture-02.json"
+        "/private/tmp/privilab-dsl154-T2-557fb5d/.local/dsl154/capture-02.json"
       ],
-      "completed_at": "2026-10-06T18:47:17.580395+00:00",
+      "completed_at": "2026-10-06T21:15:11.965215+00:00",
       "environment_overrides": {
         "UV_NO_PROGRESS": "1",
         "UV_OFFLINE": "1",
@@ -231,12 +350,12 @@
       "identity": {
         "before": "",
         "candidate": "f19f5542105661614c225691c3df780264de8262",
-        "head": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
+        "head": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
       },
       "log_bytes": 63,
       "log_sha256": "1fafb0b33ecdfa6146afe83ba79af4962a661c772c44a1081eccb625ce023ba9",
       "qualification_disposition": "PASS",
-      "started_at": "2026-10-06T18:47:16.740419+00:00",
+      "started_at": "2026-10-06T21:15:11.151464+00:00",
       "status": "PASS",
       "summary": [
         "PASS: 14 DSL-154 checks; 12 executions; metadata-only capture."
@@ -248,11 +367,11 @@
         ".venv/bin/python",
         "scripts/collect_dsl154_evidence.py",
         "--database",
-        "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/capture-03.sqlite3",
+        "/private/tmp/privilab-dsl154-T2-557fb5d/.local/dsl154/capture-03.sqlite3",
         "--output",
-        "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/capture-03.json"
+        "/private/tmp/privilab-dsl154-T2-557fb5d/.local/dsl154/capture-03.json"
       ],
-      "completed_at": "2026-10-06T18:47:18.491252+00:00",
+      "completed_at": "2026-10-06T21:15:13.165294+00:00",
       "environment_overrides": {
         "UV_NO_PROGRESS": "1",
         "UV_OFFLINE": "1",
@@ -263,12 +382,12 @@
       "identity": {
         "before": "",
         "candidate": "f19f5542105661614c225691c3df780264de8262",
-        "head": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
+        "head": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
       },
       "log_bytes": 63,
       "log_sha256": "1fafb0b33ecdfa6146afe83ba79af4962a661c772c44a1081eccb625ce023ba9",
       "qualification_disposition": "PASS",
-      "started_at": "2026-10-06T18:47:17.636259+00:00",
+      "started_at": "2026-10-06T21:15:12.025921+00:00",
       "status": "PASS",
       "summary": [
         "PASS: 14 DSL-154 checks; 12 executions; metadata-only capture."
@@ -277,35 +396,30 @@
     },
     {
       "command": [
-        ".tools/bin/uv",
-        "build",
-        "--offline",
-        "--no-sources",
-        "--out-dir",
-        ".local/dsl154/dist"
+        ".venv/bin/python",
+        "/Users/andrewtsintsiruk/privilab/.local/dsl154/remediation/qualify_observations.py",
+        "/private/tmp/privilab-dsl154-T2-557fb5d"
       ],
-      "completed_at": "2026-10-06T18:47:27.065850+00:00",
+      "completed_at": "2026-10-06T21:15:13.481709+00:00",
       "environment_overrides": {
         "UV_NO_PROGRESS": "1",
         "UV_OFFLINE": "1",
         "UV_PYTHON_DOWNLOADS": "never"
       },
-      "evidence_id": "retained-build",
-      "exit_code": 2,
+      "evidence_id": "repeatability-history",
+      "exit_code": 0,
       "identity": {
         "before": "",
         "candidate": "f19f5542105661614c225691c3df780264de8262",
-        "head": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
+        "head": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
       },
-      "log_bytes": 191,
-      "log_sha256": "926b24acfa7ae5cfc3cec57f790a1cb3161a40337bcb95c222df007ba3f8f14f",
-      "qualification_disposition": "RESOLVED_INVOCATION_LIMITATION",
-      "resolution": "Explicit local cache directory, as in current Makefile contract; retained-build-local-cache passed.",
-      "started_at": "2026-10-06T18:47:27.012974+00:00",
-      "status": "FAIL",
+      "log_bytes": 159,
+      "log_sha256": "6f9bec58c56c6617bd548132fb8e360e91eb95dfd68048bc39f8e30a41b99940",
+      "qualification_disposition": "PASS",
+      "started_at": "2026-10-06T21:15:13.223521+00:00",
+      "status": "PASS",
       "summary": [
-        "error: Failed to initialize cache at `/Users/andrewtsintsiruk/.cache/uv`",
-        "  cause: failed to open file `/Users/andrewtsintsiruk/.cache/uv/sdists-v9/.git`: Operation not permitted (os error 1)"
+        "PASS: 3 complete captures, 36 distinct runs, 6 history observations, nine unchanged tables per observation, zero replay attempts, metadata-only reopened views"
       ],
       "working_tree_after": ""
     },
@@ -320,23 +434,23 @@
         "--out-dir",
         ".local/dsl154/dist"
       ],
-      "completed_at": "2026-10-06T18:47:37.109100+00:00",
+      "completed_at": "2026-10-06T21:15:58.561480+00:00",
       "environment_overrides": {
         "UV_NO_PROGRESS": "1",
         "UV_OFFLINE": "1",
         "UV_PYTHON_DOWNLOADS": "never"
       },
-      "evidence_id": "retained-build-local-cache",
+      "evidence_id": "retained-build",
       "exit_code": 0,
       "identity": {
         "before": "",
         "candidate": "f19f5542105661614c225691c3df780264de8262",
-        "head": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
+        "head": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
       },
       "log_bytes": 340,
       "log_sha256": "fcad3b878e248c207e95a751e10dede3360beaf05108db1f79735143b581f30b",
       "qualification_disposition": "PASS",
-      "started_at": "2026-10-06T18:47:36.936719+00:00",
+      "started_at": "2026-10-06T21:15:58.334556+00:00",
       "status": "PASS",
       "summary": [
         "Successfully built .local/dsl154/dist/privilab-0.1.0.tar.gz",
@@ -348,33 +462,161 @@
       "command": [
         ".venv/bin/python",
         "scripts/verify_built_package.py",
-        ".local/dsl154/dist/privilab-0.1.0-py3-none-any.whl",
-        ".local/dsl154/wheel-smoke"
+        "/private/tmp/privilab-dsl154-T2-557fb5d/.local/dsl154/dist/privilab-0.1.0-py3-none-any.whl",
+        "/private/tmp/privilab-dsl154-T2-557fb5d/.local/dsl154/wheel-smoke"
       ],
-      "completed_at": "2026-10-06T18:47:38.989658+00:00",
+      "completed_at": "2026-10-06T21:16:00.986306+00:00",
       "environment_overrides": {
         "UV_NO_PROGRESS": "1",
         "UV_OFFLINE": "1",
         "UV_PYTHON_DOWNLOADS": "never"
       },
       "evidence_id": "retained-wheel-smoke",
-      "exit_code": 1,
+      "exit_code": 0,
       "identity": {
         "before": "",
         "candidate": "f19f5542105661614c225691c3df780264de8262",
-        "head": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
+        "head": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
       },
-      "log_bytes": 1811,
-      "log_sha256": "cf326ab2357ce870db2be9bdeb9a18d0e6b1f8b8f659ba726f4ead35e76a70bc",
-      "qualification_disposition": "RESOLVED_INVOCATION_LIMITATION",
-      "resolution": "Absolute work-root argument required by existing verifier/Makefile usage; retained-wheel-smoke-absolute passed.",
-      "started_at": "2026-10-06T18:47:37.167130+00:00",
-      "status": "FAIL",
+      "log_bytes": 45,
+      "log_sha256": "24b2bfc7ea839b01fa432cbfd64d2bc95df9464d6cc9ca05e8735f285aa3dad7",
+      "qualification_disposition": "PASS",
+      "started_at": "2026-10-06T21:15:58.623546+00:00",
+      "status": "PASS",
       "summary": [
-        "FileNotFoundError: [Errno 2] No such file or directory: '.local/dsl154/wheel-smoke/venv/bin/python'"
+        "built package governed-resource smoke passed"
       ],
       "working_tree_after": ""
     },
+    {
+      "command": [
+        ".tools/bin/uv",
+        "export",
+        "--offline",
+        "--frozen",
+        "--all-groups",
+        "--format",
+        "cyclonedx1.5",
+        "--cache-dir",
+        ".local/uv-cache",
+        "--output-file",
+        ".local/dsl154/sbom.cdx.json"
+      ],
+      "completed_at": "2026-10-06T21:16:01.072038+00:00",
+      "environment_overrides": {
+        "UV_NO_PROGRESS": "1",
+        "UV_OFFLINE": "1",
+        "UV_PYTHON_DOWNLOADS": "never"
+      },
+      "evidence_id": "sbom",
+      "exit_code": 0,
+      "identity": {
+        "before": "",
+        "candidate": "f19f5542105661614c225691c3df780264de8262",
+        "head": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f"
+      },
+      "log_bytes": 79624,
+      "log_sha256": "1d696dbb1fd3770a1ba1589ed8695b725d0d24ff77e3f5c6f9df284aff20e8be",
+      "qualification_disposition": "PASS",
+      "started_at": "2026-10-06T21:16:01.045505+00:00",
+      "status": "PASS",
+      "summary": [],
+      "working_tree_after": ""
+    }
+  ],
+  "container_preview": {
+    "reason": "Unaffected container scope; prior T Docker access failure and original handoff retained.",
+    "status": "NOT_RUN"
+  },
+  "environment_classification": "FRESH_CHECKOUT_CACHE_BACKED",
+  "evidence_tooling_head_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
+  "final_head_verification_binding": "Final author handoff records concrete H2 and fresh-H2 verification without self-embedding H2.",
+  "fresh_checkout_sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
+  "history_verification": {
+    "installed_application_path": "/private/tmp/privilab-dsl154-T2-557fb5d/src/privilab/__init__.py",
+    "observations": [
+      {
+        "guarded_execution_call_counts": {
+          "evaluation": 0,
+          "model": 0,
+          "retrieval": 0,
+          "run": 0
+        },
+        "metadata_only": true,
+        "persistence_unchanged": true,
+        "phase": "baseline",
+        "run_count": 10,
+        "tables": 9
+      },
+      {
+        "guarded_execution_call_counts": {
+          "evaluation": 0,
+          "model": 0,
+          "retrieval": 0,
+          "run": 0
+        },
+        "metadata_only": true,
+        "persistence_unchanged": true,
+        "phase": "final",
+        "run_count": 12,
+        "tables": 9
+      },
+      {
+        "guarded_execution_call_counts": {
+          "evaluation": 0,
+          "model": 0,
+          "retrieval": 0,
+          "run": 0
+        },
+        "metadata_only": true,
+        "persistence_unchanged": true,
+        "phase": "baseline",
+        "run_count": 10,
+        "tables": 9
+      },
+      {
+        "guarded_execution_call_counts": {
+          "evaluation": 0,
+          "model": 0,
+          "retrieval": 0,
+          "run": 0
+        },
+        "metadata_only": true,
+        "persistence_unchanged": true,
+        "phase": "final",
+        "run_count": 12,
+        "tables": 9
+      },
+      {
+        "guarded_execution_call_counts": {
+          "evaluation": 0,
+          "model": 0,
+          "retrieval": 0,
+          "run": 0
+        },
+        "metadata_only": true,
+        "persistence_unchanged": true,
+        "phase": "baseline",
+        "run_count": 10,
+        "tables": 9
+      },
+      {
+        "guarded_execution_call_counts": {
+          "evaluation": 0,
+          "model": 0,
+          "retrieval": 0,
+          "run": 0
+        },
+        "metadata_only": true,
+        "persistence_unchanged": true,
+        "phase": "final",
+        "run_count": 12,
+        "tables": 9
+      }
+    ],
+    "passed": true
+  },
+  "prior_execution_commands": [
     {
       "command": [
         "make",
@@ -464,101 +706,99 @@
       "status": "FAIL",
       "summary": [],
       "working_tree_after": ""
-    },
-    {
-      "command": [
-        ".venv/bin/python",
-        "scripts/verify_built_package.py",
-        "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/dist/privilab-0.1.0-py3-none-any.whl",
-        "/private/tmp/privilab-dsl154-T-06d4fe8/.local/dsl154/wheel-smoke-02"
-      ],
-      "completed_at": "2026-10-06T18:48:04.859823+00:00",
-      "environment_overrides": {
-        "UV_NO_PROGRESS": "1",
-        "UV_OFFLINE": "1",
-        "UV_PYTHON_DOWNLOADS": "never"
-      },
-      "evidence_id": "retained-wheel-smoke-absolute",
-      "exit_code": 0,
-      "identity": {
-        "before": "",
-        "candidate": "f19f5542105661614c225691c3df780264de8262",
-        "head": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
-      },
-      "log_bytes": 45,
-      "log_sha256": "24b2bfc7ea839b01fa432cbfd64d2bc95df9464d6cc9ca05e8735f285aa3dad7",
-      "qualification_disposition": "PASS",
-      "started_at": "2026-10-06T18:48:02.643161+00:00",
-      "status": "PASS",
-      "summary": [
-        "built package governed-resource smoke passed"
-      ],
-      "working_tree_after": ""
-    },
-    {
-      "command": [
-        ".tools/bin/uv",
-        "export",
-        "--offline",
-        "--frozen",
-        "--all-groups",
-        "--format",
-        "cyclonedx1.5",
-        "--cache-dir",
-        ".local/uv-cache",
-        "--output-file",
-        ".local/dsl154/sbom.cdx.json"
-      ],
-      "completed_at": "2026-10-06T18:48:04.968009+00:00",
-      "environment_overrides": {
-        "UV_NO_PROGRESS": "1",
-        "UV_OFFLINE": "1",
-        "UV_PYTHON_DOWNLOADS": "never"
-      },
-      "evidence_id": "sbom",
-      "exit_code": 0,
-      "identity": {
-        "before": "",
-        "candidate": "f19f5542105661614c225691c3df780264de8262",
-        "head": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
-      },
-      "log_bytes": 79624,
-      "log_sha256": "5a0b91f21a70560461e826f782b160f8a04055a121f578df1bdd5e370b9d9d56",
-      "qualification_disposition": "PASS",
-      "started_at": "2026-10-06T18:48:04.917145+00:00",
-      "status": "PASS",
-      "summary": [],
-      "working_tree_after": ""
     }
   ],
-  "container_preview": {
-    "reason": "Container build blocked by Docker socket access; broader access not requested.",
-    "status": "NOT_RUN"
-  },
-  "environment_classification": "FRESH_CHECKOUT_CACHE_BACKED",
-  "evidence_tooling_head_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
-  "final_head_verification_binding": "Final author handoff records exact final H and fresh-H make ci/diff checks; not self-embedded in H.",
-  "fresh_checkout_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
   "product_candidate_sha": "f19f5542105661614c225691c3df780264de8262",
   "raw_logs_committed": false,
+  "reconstruction_reference": "README.md: commands and corrected history/repeatability assertions; collector/tests at recorded T2",
+  "regression_passed_nodes": [
+    "tests/integration/test_dsl154_evidence.py::test_scenarios_and_metadata",
+    "tests/integration/test_dsl154_evidence.py::test_content_not_exported",
+    "tests/integration/test_dsl154_evidence.py::test_three_independent_captures",
+    "tests/integration/test_dsl154_evidence.py::test_reused_runs_are_not_independent",
+    "tests/integration/test_dsl154_evidence.py::test_candidate_or_history_drift_refused[src/privilab/main.py]",
+    "tests/integration/test_dsl154_evidence.py::test_candidate_or_history_drift_refused[uv.lock]",
+    "tests/integration/test_dsl154_evidence.py::test_candidate_or_history_drift_refused[scripts/collect_gate5_evidence.py]",
+    "tests/integration/test_dsl154_evidence.py::test_candidate_or_history_drift_refused[docs/product/evidence/gate5/manifest.json]",
+    "tests/integration/test_dsl154_evidence.py::test_dirty_checkout_refused",
+    "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[outside]",
+    "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[database]",
+    "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[output]",
+    "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[same]",
+    "tests/integration/test_dsl154_evidence.py::test_destinations_preserve_existing[symlink]",
+    "tests/integration/test_dsl154_evidence.py::test_partial_failure_keeps_observations",
+    "tests/integration/test_dsl154_evidence.py::test_observations_do_not_copy_expected",
+    "tests/integration/test_dsl154_evidence.py::test_replay_attempt_is_failure",
+    "tests/integration/test_dsl154_evidence.py::test_failed_or_different_identity_not_repeatable",
+    "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[pass-pass]",
+    "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[pass-fail]",
+    "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[fail-pass]",
+    "tests/integration/test_dsl154_evidence.py::test_history_observation_failures_are_not_masked[fail-fail]",
+    "tests/integration/test_dsl154_evidence.py::test_required_history_observation_cardinality[missing]",
+    "tests/integration/test_dsl154_evidence.py::test_required_history_observation_cardinality[duplicate]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[run_ids-baseline]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[run_ids-final]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[before-baseline]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[before-final]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[after-baseline]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[after-final]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[persistence_unchanged-baseline]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[persistence_unchanged-final]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[guarded_execution_call_counts-baseline]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[guarded_execution_call_counts-final]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[http_statuses-baseline]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[http_statuses-final]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[draft_and_citation_work_area_absent-baseline]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[draft_and_citation_work_area_absent-final]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[passed-baseline]",
+    "tests/integration/test_dsl154_evidence.py::test_incomplete_history_observation_fails_closed[passed-final]",
+    "tests/integration/test_dsl154_evidence.py::test_interrupted_history_attempt_is_preserved[baseline]",
+    "tests/integration/test_dsl154_evidence.py::test_interrupted_history_attempt_is_preserved[final]",
+    "tests/integration/test_dsl154_evidence.py::test_history_survives_later_baseline_composition_failure"
+  ],
   "schema_version": "1",
   "source_checkout": {
     "clean_after_qualification": true,
     "clean_before_bootstrap": true,
+    "installed_application_path": "/private/tmp/privilab-dsl154-T2-557fb5d/src/privilab/__init__.py",
     "installed_application_under_fresh_checkout": true,
-    "method": "git clone --local --no-hardlinks --no-checkout; checkout --detach exact T",
-    "path": "/private/tmp/privilab-dsl154-T-06d4fe8",
-    "sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7",
+    "method": "git clone --local --no-hardlinks --no-checkout; checkout --detach exact T2",
+    "path": "/private/tmp/privilab-dsl154-T2-557fb5d",
+    "sha": "557fb5d5d8f9f14c134577001fb1ccc41633ec4f",
     "virtualenv_copied": false
   },
   "suite_counts": {
-    "browser_runs": 10,
+    "carried_forward_browser_runs": 10,
     "collector_checks": 42,
     "collector_distinct_runs": 36,
     "contract": 52,
-    "dsl154_collector_tests": 18,
+    "current_browser_runs": 0,
+    "dsl154_collector_tests": 43,
     "golden_cases": 6,
+    "history_observations": 6,
     "smoke_cases": 5,
-    "unit_integration_security": 2208
+    "unit_integration_security": 2233
+  },
+  "supersedes": {
+    "final_evidence_sha": "c1001ffa0477771848f47f5fffd37893983843c3",
+    "original_package_reference": "c1001ffa0477771848f47f5fffd37893983843c3:docs/product/evidence/dsl154/",
+    "original_verification_sha256": "a32064911ff06c57930e2ca9986bd3b6a4907ed87a463e627f10fd3b53f56a78",
+    "reason": "Independent-review P2: final history observation masked baseline replay failure. Collector semantics corrected; affected qualification regenerated from T2.",
+    "status": "SUPERSEDED_FOR_FINAL_QUALIFICATION",
+    "tooling_sha": "06d4fe827d3c8f3aa16a0df4de7a3b1938598ba7"
+  },
+  "support_tool_provenance": {
+    "assemble.py": {
+      "local_path": "/Users/andrewtsintsiruk/privilab/.local/dsl154/remediation/assemble.py",
+      "sha256": "74592a9364db4258d0c2b24e95097bc4509aec1f15cac4ac878642f405aa10c3"
+    },
+    "provision_fresh.py": {
+      "local_path": "/Users/andrewtsintsiruk/privilab/.local/dsl154/remediation/provision_fresh.py",
+      "sha256": "855e1c1bd597f4e821e8867c7cae3f8c16f0f7a1cfd8b6f8a1364ba657726cbc"
+    },
+    "qualify_observations.py": {
+      "local_path": "/Users/andrewtsintsiruk/privilab/.local/dsl154/remediation/qualify_observations.py",
+      "sha256": "039faf75822b4f8405b54e8f6d3916c068867b39d22086951378b872df5e5c31"
+    }
   }
 }
