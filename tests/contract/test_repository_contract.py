@@ -136,6 +136,7 @@ def registry_by_id(registry: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
 def assert_reviewed_non_pypi_artifacts_match(
     registry: list[dict[str, Any]],
     *,
+    project_override: dict[str, Any] | None = None,
     workflow_override: dict[str, Any] | None = None,
     dockerfile_override: str | None = None,
 ) -> None:
@@ -144,12 +145,15 @@ def assert_reviewed_non_pypi_artifacts_match(
     gitleaks_version = bootstrap_constant("GITLEAKS_VERSION")
     python_version = bootstrap_constant("PYTHON_VERSION")
 
-    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    project = project_override or tomllib.loads(
+        (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
     build_requirements = project["build-system"]["requires"]
     assert len(build_requirements) == 1
     build_match = re.fullmatch(r"uv_build==([^\s]+)", build_requirements[0])
     assert build_match, "uv_build must be the sole exact-pinned build backend"
     uv_build_version = build_match.group(1)
+    assert uv_build_version == uv_version, "uv_build must match bootstrap UV_VERSION"
     assert project["tool"]["uv"]["required-version"] == f"=={uv_version}"
 
     expected = {
@@ -199,13 +203,15 @@ def assert_reviewed_non_pypi_artifacts_match(
         "runtime:python-build-standalone": {
             "kind": "dependency",
             "name": "uv-managed CPython distribution",
-            "source": "https://github.com/astral-sh/python-build-standalone",
+            "source": (
+                "https://github.com/astral-sh/python-build-standalone/releases/tag/20260929"
+            ),
             "version_or_commit": (
-                f"CPython {python_version} selected by uv {uv_version}"
+                f"CPython {python_version} build 20260929 selected by uv {uv_version}"
             ),
             "license_source": (
                 "LICENSE.txt bundled in the installed uv-managed CPython "
-                f"{python_version} distribution."
+                f"{python_version} build 20260929 distribution."
             ),
             "repository_paths": [
                 "scripts/bootstrap.sh",
@@ -383,6 +389,21 @@ def test_non_pypi_artifacts_match_reviewed_registry_evidence() -> None:
     assert_reviewed_non_pypi_artifacts_match(registry)
 
 
+def test_mismatched_uv_build_version_is_rejected() -> None:
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    project["build-system"]["requires"] = ["uv_build==0.0.0"]
+    registry = copy.deepcopy(load_yaml("licenses/registry.yaml"))
+    build_entry = registry_by_id(registry)["build:uv-build"]
+    build_entry["version_or_commit"] = "0.0.0"
+    build_entry["source"] = "https://github.com/astral-sh/uv/tree/0.0.0/crates/uv-build"
+    build_entry["license_source"] = "https://github.com/astral-sh/uv/tree/0.0.0#license"
+
+    with pytest.raises(
+        AssertionError, match="uv_build must match bootstrap UV_VERSION"
+    ):
+        assert_reviewed_non_pypi_artifacts_match(registry, project_override=project)
+
+
 @pytest.mark.parametrize(
     ("entry_id", "field", "stale_value"),
     [
@@ -392,6 +413,21 @@ def test_non_pypi_artifacts_match_reviewed_registry_evidence() -> None:
             "runtime:python-build-standalone",
             "version_or_commit",
             "CPython 0.0.0 selected by uv 0.0.0",
+        ),
+        (
+            "runtime:python-build-standalone",
+            "version_or_commit",
+            "CPython 3.13.15 build 20260825 selected by uv 0.12.23",
+        ),
+        (
+            "runtime:python-build-standalone",
+            "source",
+            "https://github.com/astral-sh/python-build-standalone",
+        ),
+        (
+            "runtime:python-build-standalone",
+            "source",
+            "https://github.com/astral-sh/python-build-standalone/releases/tag/20260825",
         ),
         ("build:uv-build", "version_or_commit", "0.0.0"),
         ("container:uv", "version_or_commit", "0.0.0@sha256:stale"),
@@ -429,9 +465,9 @@ def test_stale_workflow_python_version_is_rejected() -> None:
 @pytest.mark.parametrize(
     ("old_reference", "stale_reference", "message"),
     [
-        ("uv:0.12.6@", "uv:0.0.0@", "Docker uv image tag"),
+        ("uv:0.12.23@", "uv:0.0.0@", "Docker uv image tag"),
         (
-            "88bc6eb1ccd4b82efd0e1b530caffabddf50dc2bf612e66c14ea25b8ee8a4d3d",
+            "61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21",
             "0" * 64,
             "stale license evidence",
         ),
@@ -518,6 +554,52 @@ def test_bootstrap_keeps_managed_python_out_of_user_global_launchers() -> None:
     )
     assert '"$UV_BIN" python install --no-bin "$PYTHON_VERSION"' in bootstrap
     assert '"$UV_BIN" python install "$PYTHON_VERSION"' not in bootstrap
+
+
+def assert_bootstrap_requires_managed_python(bootstrap: str) -> None:
+    control = "export UV_MANAGED_PYTHON=true"
+    assert control in bootstrap.splitlines(), (
+        "bootstrap must export UV_MANAGED_PYTHON=true"
+    )
+    for operation in (
+        '"$UV_BIN" python find "$PYTHON_VERSION"',
+        '"$UV_BIN" python install --no-bin "$PYTHON_VERSION"',
+        '"$UV_BIN" sync',
+    ):
+        assert bootstrap.index(control) < bootstrap.index(operation), (
+            "managed-Python control must precede bootstrap interpreter operations"
+        )
+
+
+def test_bootstrap_requires_managed_python() -> None:
+    bootstrap = (ROOT / "scripts/bootstrap.sh").read_text(encoding="utf-8")
+    assert_bootstrap_requires_managed_python(bootstrap)
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    [
+        "",
+        "# export UV_MANAGED_PYTHON=true",
+        "export UV_MANAGED_PYTHON=false",
+        "UV_MANAGED_PYTHON=true",
+        "late",
+    ],
+    ids=["missing", "commented", "false", "not-exported", "too-late"],
+)
+def test_bootstrap_without_managed_python_requirement_is_rejected(
+    replacement: str,
+) -> None:
+    bootstrap = (ROOT / "scripts/bootstrap.sh").read_text(encoding="utf-8")
+    control = "export UV_MANAGED_PYTHON=true"
+    if replacement == "late":
+        invalid_bootstrap = bootstrap.replace(control, "") + f"\n{control}\n"
+    else:
+        invalid_bootstrap = bootstrap.replace(control, replacement)
+    assert invalid_bootstrap != bootstrap
+
+    with pytest.raises(AssertionError, match="bootstrap must export|must precede"):
+        assert_bootstrap_requires_managed_python(invalid_bootstrap)
 
 
 def test_preview_uses_the_documented_environment_variables() -> None:
