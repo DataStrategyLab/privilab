@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security concern privately
+    url: https://github.com/DataStrategyLab/privilab/blob/main/SECURITY.md
+    about: Follow the private reporting instructions; do not open a public vulnerability issue.
+  - name: Report a conduct concern privately
+    url: https://github.com/DataStrategyLab/privilab/blob/main/CODE_OF_CONDUCT.md
+    about: Use the private contact listed in the project policy.

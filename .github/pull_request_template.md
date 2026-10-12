@@ -1,34 +1,36 @@
-## Linear issue
+## Problem and resulting behavior
 
-- Issue: DSL-
+Describe the concrete change and its scope.
 
-## Scope
+## Issue
 
-- [ ] This PR implements only the linked issue.
-- [ ] No architecture drift or unapproved dependency was introduced.
+- Public GitHub issue:
+- Maintainer engineering issue (when assigned):
 
 ## Verification
 
-- [ ] `./scripts/bootstrap.sh --ci`
-- [ ] `make ci`
-- [ ] Required preview command and evidence
-- [ ] Local container check, when applicable and available
+- [ ] `make ci` passed; record actual result and source head.
+- [ ] Required preview command and observations recorded, or N/A with rationale.
+- [ ] Diff and documentation links checked.
+- [ ] No live/paid model call was introduced into CI.
 
-## Security, data, and licenses
+## Scope, security, data and rights
 
-- [ ] No client/matter data, restricted content, or credentials.
-- [ ] `licenses/registry.yaml` covers every introduced third-party artifact.
-- [ ] No live model call is part of `make ci`.
+- [ ] Within the accepted issue scope; no unapproved architecture/dependency change.
+- [ ] No client/matter/privileged content, restricted material, credentials or private findings.
+- [ ] Applicable third-party/fixture rights and attribution recorded.
+- [ ] Generated tools, environment files, caches, outputs and databases remain untracked.
 
-## Review
+## Maintainer review and decisions
 
-- [ ] Dedicated Codex `/review` completed.
-- [ ] Critical and High findings resolved.
-- [ ] One non-author human approval obtained.
-- [ ] CODEOWNER review obtained for high-risk paths.
-- [ ] Andrew final merge/release decision recorded.
+- [ ] Dedicated Codex `/review` completed on the reviewed head.
+- [ ] Critical/High findings resolved; other findings dispositioned.
+- [ ] One non-author human approval and applicable CODEOWNER approvals obtained.
+- [ ] Andrew's final merge/release decision recorded.
 
-## Limitations
+Public contributors can leave maintainer-only review boxes pending. Do not invent
+approval, hosted execution or release readiness from a passing local test.
 
-Describe known limitations and why merge does or does not satisfy the issue's
-Definition of Done.
+## Limitations / unfinished work
+
+Describe actual remaining gates and whether merge satisfies issue acceptance.
