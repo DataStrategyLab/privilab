@@ -62,7 +62,7 @@ sequenceDiagram
     R-->>V: Outcome plus provenance
     V->>V: Deterministic evaluation
     V->>S: Evaluation metadata
-    V-->>U: Result or safe stop; gate and review availability
+    V-->>U: Result or safe stop, gate and review availability
     U->>V: Separate synthetic decision if allowed
     V->>S: One immutable decision
 ```
