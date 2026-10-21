@@ -142,6 +142,9 @@ assurances. See [Capabilities and limitations](docs/capabilities.md).
 
 ## Contributing and licensing
 
+See [Contributors and acknowledgments](CONTRIBUTORS.md) for engineering and
+technical-review credits, including Adaora Orakwue's earlier review contributions.
+
 Open a [GitHub issue](https://github.com/DataStrategyLab/privilab/issues) with a
 bounded proposal or reproducible non-sensitive bug report. Maintainers route
 accepted work into the repository's issue, CI and review process. Contributors

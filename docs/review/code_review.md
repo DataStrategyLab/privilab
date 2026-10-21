@@ -30,14 +30,18 @@ high risk.
 
 ## CODEOWNERS identities
 
-`@tsintsiruk`, `@adaora-orakwue` and `@NaveenGali11` are the GitHub handles for
-Andrew, Adaora and Naveen. Existing CODEOWNERS patterns retain all three owners.
-CODEOWNERS is final for these approved patterns and identities.
+`@tsintsiruk` and `@NaveenGali11` are the GitHub handles for Andrew and Naveen.
+All 19 existing CODEOWNERS patterns name both active owners.
+CODEOWNERS is final for these active patterns and identities.
 GitHub uses the PR base branch's CODEOWNERS until a change merges. Adding a PR
 author as an owner does not make their self-review a non-author approval.
 
 High-risk changes require the applicable CODEOWNER review controls and at least
 one non-author human approval. Andrew retains final merge and release authority.
+
+Historical review contributions remain credited in
+[Contributors and acknowledgments](../../CONTRIBUTORS.md). A change in active
+ownership does not change the attribution, version, or scope of earlier reviews.
 
 ## Findings
 

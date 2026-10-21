@@ -18,6 +18,7 @@ implemented behavior from limits and future work.
 
 - [Support](../SUPPORT.md): questions, reporting channels, and support limits.
 - [Governance](../GOVERNANCE.md): responsibilities, proposals, and release decisions.
+- [Contributors and acknowledgments](../CONTRIBUTORS.md): engineering and historical review credits.
 - [Contributing](../CONTRIBUTING.md), [Code of Conduct](../CODE_OF_CONDUCT.md),
   [Security](../SECURITY.md) and [data handling](../DATA_HANDLING.md).
 - [License guide](../licenses/README.md) and [third-party notices](../THIRD_PARTY_NOTICES.md).
