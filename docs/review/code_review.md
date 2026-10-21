@@ -1,5 +1,15 @@
 # Code review controls
 
+## Requesting a Codex review
+
+Comment `@codex review` on the pull request. The root
+[AGENTS.md](../../AGENTS.md) directs Codex to the shared
+[pull request review guide](../../.github/CODE_REVIEW.md), which defines review
+scope, evidence standards, actionable feedback, and private security reporting.
+Maintainers coordinate the configured dedicated review and retain the required
+human approval sequence below. A GitHub review request does not configure or
+prove which model executed it; record the actual available review evidence.
+
 ## Required sequence
 
 1. Author completes issue-scoped implementation and `make ci`.

@@ -133,7 +133,9 @@ assurances. See [Capabilities and limitations](docs/capabilities.md).
 | Understand the implementation | [Architecture](docs/architecture/system.md) and [capabilities](docs/capabilities.md) |
 | Understand tests and scenarios | [Evaluation](docs/evaluation.md) |
 | Find the rest of the docs | [Documentation index](docs/README.md) |
+| Get help or report a problem | [Support](SUPPORT.md) |
 | Contribute | [Contributing](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) |
+| Understand project decisions and responsibilities | [Governance](GOVERNANCE.md) |
 | Report a vulnerability privately | [Security policy](SECURITY.md) |
 | Understand content and reuse rights | [License guide](licenses/README.md) and [data policy](DATA_HANDLING.md) |
 | Track shipped versus planned work | [Changelog](CHANGELOG.md), [roadmap](ROADMAP.md) and [release status](docs/release-status.md) |

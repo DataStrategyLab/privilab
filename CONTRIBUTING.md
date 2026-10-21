@@ -3,6 +3,8 @@
 Thank you for helping improve controlled, permission-aware AI workflows.
 Read the [Code of Conduct](CODE_OF_CONDUCT.md), [data policy](DATA_HANDLING.md)
 and [security policy](SECURITY.md) before submitting content.
+See [Support](SUPPORT.md) for usage questions and reporting channels, and
+[Governance](GOVERNANCE.md) for responsibilities and project decisions.
 
 ## Start with an issue
 
@@ -71,8 +73,10 @@ The maintainer workflow requires:
 5. Andrew's separate final merge and release decision.
 
 Contributors need not install Codex to file an issue or open a proposal; maintainers
-coordinate the dedicated review. A merged PR does not automatically make the
-engineering issue Done or authorize a prospect/production release. See
+coordinate the dedicated review by commenting `@codex review` on the PR. The
+[pull request review guide](.github/CODE_REVIEW.md) describes the shared review
+standards and how to handle sensitive findings. A merged PR does not automatically
+make the engineering issue Done or authorize a prospect/production release. See
 [review controls](docs/review/code_review.md).
 
 ## Contribution rights

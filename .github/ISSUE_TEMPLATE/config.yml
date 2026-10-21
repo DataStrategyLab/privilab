@@ -1,5 +1,11 @@
 blank_issues_enabled: true
 contact_links:
+  - name: Get help and find reporting channels
+    url: https://github.com/DataStrategyLab/privilab/blob/main/SUPPORT.md
+    about: Read setup guidance, support limits, and the appropriate channel for your question.
+  - name: Understand project governance
+    url: https://github.com/DataStrategyLab/privilab/blob/main/GOVERNANCE.md
+    about: Read how proposals, reviews, ownership, and release decisions are handled.
   - name: Report a security concern privately
     url: https://github.com/DataStrategyLab/privilab/blob/main/SECURITY.md
     about: Follow the private reporting instructions; do not open a public vulnerability issue.
