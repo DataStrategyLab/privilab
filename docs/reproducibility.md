@@ -1,0 +1,93 @@
+# Reproducibility
+
+PriviLAB's normal verification path is deterministic, fixture-based and secret-free.
+It exercises application controls; it does not measure live-model stability or
+establish legal correctness. The canonical command is `make ci`.
+
+## Record the inputs
+
+Keep the source SHA and working-tree state, Python and tool versions, `uv.lock`,
+fixture/corpus/task/rubric versions and any explicit preview configuration together.
+A Git SHA alone does not identify a materially changed model, permission policy,
+corpus or environment. Do not reuse historical approval for a successor runtime.
+
+```sh
+git rev-parse HEAD
+git status --short
+.tools/bin/uv --version
+.venv/bin/python --version
+.tools/bin/gitleaks version
+```
+
+Current pins: Python 3.13.15, uv/uv_build 0.12.23 and Gitleaks 8.30.1. Exact artifact
+provenance and applicable component records are in `licenses/registry.yaml`.
+Equal Python version strings alone do not establish identical distribution bytes.
+
+## Reproduce from source
+
+Use a fresh checkout at an exact existing commit, then bootstrap and verify:
+
+```sh
+git clone https://github.com/DataStrategyLab/privilab.git privilab-repro
+cd privilab-repro
+git checkout --detach YOUR_RECORDED_COMMIT
+./scripts/bootstrap.sh --ci
+make ci
+git diff --check
+git status --short
+```
+
+Replace `YOUR_RECORDED_COMMIT` with a real commit you recorded. A successful final
+status is clean. No virtualenv, tool directory, old DB or generated result should
+be copied into Git. A fresh checkout using caches is cache-backed reproducibility,
+not independent fresh upstream acquisition.
+
+Bootstrap is the normal network/download step. Once inputs are provisioned,
+`make ci` invokes frozen offline lock checking, repository contracts, fixture/
+license validation, formatting/lint/type checks, wheel/sdist build and governed
+package smoke, unit/integration/security tests, deterministic smoke/golden
+cases, history/worktree secret scans and generated-state checks. It also verifies
+that repository-visible state is unchanged. Do not replace it with selected tests.
+
+The five smoke and six golden cases have defined expected outcomes. Test counts
+can change as coverage grows; record observed counts rather than treating an old
+count as the acceptance criterion. To inspect golden results separately:
+
+```sh
+make golden-eval
+```
+
+This is supplemental and does not replace CI.
+
+## Repeat preview behavior
+
+Use a new ignored DB as described in [Getting started](getting-started.md).
+Record actual run IDs, configuration hashes, permission/gate states and synthetic
+decisions. Repeat scenarios on distinct runs. Reopen the same DB after restarting
+the preview to inspect persisted metadata. Answer/source bodies are transient;
+metadata hashes establish identity, not legal truth or full answer replay.
+
+Permission BLOCK, UNKNOWN and unresolved CONDITIONAL should stop before retrieval/
+model execution. Generated critical evaluation failure should disable approval.
+A safe new run must not change earlier immutable decisions.
+
+## Existing qualification collectors
+
+The [historical evidence index](product/evidence/README.md) links candidate-bound
+collectors and manifests. Those collectors may enforce exact candidate ancestry,
+allowed diffs, clean status and never-used output paths. Do not run them on a new
+release-doc branch and reinterpret a refusal as product failure, or edit guards to
+get a PASS. Their observations retain their original execution identity and time.
+
+## Limits
+
+- Fixture repeatability does not establish live-provider nondeterminism, current
+  model availability, substantive legal quality or protected holdout performance.
+- A lock export/SBOM is component inventory, not vulnerability clearance or an
+  image attestation. Current security/OSS review remains separate.
+- Docker base inputs are digest-pinned, but cached build layers and OS package
+  scope must be disclosed. The container does not contain the entire task pack.
+- Pre-existing incompatible evidence schemas fail closed; no automatic migration
+  or deletion is performed.
+- Public source publication, package/image redistribution, hosted operation,
+  prospect eligibility and production deployment have separate review scopes.

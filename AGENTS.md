@@ -19,6 +19,12 @@ ADR and Andrew's approval.
 7. Obtain one non-author human approval and Andrew's final merge/release
    decision. Merge does not automatically mean the Linear issue is Done.
 
+## Code Review Rules
+
+Read and follow [.github/CODE_REVIEW.md](.github/CODE_REVIEW.md) for pull-request
+reviews, including requests made with `@codex review`. Apply the checks relevant
+to the change and preserve the required human approval workflow above.
+
 ## Hard boundaries
 
 - Use public, synthetic, anonymized, redacted, or properly licensed content

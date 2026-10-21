@@ -1,0 +1,23 @@
+name: Feature or documentation proposal
+description: Propose a bounded improvement with observable acceptance criteria.
+title: "[Proposal]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and intended user
+      description: Explain the need with public or synthetic examples.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed scope and acceptance
+      description: Describe observable behavior, limits and alternatives.
+    validations:
+      required: true
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Architecture, data and license considerations
+      description: Identify new dependencies/providers/tools or rights questions. An issue does not authorize architecture changes.

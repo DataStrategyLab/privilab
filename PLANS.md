@@ -113,3 +113,33 @@ only. Do not retain unnecessary prompt, answer, retrieved-source, secret, client
 matter, OCG, privileged, work-product, or sensitive security content in evidence.
 A green test suite, successful rehearsal, or automated evaluator result is evidence,
 not release authority.
+
+
+## DSL-152 — Developer Preview source-release documentation (October 12, 2026)
+
+User-approved scope: prepare current-main public entry, reproducibility and
+architecture docs; Apache-2.0 LICENSE/NOTICE and rights guide; community/security
+contact and GitHub templates; roadmap/changelog; dated pending-review notice
+with an October 16 follow-up target. The existing Ready DSL-152 has no description.
+Attempted Linear scope/state updates were rejected and no issue state change
+is claimed; this approved branch scope is recorded here.
+
+Branch: codex/open-source-release-readiness, from main 9e7173ab629ea4604f26fa3d70211c15df4e0c71.
+Use PR #22's recorded Apache-2.0/v0.1.0 Developer Preview working direction as
+reference, not automatic publication approval. Private contact confirmed by
+Naveen: andrew@datastrategylab.com.
+
+1. Inspect existing source/commands/rights and preserve historical evidence.
+2. Write accurate current implementation docs and Mermaid diagrams.
+3. Reconcile source-only license/community/release scope.
+4. Run make ci, link/diff checks and fresh-database loopback make preview.
+5. Commit the verified scope and run dedicated configured independent Codex review.
+6. Resolve Critical/High; hand off exact head for non-author/CODEOWNER and Andrew
+   merge/publication decisions. No issue Done, publication, tag or artifact
+   distribution is inferred from this preparation.
+
+Runtime, dependencies, lockfile, Docker build substrate, tasks, permissions,
+evaluators, schemas and accepted ADRs remain outside this documentation scope.
+Mandatory rights/security/publication findings cannot be deferred merely by a
+roadmap notice. Existing six domain tasks remain internal-only; no protected
+holdout, legal-quality or production-readiness claim is introduced.

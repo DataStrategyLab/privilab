@@ -1,38 +1,58 @@
 # Trust boundaries
 
-## Untrusted inputs
+## Untrusted content
 
-User-supplied text, retrieved source material, fixture content, and model output
-are untrusted. Source content must never grant permissions, select tools, change
-system instructions, or bypass evaluation/review gates.
+User text, source material, task/fixture content and model output are untrusted.
+They cannot grant permission, select runtime tools, change evaluators or create
+human review/release authority. Instruction-attack fixtures exercise bounded
+controls; they do not establish general live-model immunity.
 
-## Authorization boundary
+## Authorization before context
 
-Permission evaluation precedes retrieval. Retrieval must receive an explicit
-authorization scope and filter sources before any source text enters future
-model context. Missing or unresolved material context fails closed.
+The application evaluates synthetic permission and creates an explicit
+AccessScope. Retrieval filters sources against that scope before source content
+enters provider context. BLOCK, UNKNOWN and unresolved CONDITIONAL stop protected
+progression; runtime labels are distinct from Legal AI Readiness G1/G2/G3.
 
-## Model boundary
+```mermaid
+flowchart LR
+    C["Context + policy"] --> P{"Permission"}
+    P -->|"Denied / missing / unresolved"| STOP["No retrieval or generation"]
+    P -->|"Authorized scope"| F["Retrieval filter"]
+    F --> A["Authorized chunks"]
+    A --> M["Provider context"]
+    X["Excluded source content"] -.->|"Filtered out"| F
+```
 
-Models are providers behind an application-controlled interface. They do not
-control runtime tools, authorization, retrieval scope, evaluation release logic,
-or human-review state. DSL-105 contains no provider implementation.
+## Provider, evaluation and review
 
-## Data boundary
+ModelProvider supplies a structured result behind an application-owned interface.
+Providers cannot broaden scope, invoke tools, modify rubric/gate results or approve
+work. Deterministic criteria validate structural source/citation and provenance
+boundaries; a qualified human separately assesses substantive adequacy.
 
-Only public, synthetic, anonymized, redacted, or properly licensed material may
-enter the repository. Client/DMS content and credentials remain outside the
-system and outside Linear MCP engineering sessions.
+Generated critical BLOCK disables approval. Stopped runs are not reviewable.
+Evaluation execution/persistence failure fails closed. The local reviewer identity
+is synthetic, without production authentication; its immutable decision is not
+legal/client approval or a product release decision.
 
-## Engineering boundary
+## Data and persistence
 
-Codex may use approved user-level engineering integrations. Repository Codex
-configuration disables workspace network access, web search, and multi-agent
-delegation. Linear MCP is not a runtime dependency and grants no architecture,
-merge, release, client-data, or credential authority.
+Only registered public/synthetic/anonymized/redacted/properly licensed materials
+belong in the repository. Client/matter/DMS content, privileged material, restricted
+legal databases, credentials and private security findings remain excluded.
+The FTS index and answer/source bodies are transient. Stored provenance validates
+metadata; it does not authenticate a deliberately forged local database or retain
+an answer replay. See [data handling](../../DATA_HANDLING.md).
 
-## Release boundary
+## Engineering and publication
 
-Automated evaluation, independent Codex review, non-author human review, and
-Andrew's merge/release decision are distinct controls. Critical evaluation and
-Critical/High review findings fail closed. Merge alone does not mark work Done.
+User-level Linear engineering integration is not a runtime dependency or permission
+to transmit protected content. Existing Codex workspace restrictions remain in
+force; this documentation change does not alter them.
+
+Automated evaluation, dedicated Codex review, non-author human engineering approval
+and Andrew's final merge/release decision remain separate controls. Source
+publication, artifact redistribution, prospect demonstration and production use
+have different review scopes. A roadmap/status notice supplies transparency, not
+a waiver of unresolved required rights/security/publication findings.

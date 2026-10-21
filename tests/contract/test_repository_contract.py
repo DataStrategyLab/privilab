@@ -758,11 +758,13 @@ def test_codeowners_and_review_controls_are_finalized() -> None:
     }
     assert set(rules) == expected_patterns
     assert all(
-        owners == {"@tsintsiruk", "@adaora-orakwue"} for owners in rules.values()
+        owners == {"@tsintsiruk", "@adaora-orakwue", "@NaveenGali11"}
+        for owners in rules.values()
     )
 
     assert "@tsintsiruk" in review_controls
     assert "@adaora-orakwue" in review_controls
+    assert "@NaveenGali11" in review_controls
     assert "CODEOWNERS is final" in review_controls
     assert "one non-author human approval" in review_controls
     assert "Andrew retains final merge and release authority" in review_controls

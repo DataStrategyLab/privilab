@@ -1,5 +1,15 @@
 # Code review controls
 
+## Requesting a Codex review
+
+Comment `@codex review` on the pull request. The root
+[AGENTS.md](../../AGENTS.md) directs Codex to the shared
+[pull request review guide](../../.github/CODE_REVIEW.md), which defines review
+scope, evidence standards, actionable feedback, and private security reporting.
+Maintainers coordinate the configured dedicated review and retain the required
+human approval sequence below. A GitHub review request does not configure or
+prove which model executed it; record the actual available review evidence.
+
 ## Required sequence
 
 1. Author completes issue-scoped implementation and `make ci`.
@@ -20,8 +30,11 @@ high risk.
 
 ## CODEOWNERS identities
 
-`@tsintsiruk` and `@adaora-orakwue` are the verified GitHub handles for Andrew
-and Adaora. CODEOWNERS is final for the current P0 repository structure.
+`@tsintsiruk`, `@adaora-orakwue` and `@NaveenGali11` are the GitHub handles for
+Andrew, Adaora and Naveen. Existing CODEOWNERS patterns retain all three owners.
+CODEOWNERS is final for these approved patterns and identities.
+GitHub uses the PR base branch's CODEOWNERS until a change merges. Adding a PR
+author as an owner does not make their self-review a non-author approval.
 
 High-risk changes require the applicable CODEOWNER review controls and at least
 one non-author human approval. Andrew retains final merge and release authority.
