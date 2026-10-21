@@ -92,5 +92,6 @@ materials and project branding retain their own applicable boundaries; see the
 ## Private concerns
 
 Send vulnerabilities through [SECURITY.md](SECURITY.md). Conduct concerns go
-privately to [andrew@datastrategylab.com](mailto:andrew@datastrategylab.com).
+privately to [conduct@datastrategylab.com](mailto:conduct@datastrategylab.com),
+following the [Code of Conduct](CODE_OF_CONDUCT.md#private-conduct-reporting).
 Do not place sensitive reports in public issues, PRs or shared project chats.

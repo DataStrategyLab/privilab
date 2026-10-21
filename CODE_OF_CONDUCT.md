@@ -20,15 +20,36 @@ evaluation results, source rights, professional approval or affiliations.
 
 This policy applies to repository issues, PRs, discussions, reviews and other
 project-designated community spaces, and to official project representation.
-Report conduct concerns privately to
-[andrew@datastrategylab.com](mailto:andrew@datastrategylab.com). Include enough
-context for review, using the minimum necessary personal information. Do not
-post private reports publicly. Security concerns follow [SECURITY.md](SECURITY.md).
 
-Andrew is the project contact. If a report concerns that contact or requires an
-independent reviewer, request an alternative DSL reviewer through an appropriate
-private DSL channel. This preview does not claim an established independent
-ombuds service or a guaranteed response time.
+### Project Contact and Conduct Reporting
+
+- **Andrew Tsintsiruk**
+- Managing Partner, Data Strategy Lab LLC
+- Arlington, Virginia, USA
+- Email: [contact@datastrategylab.com](mailto:contact@datastrategylab.com)
+- Website: [www.datastrategylab.com](https://www.datastrategylab.com/)
+
+### Private Conduct Reporting
+
+Community members may report Code of Conduct concerns privately to:
+[conduct@datastrategylab.com](mailto:conduct@datastrategylab.com).
+
+Reports should include only the information reasonably necessary to understand
+and assess the concern. Sensitive reports must not be submitted through public
+GitHub issues, pull requests, or discussions. Security concerns follow
+[SECURITY.md](SECURITY.md).
+
+### Independent and Conflict-Free Review
+
+Conduct reports involving the primary project contact or another designated
+reviewer will be handled by an authorized, non-conflicted DSL representative.
+Individuals named in a report will not participate in reviewing or deciding
+that matter.
+
+Access to reports will be restricted to individuals reasonably necessary for
+assessment and resolution. DSL will handle reports discreetly, without promising
+absolute confidentiality, an independent ombuds service, or a guaranteed response
+time.
 
 ## Maintainer response
 
