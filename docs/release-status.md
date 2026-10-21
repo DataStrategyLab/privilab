@@ -1,61 +1,72 @@
 # Developer Preview release status
 
-**Status snapshot: October 12, 2026 (America/New_York).**
-**Next status notice target: Friday, October 16, 2026.**
+**Status snapshot: October 21, 2026 (America/New_York).**
+**Planned source-only release target: Wednesday, October 21, 2026.**
+**Publication status: not published yet; final owner decision pending.**
 
-This document accompanies preparation of the v0.1.0 Developer Preview source
-repository. It does not assert a public release/tag, completed prospect-demo
-qualification, security clearance or production fitness. The October 16 target
-is for reporting actual progress/evidence; unresolved items remain pending until
-attributable decisions exist. It is not a promise that every item will be complete.
+The proposed release is **PriviLAB v0.1.0 Developer Preview**, a public,
+Apache-2.0 source-only reference implementation using public/synthetic fixtures.
+The target date does not authorize merge, public repository visibility, a tag or
+release publication. Andrew separately makes those decisions after the final
+release-readiness review. If a required check fails, report the actual blocker;
+do not backdate a release or treat the target as a PASS.
+
+## Source-publication gate
+
+| Area | Current disposition | Evidence/decision required |
+| --- | --- | --- |
+| Public files, history and repository surfaces | Review required | Exact release tree and reachable history; issues/PRs, Actions logs/artifacts and other exposed surfaces; owner clearance of exceptions |
+| Source, fixture and contributor rights | Owner confirmation required | Affirmative Apache-2.0 publishing authority and applicable notices for the actual included bytes |
+| Branding and attribution | Owner confirmation required | Public display/redistribution scope for included DSL marks; Andrew credited as Creator & Lead Architect; trademark rights remain separate |
+| Actual published source execution path | Applicable material issues require disposition | Current local tool/runtime/dependency path, safe defaults and bounded claims; source-only does not waive a relevant security concern |
+| Final PR verification and review | Pending final head | Pinned bootstrap, `make ci`, disclosure/link checks, dedicated Codex review and genuine non-author human/CODEOWNER approval |
+| Repository controls and publication | Owner decision pending | Effective settings, approved publication route, final GO, source-only pre-release and actual public readback |
+| Wheel, binary, container or hosted distribution | Excluded | Separate artifact rights, security qualification and distribution approval would be required |
+
+The release contains source and GitHub's automatic source archives only. The
+Dockerfile and local bootstrap instructions are source examples, not approval to
+distribute an image, wheel, managed runtime or dependency bundle. The retained
+historical application configuration, held successor bases and a future complete
+successor application are distinct artifacts.
 
 ## Available for local engineering exploration
 
 Synthetic fixture execution, permission-scoped retrieval, deterministic critical
 evaluation, separate synthetic review, metadata history and offline verification
 are implemented. An OpenAI adapter and opt-in local live smoke exist separately
-from the fixture preview/CI. The source-checkout task pack contains six internal
-DRAFT scenarios. See [capabilities](capabilities.md) and [getting started](getting-started.md).
+from fixture preview/CI. No live or paid model call is required for normal preview
+or CI. See [capabilities](capabilities.md) and [getting started](getting-started.md).
 
-## Pending work to report in the follow-up notice
+## Separate qualification work remains open
 
-| Area | Current disposition | Evidence/decision needed |
+| Area | Current disposition | Separate evidence/decision required |
 | --- | --- | --- |
-| Current source/advisory/OSS and claims review | In progress | Dated applicable source, component rights/notices and material finding dispositions; supported claims list |
-| Python/OS maintenance candidate selection | In progress | Qualified review of retained restricted findings, owner selection and separately authorized implementation/requalification if needed |
-| Qualified domain/task review | Pending | Attributable reviewer qualification, source/proposition/currentness assessment and task eligibility list |
-| Prospect rehearsal and claims/media acceptance | Pending prerequisites | Actual full/short human rehearsal records; accepted script, disclosures and same-candidate backup media |
-| Durable prospect release record | Pending | Designated storage, accepted evidence links/hashes and owner decision |
-| Brand assets and public content/history boundary | Owner confirmation pending | Public redistribution/display scope for DSL branding and inspection of all published files/history |
-| Public source publication | Awaiting final release-package review/owner decision | Public content/history/rights boundary, dedicated code review, non-author approval, owner publication authorization |
-| Wheel/container redistribution | Not included in this source-release preparation | Actual artifact license/notice/security provenance and separate distribution decision |
+| Held A1/A2 successor base candidates | HOLD BOTH; 44 groups preliminarily unresolved; zero final case-level dispositions | Remaining build/runtime/patch/mitigation evidence and scoped human confirmation; no selection or implementation authorized |
+| Security implementation gate | Gate 2 CLOSED; B04 OPEN | Attributable assessment and owner decisions for the applicable artifact |
+| Qualified domain/task review | Pending | Qualified substantive review, source/proposition/currentness and task eligibility |
+| Prospect rehearsal and claims/media acceptance | Pending prerequisites | Actual human rehearsal, accepted disclosures and same-candidate backup media |
+| Durable prospect release record | Pending | Accepted evidence and final owner decision |
 
-These are sanitized status categories. Raw vulnerability findings, private reports,
-client content and secrets are not public notice material. Maintainer engineering
-records use DSL-156/159 for source/security/OSS work, DSL-157 for domain review and
-DSL-158/154 for prospect qualification; public readers do not need private Linear
-access to understand the scope.
-
-## What the follow-up will contain
-
-Record the actual checked date, applicable source/runtime/configuration identities,
-completed versus pending work, approved claims/task scope, residual limitations,
-owner/reviewer roles and suitable public evidence references. If a date slips,
-publish the actual state rather than converting a target into a PASS.
+Final successor-base case dispositions and prospect rehearsal are not prerequisites
+for source visibility by themselves. Source publication does not close them or
+approve substantive/prospect use. Any material issue applicable to the actual
+source and documented local execution path must still be addressed for that
+publication scope.
 
 ## Existing limitations remain in force
 
-- All six domain tasks remain INTERNAL_ONLY pending qualified eligibility and
-  prospect-release decisions; source visibility alone does not approve them.
+- All six domain tasks remain INTERNAL_ONLY for substantive/prospect use pending
+  qualified eligibility and prospect-release decisions. Source visibility alone
+  does not approve them.
 - No protected holdout validation was performed. Evidence is disclosed synthetic/
   golden control behavior and deterministic fixture repeatability.
 - Automated structural PASS is distinct from domain correctness and human approval.
 - There is no production identity/DMS integration, hosted runtime, model-controlled
   tool execution or runtime MCP.
 - Metadata supports reconstruction of identity/disposition, not answer replay.
-- Current model availability, privacy/ZDR, pricing/savings, certification and
-  vendor partnership assertions are not established by the repository.
+- Model availability, privacy/ZDR, pricing/savings, certification, production
+  fitness and vendor endorsement are not established by the repository.
 
-A notice provides transparency. Required disclosure, rights, material security and
-publication approval concerns must be dispositioned for the applicable release
-scope; they cannot be waived simply by promising a later update.
+Raw vulnerability findings, private reports, client content and secrets are not
+public release material. Keep the release-readiness report sanitized and preserve
+private evidence in its approved restricted custody.

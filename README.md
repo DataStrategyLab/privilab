@@ -8,8 +8,11 @@ a draft before approval, keep review decisions separate, and retain useful run
 metadata. Legal and regulated environments motivate the design; the runnable
 examples use synthetic data and fixed fixture answers.
 
-**Release direction: v0.1.0 Developer Preview.** Publication approval and the
-remaining qualification work are tracked in the [release status](docs/release-status.md).
+**Creator & Lead Architect: Andrew Tsintsiruk.**
+
+**Planned source-only release: v0.1.0 Developer Preview, October 21, 2026.**
+The repository is not published yet. Final publication approval and the remaining
+qualification work are tracked in the [release status](docs/release-status.md).
 This is a local reference implementation with no production, legal-quality,
 security-certification or prospect-demo readiness claim.
 

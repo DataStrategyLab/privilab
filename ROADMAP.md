@@ -3,7 +3,8 @@
 PriviLAB's release direction is **v0.1.0 Developer Preview**, using local synthetic
 reference workflows. This roadmap describes direction, not a release commitment
 or approval for client/production use. [Release status](docs/release-status.md)
-records dated pending gates and the October 16, 2026 follow-up notice target.
+records dated pending gates and the October 21, 2026 source-only release target.
+Publication has not occurred; the target does not authorize merge or release.
 
 ## Implemented foundation
 
@@ -26,6 +27,12 @@ human rehearsal/media acceptance and final prospect-release evidence remain
 incomplete. Python/OS maintenance candidates require reviewed selection and
 separate implementation/requalification; no successor is assumed accepted.
 Public repository publication remains a distinct owner decision.
+
+The held A1/A2 successor base candidates remain HOLD BOTH, with all 44 assessment
+groups preliminarily unresolved and zero final case-level dispositions. Gate 2
+is closed. Their qualification and any prospect rehearsal are separate from the
+source-publication gate; a material issue in the actual published execution path
+still requires disposition before publication.
 
 ## Candidate future work
 

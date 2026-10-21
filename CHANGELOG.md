@@ -5,6 +5,11 @@
 The Python package version is 0.1.0. This entry does not assert that a GitHub
 release/tag or public repository publication has occurred.
 
+The planned source-only release target is October 21, 2026 (America/New_York),
+subject to public-content/history, rights, security and final approval checks.
+No wheel, binary, container image or hosted demo is included. Record the actual
+publication date when the owner publishes the GitHub pre-release.
+
 ### Existing implementation represented in this preview
 
 - Synthetic context and permission contracts; fail-closed policy/scope boundaries.
@@ -22,6 +27,9 @@ release/tag or public repository publication has occurred.
 - Current architecture diagrams, setup/reproducibility and capability/evaluation
   guides; roadmap and dated unfinished-work notice.
 
-Current-source/security/OSS, qualified domain and prospect rehearsal/release gates
-remain pending. See [release status](docs/release-status.md). Record an actual
-release date and tag only after the owner makes and executes that decision.
+Public-source disclosure, rights, applicable security review and final publication
+approval remain pending. Qualified domain and prospect rehearsal/release gates are
+separate; all six domain scenarios remain INTERNAL_ONLY for substantive/prospect
+use. Held successor bases remain HOLD BOTH and Gate 2 remains closed. See
+[release status](docs/release-status.md). Record an actual release date and tag
+only after the owner makes and executes that decision.

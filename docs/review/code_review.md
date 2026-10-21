@@ -20,8 +20,11 @@ high risk.
 
 ## CODEOWNERS identities
 
-`@tsintsiruk` and `@adaora-orakwue` are the verified GitHub handles for Andrew
-and Adaora. CODEOWNERS is final for the current P0 repository structure.
+`@tsintsiruk`, `@adaora-orakwue` and `@NaveenGali11` are the GitHub handles for
+Andrew, Adaora and Naveen. Existing CODEOWNERS patterns retain all three owners.
+CODEOWNERS is final for these approved patterns and identities.
+GitHub uses the PR base branch's CODEOWNERS until a change merges. Adding a PR
+author as an owner does not make their self-review a non-author approval.
 
 High-risk changes require the applicable CODEOWNER review controls and at least
 one non-author human approval. Andrew retains final merge and release authority.
