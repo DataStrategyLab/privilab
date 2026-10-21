@@ -336,17 +336,53 @@ def test_required_paths_are_present() -> None:
     assert not missing, f"missing required repository paths: {missing}"
 
 
+def assert_public_documentation_url_boundary(text: str, relative_path: str) -> None:
+    assert not re.search(
+        r"https?://(?:linear\.app|(?:[\w-]+\.)?(?:drive|docs)\.google\.com)"
+        r"(?:[/\s]|$)",
+        text,
+        re.IGNORECASE,
+    ), f"{relative_path}: use public references or stable internal issue identifiers"
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://linear.app/example/issue/EXAMPLE-1",
+        "https://drive.google.com/file/d/synthetic/view",
+        "https://docs.google.com/document/d/synthetic/edit",
+        "https://docs.google.com/spreadsheets/d/synthetic/edit",
+        "https://docs.google.com/presentation/d/synthetic/edit",
+        "HTTPS://DOCS.GOOGLE.COM/forms/d/synthetic/viewform",
+    ],
+)
+def test_private_workflow_links_are_rejected(url: str) -> None:
+    with pytest.raises(AssertionError, match="use public references"):
+        assert_public_documentation_url_boundary(
+            f"[Required record]({url})", "README.md"
+        )
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "https://docs.python.org/3/",
+        "https://developers.google.com/docs/api",
+        "https://github.com/DataStrategyLab/privilab/issues",
+        "Maintainer issue identifier: EXAMPLE-1",
+    ],
+)
+def test_public_references_remain_allowed(text: str) -> None:
+    assert_public_documentation_url_boundary(text, "README.md")
+
+
 @pytest.mark.parametrize("relative_path", PUBLIC_DOCS)
 def test_public_documentation_links_and_private_url_boundary(
     relative_path: str,
 ) -> None:
     path = ROOT / relative_path
     text = path.read_text(encoding="utf-8")
-    assert not re.search(
-        r"https?://(?:linear\.app|(?:[\w-]+\.)?drive\.google\.com)(?:[/\s]|$)",
-        text,
-        re.IGNORECASE,
-    ), f"{relative_path}: use public references or stable internal issue identifiers"
+    assert_public_documentation_url_boundary(text, relative_path)
 
     # Check inline Markdown file links outside fenced examples without network
     # requests. External availability and historical evidence are separate reviews.
