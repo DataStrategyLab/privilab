@@ -19,7 +19,9 @@ prove which model executed it; record the actual available review evidence.
 5. One non-author human approves the change.
 6. Required CODEOWNER approvals are present for high-risk paths.
 7. Andrew makes the final merge and release decision.
-8. Acceptance and preview evidence are reviewed before Linear is marked Done.
+8. Acceptance and preview evidence are reviewed before issue completion is
+   recorded. Public contributors use the public issue/PR; maintainers separately
+   reconcile any private Linear state. Private-system access is not required.
 
 ## High-risk paths
 

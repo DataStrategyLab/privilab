@@ -9,11 +9,41 @@ import subprocess
 import tomllib
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote, urlsplit
 
 import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+
+# Current public entry points only. Historical captures/plans retain their own
+# context and are classified separately, not rewritten to satisfy these checks.
+PUBLIC_DOCS = (
+    "README.md",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "CONTRIBUTORS.md",
+    "GOVERNANCE.md",
+    "SUPPORT.md",
+    "SECURITY.md",
+    "DATA_HANDLING.md",
+    "CODE_OF_CONDUCT.md",
+    "CHANGELOG.md",
+    "ROADMAP.md",
+    "THIRD_PARTY_NOTICES.md",
+    ".github/CODE_REVIEW.md",
+    ".github/pull_request_template.md",
+    "docs/README.md",
+    "docs/getting-started.md",
+    "docs/reproducibility.md",
+    "docs/capabilities.md",
+    "docs/release-status.md",
+    "docs/evidence-publication.md",
+    "docs/review/code_review.md",
+    "docs/decisions/README.md",
+    "docs/decisions/decision-log.md",
+    "licenses/README.md",
+)
 
 REQUIRED_PATHS = {
     ".codex/config.toml",
@@ -304,6 +334,56 @@ def assert_reviewed_non_pypi_artifacts_match(
 def test_required_paths_are_present() -> None:
     missing = sorted(path for path in REQUIRED_PATHS if not (ROOT / path).exists())
     assert not missing, f"missing required repository paths: {missing}"
+
+
+@pytest.mark.parametrize("relative_path", PUBLIC_DOCS)
+def test_public_documentation_links_and_private_url_boundary(
+    relative_path: str,
+) -> None:
+    path = ROOT / relative_path
+    text = path.read_text(encoding="utf-8")
+    assert not re.search(
+        r"https?://(?:linear\.app|(?:[\w-]+\.)?drive\.google\.com)(?:[/\s]|$)",
+        text,
+        re.IGNORECASE,
+    ), f"{relative_path}: use public references or stable internal issue identifiers"
+
+    # Check inline Markdown file links outside fenced examples without network
+    # requests. External availability and historical evidence are separate reviews.
+    prose = re.sub(r"^```[^\n]*\n.*?^```[^\n]*$", "", text, flags=re.M | re.S)
+    for match in re.finditer(r"\[[^\]\n]*\]\(<?([^\s)>]+)>?\)", prose):
+        link = urlsplit(match[1])
+        if link.scheme or link.netloc:
+            continue
+        target = (path.parent / unquote(link.path)).resolve() if link.path else path
+        assert target.is_relative_to(ROOT), f"{relative_path}: link escapes repository"
+        assert target.exists(), f"{relative_path}: missing local target {match[1]}"
+        if link.fragment and target.suffix == ".md":
+            headings = re.findall(
+                r"^#{1,6}\s+(.+?)\s*#*\s*$",
+                target.read_text(encoding="utf-8"),
+                flags=re.M,
+            )
+            anchors = {
+                re.sub(r"[^\w\- ]", "", heading.lower()).replace(" ", "-")
+                for heading in headings
+            }
+            assert unquote(link.fragment) in anchors, (
+                f"{relative_path}: missing heading target {match[1]}"
+            )
+
+
+def test_public_workflow_does_not_require_private_issue_access() -> None:
+    for relative_path in ("AGENTS.md", "CONTRIBUTING.md", "GOVERNANCE.md"):
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+        assert re.search(r"public (?:GitHub )?issue", text, re.IGNORECASE)
+        assert "maintainer-scoped" in text or "public issue/PR" in text
+        assert not re.search(r"work from one Ready Linear issue", text, re.IGNORECASE)
+    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    assert "Drive, or internal planning access is not required" in agents
+    assert "make ci" in agents
+    assert "non-author human approval" in agents
+    assert "Andrew's final merge/release" in agents
 
 
 @pytest.mark.parametrize(

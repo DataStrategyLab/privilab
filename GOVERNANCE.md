@@ -25,8 +25,10 @@ contributions separately from active review responsibilities.
 
 Start with a non-sensitive [GitHub issue](https://github.com/DataStrategyLab/privilab/issues)
 describing the problem, intended behavior, scope, and observable acceptance
-criteria. Public contributors do not need access to private Linear; maintainers
-coordinate the accepted engineering scope. Small documentation corrections can
+criteria. Public contributors and coding agents do not need private Linear or
+Drive access. Maintainers make the accepted scope and applicable decisions
+available in the public issue/PR and repository ADRs, while retaining private
+engineering records separately. Small documentation corrections can
 use the bounded process described in [Contributing](CONTRIBUTING.md).
 
 Use issue and PR discussion to explain evidence, alternatives, and trade-offs.
