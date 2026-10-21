@@ -19,7 +19,8 @@ confirmation before publication; do not infer that a code license expands them.
 [registry.yaml](registry.yaml) records reviewed artifacts, versions, source/license
 locations, intended use, attribution and open questions. Original synthetic entries
 historically say “no external license”; they describe origin, not an exemption from
-the now-published project license. Existing history and fixture hashes are preserved.
+the project license included in this tree. Existing history and fixture hashes
+are preserved.
 
 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) indexes component license
 sources. Installing dependencies from their upstream distributions differs from
