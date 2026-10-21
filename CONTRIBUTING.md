@@ -5,6 +5,8 @@ Read the [Code of Conduct](CODE_OF_CONDUCT.md), [data policy](DATA_HANDLING.md)
 and [security policy](SECURITY.md) before submitting content.
 See [Support](SUPPORT.md) for usage questions and reporting channels, and
 [Governance](GOVERNANCE.md) for responsibilities and project decisions.
+[Contributors and acknowledgments](CONTRIBUTORS.md) records engineering and
+historical technical-review credit.
 
 ## Start with an issue
 

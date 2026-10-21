@@ -1,28 +1,27 @@
 # Verified PriviLAB P0 CODEOWNERS.
 # Andrew: @tsintsiruk
-# Adaora: @adaora-orakwue
 # Naveen: @NaveenGali11
 #
 # High-risk changes require applicable CODEOWNER review controls and at least
 # one non-author human approval. Andrew retains final merge/release authority.
 
-* @tsintsiruk @adaora-orakwue @NaveenGali11
+* @tsintsiruk @NaveenGali11
 
-/.github/ @tsintsiruk @adaora-orakwue @NaveenGali11
-/.codex/ @tsintsiruk @adaora-orakwue @NaveenGali11
-/AGENTS.md @tsintsiruk @adaora-orakwue @NaveenGali11
-/SECURITY.md @tsintsiruk @adaora-orakwue @NaveenGali11
-/DATA_HANDLING.md @tsintsiruk @adaora-orakwue @NaveenGali11
-/Dockerfile @tsintsiruk @adaora-orakwue @NaveenGali11
-/Makefile @tsintsiruk @adaora-orakwue @NaveenGali11
-/pyproject.toml @tsintsiruk @adaora-orakwue @NaveenGali11
-/uv.lock @tsintsiruk @adaora-orakwue @NaveenGali11
-/docs/architecture/ @tsintsiruk @adaora-orakwue @NaveenGali11
-/docs/decisions/ @tsintsiruk @adaora-orakwue @NaveenGali11
-/docs/review/ @tsintsiruk @adaora-orakwue @NaveenGali11
-/licenses/ @tsintsiruk @adaora-orakwue @NaveenGali11
-/scripts/bootstrap.sh @tsintsiruk @adaora-orakwue @NaveenGali11
-/scripts/secret_scan.sh @tsintsiruk @adaora-orakwue @NaveenGali11
-/src/privilab/adapters/ @tsintsiruk @adaora-orakwue @NaveenGali11
-/src/privilab/config.py @tsintsiruk @adaora-orakwue @NaveenGali11
-/src/privilab/domain/ @tsintsiruk @adaora-orakwue @NaveenGali11
+/.github/ @tsintsiruk @NaveenGali11
+/.codex/ @tsintsiruk @NaveenGali11
+/AGENTS.md @tsintsiruk @NaveenGali11
+/SECURITY.md @tsintsiruk @NaveenGali11
+/DATA_HANDLING.md @tsintsiruk @NaveenGali11
+/Dockerfile @tsintsiruk @NaveenGali11
+/Makefile @tsintsiruk @NaveenGali11
+/pyproject.toml @tsintsiruk @NaveenGali11
+/uv.lock @tsintsiruk @NaveenGali11
+/docs/architecture/ @tsintsiruk @NaveenGali11
+/docs/decisions/ @tsintsiruk @NaveenGali11
+/docs/review/ @tsintsiruk @NaveenGali11
+/licenses/ @tsintsiruk @NaveenGali11
+/scripts/bootstrap.sh @tsintsiruk @NaveenGali11
+/scripts/secret_scan.sh @tsintsiruk @NaveenGali11
+/src/privilab/adapters/ @tsintsiruk @NaveenGali11
+/src/privilab/config.py @tsintsiruk @NaveenGali11
+/src/privilab/domain/ @tsintsiruk @NaveenGali11

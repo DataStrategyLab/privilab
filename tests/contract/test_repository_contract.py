@@ -27,6 +27,7 @@ REQUIRED_PATHS = {
     ".gitignore",
     "AGENTS.md",
     "CONTRIBUTING.md",
+    "CONTRIBUTORS.md",
     "DATA_HANDLING.md",
     "Dockerfile",
     "Makefile",
@@ -722,19 +723,22 @@ def test_linear_mcp_exception_and_adr_filename_are_exact() -> None:
 def test_codeowners_and_review_controls_are_finalized() -> None:
     codeowners = (ROOT / ".github/CODEOWNERS").read_text(encoding="utf-8")
     review_controls = (ROOT / "docs/review/code_review.md").read_text(encoding="utf-8")
+    contributors = (ROOT / "CONTRIBUTORS.md").read_text(encoding="utf-8")
 
     assert "@tsintsiruk" in codeowners
-    assert "@adaora-orakwue" in codeowners
-    assert "Adaora's verified GitHub handle" not in codeowners
+    assert "@NaveenGali11" in codeowners
+    assert "@adaora-orakwue" not in codeowners
     assert "still required" not in codeowners
     assert "pending" not in codeowners.lower()
 
-    rules = {
-        parts[0]: set(parts[1:])
+    rule_entries = [
+        (parts[0], set(parts[1:]))
         for line in codeowners.splitlines()
         if (stripped := line.strip()) and not stripped.startswith("#")
         if (parts := stripped.split())
-    }
+    ]
+    rules = dict(rule_entries)
+    assert len(rule_entries) == len(rules), "CODEOWNERS patterns must not be duplicated"
     expected_patterns = {
         "*",
         "/.github/",
@@ -757,18 +761,17 @@ def test_codeowners_and_review_controls_are_finalized() -> None:
         "/src/privilab/domain/",
     }
     assert set(rules) == expected_patterns
-    assert all(
-        owners == {"@tsintsiruk", "@adaora-orakwue", "@NaveenGali11"}
-        for owners in rules.values()
-    )
+    assert all(owners == {"@tsintsiruk", "@NaveenGali11"} for owners in rules.values())
 
     assert "@tsintsiruk" in review_controls
-    assert "@adaora-orakwue" in review_controls
+    assert "@adaora-orakwue" not in review_controls
     assert "@NaveenGali11" in review_controls
     assert "CODEOWNERS is final" in review_controls
     assert "one non-author human approval" in review_controls
     assert "Andrew retains final merge and release authority" in review_controls
     assert "pending" not in review_controls.lower()
+    assert "Adaora Orakwue" in contributors
+    assert "https://github.com/adaora-orakwue" in contributors
 
 
 def test_bootstrap_dependency_set_excludes_out_of_scope_components() -> None:

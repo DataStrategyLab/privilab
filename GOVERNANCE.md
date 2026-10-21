@@ -13,10 +13,13 @@ process; it does not create new approval powers or change the project license.
 | Creator and Lead Architect | Andrew Tsintsiruk (`@tsintsiruk`) makes final architecture, merge, and release decisions under the existing review requirements. |
 
 [CODEOWNERS](.github/CODEOWNERS) identifies the applicable review owners:
-`@tsintsiruk`, `@adaora-orakwue`, and `@NaveenGali11`. Ownership does not replace
+`@tsintsiruk` and `@NaveenGali11`. Ownership does not replace
 non-author review, establish availability for every request, or allow an author
 to approve their own change. GitHub evaluates CODEOWNERS from the PR's base branch
 until a change merges. See the [review controls](docs/review/code_review.md).
+
+[Contributor acknowledgments](CONTRIBUTORS.md) recognize current and historical
+contributions separately from active review responsibilities.
 
 ## Proposals and decisions
 
