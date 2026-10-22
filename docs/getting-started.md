@@ -4,11 +4,16 @@ This guide runs the local synthetic fixture preview. It needs no API key, hosted
 service, frontend build or client data. Use a source checkout for the complete
 six-task trade/regulatory pack.
 
+**Setup qualification is pending.** Wait for maintainer clearance before a new
+networked native bootstrap. The commands below describe the existing engineering
+path, not a release-cleared public setup. Check
+[local setup qualification](release-status.md#local-setup-qualification) first.
+
 ## Requirements and installation
 
 Supported bootstrap platforms are macOS/Linux on ARM64 or x86-64. Install Git,
 make, curl, tar, a POSIX shell and shasum or sha256sum. Windows is not a supported
-native bootstrap platform. Docker is optional.
+native bootstrap platform. Docker is an unsupported engineering reference only.
 
 ```sh
 git clone https://github.com/DataStrategyLab/privilab.git
@@ -85,18 +90,21 @@ load a `.env` file. Use shell environment variables. Keep secrets and DBs untrac
 
 ## Optional container
 
-```sh
-make container-build
-make container-preview
-```
+**Reference only; unsupported and unqualified.** The historical Dockerfile is
+retained for engineering traceability and reproducibility review. It is not a
+supported installation or preview path. Do not build, run or expose it for general
+external, shared, prospect, client, hosted or production use.
 
-These commands require an existing permitted Docker installation and may download
-base/dependency inputs during build. The published port binds to loopback. The
-container includes the ordinary synthetic corpus, not the full source-checkout
-trade/regulatory pack. The container is removed on exit and its DB is ephemeral.
-Use the source preview for restart/history and all six trade/regulatory tasks.
-Container/image redistribution remains separately gated by OS/component notices
-and security review; this documentation does not publish an image.
+The existing Makefile container targets remain executable; this documentation
+change does not disable them. Their presence does not authorize execution or
+establish image qualification. Digest pins and loopback port mapping do not
+resolve outstanding security findings or guarantee isolation on every Docker
+Engine version. See [Docker's port-publication guidance](https://docs.docker.com/engine/network/port-publishing/).
+
+Docker operation and image redistribution require separate security qualification
+and maintainer approval. The intended public preview path is native localhost
+with public/synthetic inputs, once the separate
+[native setup qualification](release-status.md#local-setup-qualification) is complete.
 
 ## Troubleshooting
 

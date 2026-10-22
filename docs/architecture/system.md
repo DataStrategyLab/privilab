@@ -87,9 +87,15 @@ are introduced. See [live-smoke details](live-eval.md).
 
 ## Environments and boundaries
 
-Supported execution is a local source preview or supplemental local container.
-The container lacks the complete six-task checkout pack and discards its DB on
-normal removal. No hosted runtime, production identity/DMS integration, autonomous
-framework or runtime MCP is part of this architecture. Post-bootstrap `make ci`
-is offline and secret-free. [Trust boundaries](trust-boundaries.md) explain the
-control/authority separation.
+The implemented native source preview is local and uses public/synthetic inputs;
+its uv/Python bootstrap qualification remains pending. The retained Dockerfile is
+an unsupported, unqualified engineering reference, not a supported container
+preview. Existing executable Makefile targets do not authorize Docker operation.
+See [local setup qualification](../release-status.md#local-setup-qualification)
+for current restrictions. Historical container observations retain their original
+scope; no deployment behavior changes are introduced here.
+
+No hosted runtime, production identity/DMS integration, autonomous framework or
+runtime MCP is part of this architecture. Post-bootstrap `make ci` is offline and
+secret-free. [Trust boundaries](trust-boundaries.md) explain the control/authority
+separation.
