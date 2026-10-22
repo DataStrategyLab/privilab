@@ -30,6 +30,9 @@ implemented behavior from limits and future work.
 - [Synthetic fixtures](fixtures.md) and [evaluation packs](../evals/README.md).
 - [Trade/regulatory task pack](../tasks/trade_regulatory/research_v1/README.md).
 - [Historical engineering evidence](product/evidence/README.md).
+- [Evidence publication proposals](evidence-publication.md): file-by-file
+  classification and owner decisions; no captured record is changed or cleared
+  for publication by this proposal.
 
 Historical evidence records its own candidate, time and limitations. It is not
 current approval merely because it is committed. Pending human/source/security

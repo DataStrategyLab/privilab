@@ -33,7 +33,7 @@ review requirements, or merge/release authority.
 
 ## 2026-09-28 — DSL-115 provider and DSL-116 telemetry allocation
 
-Andrew approved the [DSL-115](https://linear.app/rohic/issue/DSL-115) implementation
+Andrew approved the DSL-115 implementation
 plan after DSL-114 satisfied ADR-003's fixture-first prerequisite. DSL-115 owns
 the official OpenAI Responses adapter for exactly `gpt-5.6-terra`, governed
 composition, and an immutable execution-bound `OpenAIGeneration` containing the

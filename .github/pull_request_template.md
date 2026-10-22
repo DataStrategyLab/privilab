@@ -5,7 +5,7 @@ Describe the concrete change and its scope.
 ## Issue
 
 - Public GitHub issue:
-- Maintainer engineering issue (when assigned):
+- Maintainer engineering issue identifier (optional; no private URL or evidence):
 
 ## Verification
 

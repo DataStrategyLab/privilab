@@ -15,9 +15,10 @@ non-sensitive bug, documentation correction or bounded feature proposal. Include
 expected/actual behavior, version or source SHA, platform, reproduction steps and
 sanitized synthetic examples. Check existing issues/PRs first.
 
-Public contributors do not need access to private Linear. Maintainers map accepted
-work into one Ready engineering issue with scope, acceptance criteria, tests and
-preview needs. Read [AGENTS.md](AGENTS.md) and relevant
+Public contributors and coding agents do not need private Linear or Drive access.
+Maintainers record accepted scope, acceptance criteria, tests and preview needs in
+the public issue or PR; they may also track the work in private engineering records.
+Read [AGENTS.md](AGENTS.md) and relevant
 [ADRs](docs/decisions/README.md). Work from an isolated branch/worktree and keep
 changes inside the accepted scope. For routine documentation fixes, a maintainer
 can define that scope from the GitHub report.
@@ -28,8 +29,9 @@ is not authorization to introduce it.
 
 ## Set up and verify
 
-Fork/clone the repository and create a branch from current main. Maintainers use
-`codex/` for Codex-authored branches. Follow [Getting started](docs/getting-started.md).
+Fork/clone the repository and create a descriptively named branch from current
+main, such as `docs/getting-started-links`. No branch prefix or private project
+tool is required. Follow [Getting started](docs/getting-started.md).
 
 ```sh
 ./scripts/bootstrap.sh --ci
@@ -60,8 +62,10 @@ change. Use synthetic data and a fresh ignored DB when appropriate. See
 
 ## Pull requests and review
 
-Link the public GitHub issue and, when available, the maintainer's engineering
-issue. Explain the problem, final behavior, scope, verification, preview results
+Link the public GitHub issue or include the maintainer-scoped acceptance criteria
+in the PR. An internal issue identifier may be included for traceability; do not
+copy private URLs, descriptions or evidence. Explain the problem, final behavior,
+scope, verification, preview results
 and known limits. Keep screenshots/logs free of sensitive/private content.
 AI-assisted contributions must be understood by their author and meet the same
 requirements as other changes.

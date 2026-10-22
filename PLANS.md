@@ -5,6 +5,33 @@ records the governing issue, acceptance criteria, architecture decisions,
 dependencies, verification stages, preview evidence, license/data impact,
 review findings, and remaining blockers.
 
+Public contributions use the accepted public issue or maintainer-scoped PR,
+repository instructions, ADRs and tests. Private Linear/Drive access is not
+required. The dated plans below retain their original execution context; they
+are not instructions to repeat historical qualification or access private records.
+
+## DSL-182 public-source hygiene plan (October 21, 2026)
+
+Baseline: main `ede324d4f620afce0d0a579734e104894f99d456`.
+Branch: `naveen/dsl-182-public-source-hygiene`.
+
+1. Align public contributor/agent instructions and maintainer-only coordination;
+   preserve accepted ADRs, security controls and human approval requirements.
+2. Check public navigation and publication language; remove unnecessary private
+   URLs in ordinary documentation without editing historical captured evidence.
+3. Propose file-by-file evidence classifications separately from the captured
+   records. Preserve all existing bytes/hashes and identify owner decisions.
+4. Add narrow documentation contracts to the existing pytest/`make ci` sequence;
+   run canonical CI, link checks and `git diff --check`.
+5. Run dedicated configured Codex review; hand off one PR with exact revision,
+   results and remaining owner decisions for non-author CODEOWNER approval.
+
+No application, dependency, runtime, Docker, collector or captured-evidence
+changes; no GitHub discussion/settings cleanup, history rewrite, new scan, tag,
+publication or deployment. Source-only publication, held successor candidates
+and prospect/production qualification remain separate. The author does not merge
+or mark the tracking issue Done.
+
 ## DSL-105 bootstrap plan
 
 DSL-105 establishes the approved repository skeleton and makes `make ci` the

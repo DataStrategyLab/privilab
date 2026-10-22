@@ -18,6 +18,13 @@ need to install Codex or access private project-management tools; maintainers
 coordinate automated review. A one-off concern can be added to the request, but
 routine reviews do not need a long prompt.
 
+Use the public issue or maintainer-scoped PR, accepted ADRs, tests and repository
+instructions as the review inputs. Private Linear/Drive access is not a
+contributor or agent prerequisite. If a required decision is unavailable, request
+a public-safe maintainer clarification and report the verification gap; do not
+infer approval or weaken a control. Maintainers reconcile internal records
+separately.
+
 This is repository guidance, not a GitHub-enforced check or a configuration that
 enables the integration. Maintainers must keep Codex code review enabled for the
 repository. See the [official setup documentation](https://learn.chatgpt.com/docs/third-party/github).

@@ -148,8 +148,9 @@ technical-review credits, including Adaora Orakwue's earlier review contribution
 Open a [GitHub issue](https://github.com/DataStrategyLab/privilab/issues) with a
 bounded proposal or reproducible non-sensitive bug report. Maintainers route
 accepted work into the repository's issue, CI and review process. Contributors
-need no private Linear access. AI-assisted changes receive the same review and
-data restrictions as other contributions.
+and coding agents use public issues/PRs, [repository instructions](AGENTS.md),
+ADRs and tests without private Linear or Drive access. AI-assisted changes receive
+the same review and data restrictions as other contributions.
 
 Project-authored code and original project-authored documentation/synthetic
 fixtures are offered under [Apache License 2.0](LICENSE), subject to applicable
