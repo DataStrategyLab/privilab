@@ -5,8 +5,8 @@ Start with [Getting started](getting-started.md), then
 implemented behavior from limits and future work.
 
 Check [local setup qualification](release-status.md#local-setup-qualification)
-before new setup. Native uv/Python qualification is pending; the Dockerfile is an
-unsupported, unqualified engineering reference.
+before new setup. Native uv/Python qualification is pending; Docker setup is on a
+temporary security-qualification hold.
 
 ## Implementation
 

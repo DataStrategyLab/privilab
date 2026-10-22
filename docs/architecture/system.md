@@ -88,9 +88,13 @@ are introduced. See [live-smoke details](live-eval.md).
 ## Environments and boundaries
 
 The implemented native source preview is local and uses public/synthetic inputs;
-its uv/Python bootstrap qualification remains pending. The retained Dockerfile is
-an unsupported, unqualified engineering reference, not a supported container
-preview. Existing executable Makefile targets do not authorize Docker operation.
+its uv/Python bootstrap qualification remains pending.
+[ADR-008](../decisions/ADR-008-preview-deployment.md) permits localhost preview and
+local containers as the architectural scope. The current container setup is on a
+temporary security-qualification hold for this Developer Preview; the hold does
+not supersede ADR-008's architectural decision. During the hold, the Dockerfile
+remains an engineering reference rather than a recommended public setup.
+Existing executable Makefile targets do not lift the hold or authorize operation.
 See [local setup qualification](../release-status.md#local-setup-qualification)
 for current restrictions. Historical container observations retain their original
 scope; no deployment behavior changes are introduced here.

@@ -37,9 +37,13 @@ successor application are distinct artifacts.
   The intended public preview is native localhost with public/synthetic inputs
   only after the applicable tool/runtime findings have been resolved or explicitly
   dispositioned. This documentation does not apply a tool or interpreter fix.
-- **Docker: reference only, unsupported and unqualified.** The historical
-  Dockerfile remains for engineering traceability and reproducibility review.
-  Do not build, run or expose it for general external, shared, prospect, client,
+- **Docker: temporary security-qualification hold.**
+  [ADR-008](decisions/ADR-008-preview-deployment.md) permits a local container as an
+  architectural option. This release-specific hold preserves that decision;
+  architectural permission does not establish security qualification for the
+  current container. The Dockerfile remains for engineering traceability and
+  reproducibility review. While the hold applies, do not build, run or expose it
+  for general external, shared, prospect, client,
   hosted or production use. Existing executable Makefile targets are retained;
   their presence does not authorize execution. Docker operation needs separate
   security qualification and maintainer approval. No base-image update or

@@ -40,9 +40,9 @@ evaluation, and the separate review controls. No API key or paid model call is
 needed. Stop the preview with Ctrl-C.
 
 See [Getting started](docs/getting-started.md) for expected scenarios, fresh
-databases, configuration and troubleshooting. The Dockerfile is retained only as
-an unqualified engineering reference; Docker setup is unsupported and must not be
-built, run or exposed for general use. The clone command
+databases, configuration and troubleshooting. Docker setup is on a temporary
+security-qualification hold. The Dockerfile remains an engineering reference;
+do not build, run or expose it for general use while the hold applies. The clone command
 requires repository access until the owner makes the repository public.
 
 ## What it demonstrates

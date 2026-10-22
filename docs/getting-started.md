@@ -13,7 +13,7 @@ path, not a release-cleared public setup. Check
 
 Supported bootstrap platforms are macOS/Linux on ARM64 or x86-64. Install Git,
 make, curl, tar, a POSIX shell and shasum or sha256sum. Windows is not a supported
-native bootstrap platform. Docker is an unsupported engineering reference only.
+native bootstrap platform. Docker setup is on a temporary security-qualification hold.
 
 ```sh
 git clone https://github.com/DataStrategyLab/privilab.git
@@ -90,10 +90,13 @@ load a `.env` file. Use shell environment variables. Keep secrets and DBs untrac
 
 ## Optional container
 
-**Reference only; unsupported and unqualified.** The historical Dockerfile is
-retained for engineering traceability and reproducibility review. It is not a
-supported installation or preview path. Do not build, run or expose it for general
-external, shared, prospect, client, hosted or production use.
+**Temporary security-qualification hold.**
+[ADR-008](decisions/ADR-008-preview-deployment.md) permits a local container as an
+architectural option; this release-specific hold does not supersede that decision.
+The Dockerfile is retained for engineering traceability and reproducibility review.
+Do not use it as a public installation or preview path while the hold applies.
+Do not build, run or expose it for general external, shared, prospect, client,
+hosted or production use.
 
 The existing Makefile container targets remain executable; this documentation
 change does not disable them. Their presence does not authorize execution or

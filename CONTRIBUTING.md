@@ -35,7 +35,7 @@ tool is required. Follow [Getting started](docs/getting-started.md).
 
 Check [local setup qualification](docs/release-status.md#local-setup-qualification)
 before new networked bootstrap: native uv/Python qualification is pending, and
-Docker is an unsupported, unqualified engineering reference.
+Docker setup is on a temporary security-qualification hold.
 
 ```sh
 ./scripts/bootstrap.sh --ci

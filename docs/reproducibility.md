@@ -89,8 +89,9 @@ get a PASS. Their observations retain their original execution identity and time
   model availability, substantive legal quality or protected holdout performance.
 - A lock export/SBOM is component inventory, not vulnerability clearance or an
   image attestation. Current security/OSS review remains separate.
-- The Dockerfile is an unsupported, unqualified engineering reference. Digest
-  pins do not clear security findings; Docker operation requires separate
+- Docker setup is on a temporary security-qualification hold; the Dockerfile
+  remains an engineering reference during the hold. Digest pins do not clear
+  security findings; Docker operation requires separate
   qualification and maintainer approval. Historical container observations retain
   their original scope, including cached layers, OS packages and task-pack limits.
 - Pre-existing incompatible evidence schemas fail closed; no automatic migration

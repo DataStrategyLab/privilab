@@ -8,8 +8,9 @@ is described in [release status](docs/release-status.md).
 ## Setup qualification
 
 The native uv/Python bootstrap remains under security review; wait for maintainer
-clearance before new networked setup. The Dockerfile is an unsupported,
-unqualified engineering reference. Do not build, run or expose it for general
+clearance before new networked setup. Docker setup is on a temporary
+security-qualification hold; the Dockerfile remains an engineering reference.
+While the hold applies, do not build, run or expose it for general
 external, shared, prospect, client, hosted or production use. Executable container
 targets, immutable image references and loopback mappings do not establish
 security qualification. See
