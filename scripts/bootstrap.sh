@@ -3,6 +3,7 @@ set -eu
 
 UV_VERSION="0.13.4"
 PYTHON_VERSION="3.13.17"
+PYTHON_BUILD="20261021"
 GITLEAKS_VERSION="8.30.1"
 TOOLS_DIR=".tools/bin"
 UV_BIN="$TOOLS_DIR/uv"
@@ -11,6 +12,7 @@ GITLEAKS_BIN="$TOOLS_DIR/gitleaks"
 export UV_CACHE_DIR="${UV_CACHE_DIR:-.local/uv-cache}"
 export UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-.local/python}"
 export UV_MANAGED_PYTHON=true
+export UV_PYTHON_CPYTHON_BUILD="$PYTHON_BUILD"
 # Use a reviewed, local-only catalog: uv 0.13.4 predates CPython 3.13.17.
 PYTHON_CATALOG="configs/python-downloads-3.13.17.json"
 if [ ! -f "$PYTHON_CATALOG" ]; then
@@ -162,14 +164,23 @@ if [ ! -x "$GITLEAKS_BIN" ] || [ "$($GITLEAKS_BIN version 2>/dev/null || true)" 
     install_gitleaks
 fi
 
-if ! "$UV_BIN" python find "$PYTHON_VERSION" >/dev/null 2>&1; then
+python_path="$("$UV_BIN" python find "$PYTHON_VERSION" --system --resolve-links 2>/dev/null || true)"
+if [ -z "$python_path" ]; then
     echo "installing Python $PYTHON_VERSION"
     "$UV_BIN" python install --no-bin "$PYTHON_VERSION"
+    python_path="$("$UV_BIN" python find "$PYTHON_VERSION" --system --resolve-links)"
+fi
+
+python_root="$(dirname "$(dirname "$python_path")")"
+if [ ! -f "$python_root/BUILD" ] || [ "$(cat "$python_root/BUILD")" != "$PYTHON_BUILD" ]; then
+    echo "managed Python build provenance mismatch; expected $PYTHON_BUILD" >&2
+    echo "preserve the existing install and provision the pinned build in a clean UV_PYTHON_INSTALL_DIR" >&2
+    exit 1
 fi
 
 echo "syncing locked dependencies"
 UV_PROJECT_ENVIRONMENT=.venv "$UV_BIN" sync \
-    --python "$PYTHON_VERSION" \
+    --python "$python_path" \
     --frozen \
     --all-groups
 

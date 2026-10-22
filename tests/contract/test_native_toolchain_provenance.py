@@ -4,6 +4,8 @@ import json
 import re
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).parents[2]
 CATALOG = ROOT / "configs/python-downloads-3.13.17.json"
 FROZEN_UV = (
@@ -76,11 +78,41 @@ def test_native_python_catalog_has_exact_release_assets_and_hashes() -> None:
         assert "?" not in record["url"]
 
 
+def assert_docker_hold(documents: dict[str, str]) -> None:
+    for name, text in documents.items():
+        prose = " ".join(text.lower().split())
+        assert "security-qualification hold" in prose, name
+        assert "do not build, run or expose it" in prose, name
+
+
+def docker_hold_documents() -> dict[str, str]:
+    return {
+        name: (ROOT / name).read_text(encoding="utf-8")
+        for name in (
+            "README.md",
+            "SECURITY.md",
+            "docs/release-status.md",
+            "docs/getting-started.md",
+        )
+    }
+
+
 def test_frozen_docker_references_are_still_exact_and_on_hold() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     assert FROZEN_UV in dockerfile
     assert FROZEN_PYTHON in dockerfile
-    status = (ROOT / "docs/release-status.md").read_text(encoding="utf-8")
-    assert "Docker: temporary security-qualification hold" in status
-    guide = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
-    assert "Do not build, run or expose it" in guide
+    assert_docker_hold(docker_hold_documents())
+
+
+@pytest.mark.parametrize("name", tuple(docker_hold_documents()))
+@pytest.mark.parametrize(
+    "removed", ("security-qualification hold", "do not build, run or expose it")
+)
+def test_removed_docker_hold_is_rejected(name: str, removed: str) -> None:
+    documents = {
+        key: " ".join(value.lower().split())
+        for key, value in docker_hold_documents().items()
+    }
+    documents[name] = documents[name].replace(removed, "removed restriction")
+    with pytest.raises(AssertionError, match=re.escape(name)):
+        assert_docker_hold(documents)
