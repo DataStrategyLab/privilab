@@ -235,14 +235,14 @@ def assert_reviewed_non_pypi_artifacts_match(
             "kind": "dependency",
             "name": "uv-managed CPython distribution",
             "source": (
-                "https://github.com/astral-sh/python-build-standalone/releases/tag/20260929"
+                "https://github.com/astral-sh/python-build-standalone/releases/tag/20261021"
             ),
             "version_or_commit": (
-                f"CPython {python_version} build 20260929 selected by uv {uv_version}"
+                f"CPython {python_version} build 20261021 selected by uv {uv_version}"
             ),
             "license_source": (
                 "LICENSE.txt bundled in the installed uv-managed CPython "
-                f"{python_version} build 20260929 distribution."
+                f"{python_version} build 20261021 distribution."
             ),
             "repository_paths": [
                 "scripts/bootstrap.sh",
@@ -291,11 +291,19 @@ def assert_reviewed_non_pypi_artifacts_match(
     )
     assert uv_image_match, "Docker uv image must have an exact tag and SHA-256 digest"
     uv_image_version, uv_digest = uv_image_match.groups()
-    assert uv_image_version == uv_version, (
-        "Docker uv image tag must match bootstrap UV_VERSION"
+    # ADR-011: frozen Docker reference provenance is independent of native pins.
+    assert uv_image_version == "0.12.23", (
+        "Frozen Docker uv tag must remain at the reviewed reference version"
     )
-    assert python_image.startswith(f"python:{python_version}-slim-bookworm@sha256:")
+    assert python_image.startswith("python:3.13.15-slim-bookworm@sha256:")
     python_reference = python_image.split(":", maxsplit=1)[1]
+    assert uv_digest == (
+        "sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21"
+    ), "Frozen Docker uv digest must remain immutable"
+    assert python_reference == (
+        "3.13.15-slim-bookworm@sha256:"
+        "c45a22ea000adfd9cda29364bbe7edd23001ce5cc2ad15857cfbf7766943b9ca"
+    ), "Frozen Docker Python digest must remain immutable"
     expected.update(
         {
             "container:uv": {
@@ -534,7 +542,7 @@ def test_mismatched_uv_build_version_is_rejected() -> None:
         (
             "runtime:python-build-standalone",
             "version_or_commit",
-            "CPython 3.13.15 build 20260825 selected by uv 0.12.23",
+            "CPython 3.13.17 build 20260825 selected by uv 0.13.4",
         ),
         (
             "runtime:python-build-standalone",
@@ -582,7 +590,7 @@ def test_stale_workflow_python_version_is_rejected() -> None:
 @pytest.mark.parametrize(
     ("old_reference", "stale_reference", "message"),
     [
-        ("uv:0.12.23@", "uv:0.0.0@", "Docker uv image tag"),
+        ("uv:0.12.23@", "uv:0.0.0@", "Frozen Docker uv tag"),
         (
             "61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21",
             "0" * 64,
