@@ -24,7 +24,9 @@ existing native path; they are not a release-cleared installation recommendation
 See [local setup qualification](docs/release-status.md#local-setup-qualification).
 
 Use macOS or Linux with Git, a POSIX shell, make, curl, tar and a SHA-256 utility.
-Bootstrap provisions the repository-pinned tools and Python 3.13.15.
+Bootstrap targets patched uv 0.13.4 and managed Python 3.13.17, using a
+checked-in, digest-pinned four-platform Python download catalog. Installation
+qualification remains pending until the final artifact/CI review.
 
 ```sh
 git clone https://github.com/DataStrategyLab/privilab.git
