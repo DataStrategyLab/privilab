@@ -31,8 +31,18 @@ def test_native_python_catalog_has_exact_release_assets_and_hashes() -> None:
     assert set(catalog) == set(EXPECTED_DIGESTS)
     for key, record in catalog.items():
         assert set(record) == {
-            "name", "arch", "os", "libc", "major", "minor", "patch",
-            "prerelease", "url", "sha256", "variant", "build",
+            "name",
+            "arch",
+            "os",
+            "libc",
+            "major",
+            "minor",
+            "patch",
+            "prerelease",
+            "url",
+            "sha256",
+            "variant",
+            "build",
         }
         assert record["name"] == "cpython"
         assert (record["major"], record["minor"], record["patch"]) == (3, 13, 17)
@@ -41,9 +51,7 @@ def test_native_python_catalog_has_exact_release_assets_and_hashes() -> None:
         assert record["build"] == "20261021"
         assert record["sha256"] == EXPECTED_DIGESTS[key]
         assert re.fullmatch("[0-9a-f]{64}", record["sha256"])
-        assert record["arch"] == {
-            "family": key.split("-")[3], "variant": None
-        }
+        assert record["arch"] == {"family": key.split("-")[3], "variant": None}
         assert record["os"] in {"darwin", "linux"}
         assert record["libc"] == ("none" if record["os"] == "darwin" else "gnu")
         assert record["url"].startswith(
