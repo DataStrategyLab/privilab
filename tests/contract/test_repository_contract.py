@@ -594,7 +594,7 @@ def test_stale_workflow_python_version_is_rejected() -> None:
         (
             "61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21",
             "0" * 64,
-            "stale license evidence",
+            "Frozen Docker uv digest must remain immutable",
         ),
     ],
 )
