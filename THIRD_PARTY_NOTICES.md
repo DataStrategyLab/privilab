@@ -40,10 +40,10 @@ import their source/tasks or imply partnership. DSL marks retain trademark right
 | typing-extensions | 4.16.0 | PSF-2.0 | [Recorded source](https://pypi.org/project/typing-extensions/4.16.0/) |
 | typing-inspection | 0.4.4 | MIT | [Recorded source](https://pypi.org/project/typing-inspection/0.4.4/) |
 | uvicorn | 0.52.4 | BSD-3-Clause | [Recorded source](https://pypi.org/project/uvicorn/0.52.4/) |
-| uv_build | 0.12.23 | Apache-2.0 OR MIT | [Recorded source](https://github.com/astral-sh/uv/tree/0.12.23#license) |
-| uv | 0.12.23 | Apache-2.0 OR MIT | [Recorded source](https://github.com/astral-sh/uv/tree/0.12.23#license) |
+| uv_build | 0.13.4 | Apache-2.0 OR MIT | [Recorded source](https://github.com/astral-sh/uv/tree/0.13.4#license) |
+| uv | 0.13.4 | Apache-2.0 OR MIT | [Recorded source](https://github.com/astral-sh/uv/tree/0.13.4#license) |
 | Gitleaks | 8.30.1 | MIT | [Recorded source](https://github.com/gitleaks/gitleaks/blob/v8.30.1/LICENSE) |
-| uv-managed CPython distribution | CPython 3.13.15 build 20260929 selected by uv 0.12.23 | PSF-2.0 and bundled component licenses | [Recorded source](https://github.com/astral-sh/python-build-standalone/releases/tag/20260929) |
+| uv-managed CPython distribution | CPython 3.13.17 build 20261021 selected by uv 0.13.4 | PSF-2.0 and bundled component licenses | [Recorded source](https://github.com/astral-sh/python-build-standalone/releases/tag/20261021) |
 | Python Official Image | 3.13.15-slim-bookworm@sha256:c45a22ea000adfd9cda29364bbe7edd23001ce5cc2ad15857cfbf7766943b9ca | Aggregate image; PSF-2.0 and Debian component licenses | [Recorded source](https://github.com/docker-library/python/tree/master/3.13/bookworm) |
 | uv distroless image | 0.12.23@sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21 | Apache-2.0 OR MIT | [Recorded source](https://github.com/astral-sh/uv/tree/0.12.23#license) |
 | actions/checkout | 3d3c42e5aac5ba805825da76410c181273ba90b1 | MIT | [Recorded source](https://github.com/actions/checkout/blob/3d3c42e5aac5ba805825da76410c181273ba90b1/LICENSE) |
