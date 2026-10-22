@@ -6,13 +6,27 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[2]
 CATALOG = ROOT / "configs/python-downloads-3.13.17.json"
-FROZEN_UV = "ghcr.io/astral-sh/uv:0.12.23@sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21"
-FROZEN_PYTHON = "python:3.13.15-slim-bookworm@sha256:c45a22ea000adfd9cda29364bbe7edd23001ce5cc2ad15857cfbf7766943b9ca"
+FROZEN_UV = (
+    "ghcr.io/astral-sh/uv:0.12.23@sha256:"
+    "61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21"
+)
+FROZEN_PYTHON = (
+    "python:3.13.15-slim-bookworm@sha256:"
+    "c45a22ea000adfd9cda29364bbe7edd23001ce5cc2ad15857cfbf7766943b9ca"
+)
 EXPECTED_DIGESTS = {
-    "cpython-3.13.17-darwin-aarch64-none": "8dc60610a82f1e73be7faf964383e02520f95f6e39592a5c37c3809f5a7b798e",
-    "cpython-3.13.17-darwin-x86_64-none": "ce9c748c8f7525c0052247edb2435fdb1cac89c77e687e0e199eaf2b827668c2",
-    "cpython-3.13.17-linux-aarch64-gnu": "c6857c65b996701a5da104cbb49b35249c0c026dc0664239b04f7156aa88326a",
-    "cpython-3.13.17-linux-x86_64-gnu": "f829adc9d888e76c8801b4799ed444188d35239fcae3a9808a99ec5cb0d8d92c",
+    "cpython-3.13.17-darwin-aarch64-none": (
+        "8dc60610a82f1e73be7faf964383e02520f95f6e39592a5c37c3809f5a7b798e"
+    ),
+    "cpython-3.13.17-darwin-x86_64-none": (
+        "ce9c748c8f7525c0052247edb2435fdb1cac89c77e687e0e199eaf2b827668c2"
+    ),
+    "cpython-3.13.17-linux-aarch64-gnu": (
+        "c6857c65b996701a5da104cbb49b35249c0c026dc0664239b04f7156aa88326a"
+    ),
+    "cpython-3.13.17-linux-x86_64-gnu": (
+        "f829adc9d888e76c8801b4799ed444188d35239fcae3a9808a99ec5cb0d8d92c"
+    ),
 }
 
 
