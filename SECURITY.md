@@ -5,6 +5,17 @@ reference workflows. No production-support SLA, certification or safe handling
 of actual client/matter data is established. Current source/runtime review status
 is described in [release status](docs/release-status.md).
 
+## Setup qualification
+
+The native uv/Python bootstrap remains under security review; wait for maintainer
+clearance before new networked setup. Docker setup is on a temporary
+security-qualification hold; the Dockerfile remains an engineering reference.
+While the hold applies, do not build, run or expose it for general
+external, shared, prospect, client, hosted or production use. Executable container
+targets, immutable image references and loopback mappings do not establish
+security qualification. See
+[local setup qualification](docs/release-status.md#local-setup-qualification).
+
 ## Report privately
 
 Send suspected vulnerabilities to

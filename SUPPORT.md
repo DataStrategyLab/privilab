@@ -33,6 +33,10 @@ See the [data-handling policy](DATA_HANDLING.md).
 
 ## Support boundaries
 
+- Docker setup is on a temporary security-qualification hold; the retained
+  Dockerfile remains an engineering reference. Native uv/Python qualification is pending.
+  Check [local setup qualification](docs/release-status.md#local-setup-qualification)
+  before a new networked bootstrap.
 - Platform and setup requirements are documented in
   [Getting started](docs/getting-started.md); do not assume support for other
   platforms or deployment models.

@@ -4,6 +4,10 @@ Start with [Getting started](getting-started.md), then
 [Reproducibility](reproducibility.md). [Capabilities](capabilities.md) separates
 implemented behavior from limits and future work.
 
+Check [local setup qualification](release-status.md#local-setup-qualification)
+before new setup. Native uv/Python qualification is pending; Docker setup is on a
+temporary security-qualification hold.
+
 ## Implementation
 
 - [Viewing Mermaid diagrams](diagrams/README.md): GitHub and local-preview guidance.

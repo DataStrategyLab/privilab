@@ -4,6 +4,10 @@ PriviLAB's normal verification path is deterministic, fixture-based and secret-f
 It exercises application controls; it does not measure live-model stability or
 establish legal correctness. The canonical command is `make ci`.
 
+Native uv/Python setup qualification remains pending. Wait for maintainer
+clearance before using the bootstrap commands below for a new networked setup.
+See [local setup qualification](release-status.md#local-setup-qualification).
+
 ## Record the inputs
 
 Keep the source SHA and working-tree state, Python and tool versions, `uv.lock`,
@@ -85,8 +89,11 @@ get a PASS. Their observations retain their original execution identity and time
   model availability, substantive legal quality or protected holdout performance.
 - A lock export/SBOM is component inventory, not vulnerability clearance or an
   image attestation. Current security/OSS review remains separate.
-- Docker base inputs are digest-pinned, but cached build layers and OS package
-  scope must be disclosed. The container does not contain the entire task pack.
+- Docker setup is on a temporary security-qualification hold; the Dockerfile
+  remains an engineering reference during the hold. Digest pins do not clear
+  security findings; Docker operation requires separate
+  qualification and maintainer approval. Historical container observations retain
+  their original scope, including cached layers, OS packages and task-pack limits.
 - Pre-existing incompatible evidence schemas fail closed; no automatic migration
   or deletion is performed.
 - Public source publication, package/image redistribution, hosted operation,

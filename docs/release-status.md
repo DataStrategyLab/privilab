@@ -1,6 +1,6 @@
 # Developer Preview release status
 
-**Status snapshot: October 21, 2026 (America/New_York).**
+**Status snapshot: October 22, 2026 (America/New_York).**
 **Planned source-only release target: Wednesday, October 21, 2026.**
 **Publication status: not published yet; final owner decision pending.**
 
@@ -28,6 +28,29 @@ Dockerfile and local bootstrap instructions are source examples, not approval to
 distribute an image, wheel, managed runtime or dependency bundle. The retained
 historical application configuration, held successor bases and a future complete
 successor application are distinct artifacts.
+
+## Local setup qualification
+
+- **Native setup: qualification pending.** The pinned uv/Python bootstrap remains
+  under security review. Wait for maintainer clearance before a new networked
+  bootstrap; the documented commands describe the existing engineering path.
+  The intended public preview is native localhost with public/synthetic inputs
+  only after the applicable tool/runtime findings have been resolved or explicitly
+  dispositioned. This documentation does not apply a tool or interpreter fix.
+- **Docker: temporary security-qualification hold.**
+  [ADR-008](decisions/ADR-008-preview-deployment.md) permits a local container as an
+  architectural option. This release-specific hold preserves that decision;
+  architectural permission does not establish security qualification for the
+  current container. The Dockerfile remains for engineering traceability and
+  reproducibility review. While the hold applies, do not build, run or expose it
+  for general external, shared, prospect, client,
+  hosted or production use. Existing executable Makefile targets are retained;
+  their presence does not authorize execution. Docker operation needs separate
+  security qualification and maintainer approval. No base-image update or
+  security clearance is established by this documentation change.
+
+Historical deployment decisions and captured evidence retain their original
+scope. They do not establish current release-specific runtime qualification.
 
 ## Available for local engineering exploration
 

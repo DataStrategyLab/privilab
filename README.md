@@ -18,6 +18,11 @@ security-certification or prospect-demo readiness claim.
 
 ## Try it locally
 
+**Setup qualification is pending.** Wait for maintainer clearance of the native
+uv/Python bootstrap before a new networked setup. The commands below document the
+existing native path; they are not a release-cleared installation recommendation.
+See [local setup qualification](docs/release-status.md#local-setup-qualification).
+
 Use macOS or Linux with Git, a POSIX shell, make, curl, tar and a SHA-256 utility.
 Bootstrap provisions the repository-pinned tools and Python 3.13.15.
 
@@ -35,7 +40,9 @@ evaluation, and the separate review controls. No API key or paid model call is
 needed. Stop the preview with Ctrl-C.
 
 See [Getting started](docs/getting-started.md) for expected scenarios, fresh
-databases, configuration, containers and troubleshooting. The clone command
+databases, configuration and troubleshooting. Docker setup is on a temporary
+security-qualification hold. The Dockerfile remains an engineering reference;
+do not build, run or expose it for general use while the hold applies. The clone command
 requires repository access until the owner makes the repository public.
 
 ## What it demonstrates

@@ -33,6 +33,10 @@ Fork/clone the repository and create a descriptively named branch from current
 main, such as `docs/getting-started-links`. No branch prefix or private project
 tool is required. Follow [Getting started](docs/getting-started.md).
 
+Check [local setup qualification](docs/release-status.md#local-setup-qualification)
+before new networked bootstrap: native uv/Python qualification is pending, and
+Docker setup is on a temporary security-qualification hold.
+
 ```sh
 ./scripts/bootstrap.sh --ci
 make ci
