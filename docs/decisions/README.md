@@ -16,6 +16,7 @@ model-controlled tools require an approved ADR and Andrew's approval.
 | [008](ADR-008-preview-deployment.md) | Local preview/deployment scope |
 | [009](ADR-009-independent-review.md) | Dedicated Codex and non-author human review |
 | [010](ADR-010-untrusted-content.md) | Untrusted text cannot redefine authority |
+| [011](ADR-011-native-and-frozen-docker-provenance.md) | Separately governed native and frozen Docker provenance |
 
 [Decision log](decision-log.md) records dated refinements. Model/provider aliases
 and tooling versions in historical decisions retain their historical context;
