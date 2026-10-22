@@ -33,7 +33,7 @@ import their source/tasks or imply partnership. DSL marks retain trademark right
 | pydantic | 2.13.4 | MIT | [Recorded source](https://pypi.org/project/pydantic/2.13.4/) |
 | pydantic-core | 2.46.4 | MIT | [Recorded source](https://pypi.org/project/pydantic-core/2.46.4/) |
 | Pygments | 2.21.0 | BSD-2-Clause | [Recorded source](https://pypi.org/project/Pygments/2.21.0/) |
-| pytest | 8.4.2 | MIT | [Recorded source](https://pypi.org/project/pytest/8.4.2/) |
+| pytest | 9.0.3 | MIT | [Recorded source](https://pypi.org/project/pytest/9.0.3/) |
 | PyYAML | 6.0.3 | MIT | [Recorded source](https://pypi.org/project/PyYAML/6.0.3/) |
 | ruff | 0.16.5 | MIT | [Recorded source](https://pypi.org/project/ruff/0.16.5/) |
 | starlette | 1.6.0 | BSD-3-Clause | [Recorded source](https://pypi.org/project/starlette/1.6.0/) |
