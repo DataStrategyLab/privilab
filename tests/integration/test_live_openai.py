@@ -15,6 +15,7 @@ import pytest
 from test_model_telemetry import FakeClock, price, sdk
 from test_model_telemetry import offline as offline
 
+from privilab.adapters.models import openai as adapter
 from privilab.adapters.storage import SQLiteProvenanceStore
 from privilab.application import RunStatus
 from privilab.application.telemetry import (
@@ -34,6 +35,25 @@ def case_root(tmp_path: Path) -> Path:
             ROOT / "fixtures" / directory, tmp_path / "fixtures" / directory
         )
     return tmp_path
+
+
+def test_real_live_runner_opt_in_does_not_override_source_only_hold(
+    case_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("PRIVILAB_LIVE_EVAL", "1")
+    monkeypatch.setenv("OPENAI_API_KEY", "synthetic-key-cannot-lift-hold")
+    monkeypatch.delenv("PRIVILAB_PRICING_EVIDENCE_FILE", raising=False)
+    constructed: list[bool] = []
+
+    def forbidden(**kwargs: object) -> None:
+        constructed.append(True)
+        raise AssertionError("live runner must not construct an HTTP client")
+
+    monkeypatch.setattr(adapter, "OpenAI", forbidden)
+    evidence = live_openai.run_live(case_root)
+    assert evidence.passed is False
+    assert evidence.run.status is RunStatus.FAILED
+    assert constructed == []
 
 
 @pytest.mark.parametrize("pricing", ["absent", "missing-file", "invalid", "valid"])

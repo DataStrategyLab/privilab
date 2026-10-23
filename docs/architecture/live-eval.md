@@ -1,23 +1,21 @@
 # DSL-116 local live smoke
 
-`make eval-live` explicitly opts into one controlled local OpenAI execution.
-It is outside `make ci`, `ci-stages`, tests, deterministic smoke/golden evaluation,
-and package building. The GitHub live-eval workflow remains disabled.
+**Execution on hold.** This is an implementation and telemetry reference, not a
+public live-run procedure. The default SDK client raises a sanitized error before
+reading credentials or constructing an HTTP client. The retained Make target,
+direct module entry point, credentials and `PRIVILAB_LIVE_EVAL` opt-in flag cannot
+override this release-specific restriction. The hosted live-eval workflow also
+remains disabled. No native TLS remediation or affected-chain rejection is claimed.
 
-Run the command from the repository root after deterministic verification:
+The runner stays outside `make ci`, deterministic fixture smoke/golden evaluation
+and package building. Offline tests use explicit mocked transports and test-local
+replacement of the qualification gate; no runtime bypass is exposed. Enabling
+networked use requires a separately reviewed correction and maintainer
+qualification decision. See [setup status](../release-status.md#local-setup-qualification).
 
-```sh
-make ci
-git diff --check
-make eval-live
-```
-
-The Make target sets `PRIVILAB_LIVE_EVAL=1`. Direct module execution refuses to
-proceed without that exact value. `OPENAI_API_KEY` must already be available in
-the approved local environment; it is read at the governed model stage, never
-at import. Do not put credentials in repository files, pricing evidence, or chat.
-Without credentials, the attempt records a model-stage failure and reports
-`live smoke validation pending approved local execution`.
+The following sections describe retained implementation contracts and historical
+behavior. They do not authorize a live run. Never put credentials in repository
+files, pricing evidence or chat.
 
 The versioned `dsl-116-synthetic-smoke` case reuses the registered, licensed
 synthetic request context and synthetic trade notice, checking their pinned

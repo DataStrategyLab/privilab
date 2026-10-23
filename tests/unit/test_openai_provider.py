@@ -827,6 +827,8 @@ def test_value_objects_and_provider_are_frozen() -> None:
 def test_missing_credentials_are_lazy_and_sanitized(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    # Exercise credential behavior only beyond the independently tested live hold.
+    monkeypatch.setattr(adapter, "_require_live_qualification", lambda: None)
     provider = OpenAIProvider()
     monkeypatch.setenv("OPENAI_ADMIN_KEY", "synthetic-admin-must-not-substitute")
     with pytest.raises(OpenAIProviderError) as caught:
@@ -838,6 +840,8 @@ def test_missing_credentials_are_lazy_and_sanitized(
 def test_production_client_uses_official_endpoint_and_explicit_limits(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    # Constructor inspection only; the module's offline fixture forbids sockets.
+    monkeypatch.setattr(adapter, "_require_live_qualification", lambda: None)
     monkeypatch.setenv("OPENAI_API_KEY", "synthetic-runtime-key")
     monkeypatch.setenv("OPENAI_BASE_URL", "https://alternate.invalid/v1")
     with adapter._new_client(OpenAIProviderConfig(timeout_seconds=7)) as client:

@@ -9,10 +9,11 @@ SQLite/FTS5 performs application-scoped retrieval; SQLite stores metadata.
 
 The fixture provider uses versioned fixed outputs. An OpenAI adapter exists behind
 the provider boundary, configured for `gpt-5.6-terra`; offline fake-SDK tests cover
-its request and failure behavior. A separately gated local smoke captures reported
+its request and failure behavior. A local smoke implementation records reported
 usage, provider-call latency and cost only when adequate applicable pricing/
-billing evidence exists. Missing cost is unavailable, not measured zero. Hosted
-live-eval remains blocked even though local opt-in code exists.
+billing evidence exists in offline mocked tests. The default live SDK client is
+disabled before credentials or HTTP construction, pending native trust qualification. Missing cost is unavailable, not measured zero. Hosted
+live-eval also remains blocked; retained local opt-in code does not override the hold.
 
 ## Local web routes
 

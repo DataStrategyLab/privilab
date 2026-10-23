@@ -120,7 +120,16 @@ class OpenAIGeneration:
             raise TypeError("usage must be OpenAIUsage or None")
 
 
+def _require_live_qualification() -> None:
+    """Keep the source-only preview offline until native trust is qualified."""
+    raise OpenAIProviderError(
+        "Live model execution is unavailable pending native trust qualification"
+    )
+
+
 def _new_client(config: OpenAIProviderConfig) -> OpenAI:
+    # No credential, opt-in flag or environment setting overrides this hold.
+    _require_live_qualification()
     # Called only after RunService reaches the model stage. Passing the endpoint
     # explicitly prevents OPENAI_BASE_URL from changing the approved destination.
     api_key = os.environ.get("OPENAI_API_KEY")

@@ -174,6 +174,8 @@ def sdk(
         return original_provider(settings, _sleep=clock.sleep)
 
     monkeypatch.setenv("OPENAI_API_KEY", "synthetic-credential-sentinel")
+    # Only this offline mock exercises historical transport behavior past the hold.
+    monkeypatch.setattr(adapter, "_require_live_qualification", lambda: None)
     monkeypatch.setattr(adapter, "OpenAI", client)
     monkeypatch.setattr(adapter, "OpenAIProvider", provider)
     return calls

@@ -38,6 +38,7 @@ PUBLIC_DOCS = (
     "docs/reproducibility.md",
     "docs/capabilities.md",
     "docs/release-status.md",
+    "docs/release-notes-v0.1.0.md",
     "docs/evidence-publication.md",
     "docs/review/code_review.md",
     "docs/decisions/README.md",
@@ -468,6 +469,27 @@ def test_env_example_remains_intentionally_trackable() -> None:
     )
     assert result.returncode == 1
     assert (ROOT / ".env.example").is_file()
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        "README.md",
+        "CONTRIBUTING.md",
+        "docs/getting-started.md",
+        "docs/reproducibility.md",
+        "docs/architecture/live-eval.md",
+    ],
+)
+def test_current_guides_do_not_offer_held_network_execution(
+    relative_path: str,
+) -> None:
+    text = (ROOT / relative_path).read_text(encoding="utf-8")
+    for block in re.findall(r"```(?:sh|bash|shell)?\n(.*?)```", text, re.DOTALL):
+        assert "scripts/bootstrap.sh" not in block
+        assert "make bootstrap" not in block
+        assert "make eval-live" not in block
+        assert "PRIVILAB_LIVE_EVAL=" not in block
 
 
 def test_bootstrap_scripts_are_executable() -> None:

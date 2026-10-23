@@ -4,7 +4,7 @@ set -eu
 GITLEAKS=".tools/bin/gitleaks"
 
 if [ ! -x "$GITLEAKS" ]; then
-    echo "missing pinned Gitleaks; run ./scripts/bootstrap.sh" >&2
+    echo "missing pinned Gitleaks; setup is held: see docs/release-status.md" >&2
     exit 1
 fi
 

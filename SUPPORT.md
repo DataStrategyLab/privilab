@@ -17,7 +17,7 @@ data. Start with [Getting started](docs/getting-started.md),
 | Review responsibilities or project decisions | Read [Governance](GOVERNANCE.md) and the [review controls](docs/review/code_review.md). |
 
 Public contributors do not need access to private project-management tools.
-Repository access is required to use GitHub issues before public publication.
+GitHub's access requirements apply to issues and pull requests.
 
 ## Make a question or report useful
 
@@ -36,7 +36,8 @@ See the [data-handling policy](DATA_HANDLING.md).
 - Docker setup is on a temporary security-qualification hold; the retained
   Dockerfile remains an engineering reference. Native uv/Python qualification is pending.
   Check [local setup qualification](docs/release-status.md#local-setup-qualification)
-  before a new networked bootstrap.
+  before execution. No fresh networked setup procedure is approved, and the default
+  live SDK client is disabled. Do not use troubleshooting to bypass these holds.
 - Platform and setup requirements are documented in
   [Getting started](docs/getting-started.md); do not assume support for other
   platforms or deployment models.

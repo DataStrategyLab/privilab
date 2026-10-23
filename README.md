@@ -10,31 +10,34 @@ examples use synthetic data and fixed fixture answers.
 
 **Creator & Lead Architect: Andrew Tsintsiruk.**
 
-**Planned source-only release: v0.1.0 Developer Preview, October 21, 2026.**
-The repository is not published yet. Final publication approval and the remaining
-qualification work are tracked in the [release status](docs/release-status.md).
+**PriviLAB v0.1.0 — Developer Preview (source-only).**
+[GitHub Releases](https://github.com/DataStrategyLab/privilab/releases) is the
+authoritative record of publication status, release dates, tags and downloadable
+source archives. Security restrictions and the dated readiness assessment are
+documented in [release status](docs/release-status.md).
 This is a local reference implementation with no production, legal-quality,
 security-certification or prospect-demo readiness claim.
 
-## Try it locally
+## Source-only preview and local exploration
 
-**Setup qualification is pending.** Wait for maintainer clearance of the native
-uv/Python bootstrap before a new networked setup. The commands below document the
-existing native path; they are not a release-cleared installation recommendation.
-See [local setup qualification](docs/release-status.md#local-setup-qualification).
+This candidate is for source inspection and contribution with public/synthetic
+material. **There is no approved fresh networked installation path.** Native
+bootstrap and Docker execution remain on hold, and the default live SDK client
+is disabled before credential access or HTTP-client construction. Credentials
+and live opt-in flags do not override that restriction. No T01 correction or
+native TLS qualification is claimed; see [setup status](docs/release-status.md#local-setup-qualification).
 
-Use macOS or Linux with Git, a POSIX shell, make, curl, tar and a SHA-256 utility.
-Bootstrap targets patched uv 0.13.4 and managed Python 3.13.17, using a
-checked-in, digest-pinned four-platform Python download catalog. Installation
-qualification remains pending until the final artifact/CI review.
+Only developers with an existing, separately approved, fully provisioned offline
+environment may use the following fixture verification and localhost preview:
 
 ```sh
-git clone https://github.com/DataStrategyLab/privilab.git
-cd privilab
-./scripts/bootstrap.sh --ci
 make ci
 make preview
 ```
+
+If that environment is unavailable, read the source and diagrams or contribute
+documentation through GitHub. Do not work around the setup hold, acquire a new
+runtime, or substitute unreviewed tools to run these commands.
 
 Open [http://127.0.0.1:8000](http://127.0.0.1:8000). Select **Standard synthetic
 researcher**, then **Run scenario**. Inspect permission, source metadata, draft,
@@ -44,8 +47,7 @@ needed. Stop the preview with Ctrl-C.
 See [Getting started](docs/getting-started.md) for expected scenarios, fresh
 databases, configuration and troubleshooting. Docker setup is on a temporary
 security-qualification hold. The Dockerfile remains an engineering reference;
-do not build, run or expose it for general use while the hold applies. The clone command
-requires repository access until the owner makes the repository public.
+do not build, run or expose it for general use while the hold applies.
 
 ## What it demonstrates
 
@@ -77,7 +79,7 @@ passed; qualified substantive review and release decisions remain separate.
 | Critical evaluation | Authorized-source, citation-resolution, permission-boundary and provenance-completeness checks |
 | Review controls | Approve, Reject or Request revision; one immutable synthetic decision per run |
 | Traceability | Run/configuration/source/evaluation/review metadata; history does not replay answer bodies |
-| Local live smoke | Separately gated opt-in execution and usage/latency/conditional cost evidence |
+| Local live smoke | Implementation and offline mock coverage retained; default live client disabled pending qualification |
 | Verification | Repository contracts, fixtures/licenses, package build, lint/types, tests, smoke/golden and secret scans |
 
 ## Architecture
@@ -124,8 +126,9 @@ The normal preview runs fixed answers through the same permission, evaluation an
 review boundaries. The OpenAI adapter is configured in source for
 `gpt-5.6-terra`; that configured alias is not proof of current service availability
 or a pinned dated model snapshot. [Local live smoke](docs/architecture/live-eval.md)
-requires explicit opt-in, credentials and approved public/synthetic inputs.
-It is outside CI; the hosted live-eval workflow remains deliberately blocked.
+is retained as implementation reference but cannot construct the default live
+SDK client in this preview. Offline mock tests exercise the transport contract;
+they do not qualify TLS. The hosted live-eval workflow also remains blocked.
 
 Generated answer, prompt/query and retrieved source bodies are transient. Stored
 history contains metadata, not an answer replay. `synthetic-local-reviewer` is a
@@ -137,7 +140,7 @@ assurances. See [Capabilities and limitations](docs/capabilities.md).
 
 | Need | Start here |
 | --- | --- |
-| Install and run | [Getting started](docs/getting-started.md) |
+| Setup restrictions and fixture preview | [Getting started](docs/getting-started.md) |
 | Reproduce verification | [Reproducibility](docs/reproducibility.md) |
 | Understand the implementation | [Architecture](docs/architecture/system.md) and [capabilities](docs/capabilities.md) |
 | Understand tests and scenarios | [Evaluation](docs/evaluation.md) |
