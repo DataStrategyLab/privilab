@@ -1,8 +1,9 @@
 #!/bin/sh
 set -eu
 
-UV_VERSION="0.12.23"
-PYTHON_VERSION="3.13.15"
+UV_VERSION="0.13.4"
+PYTHON_VERSION="3.13.17"
+PYTHON_BUILD="20261021"
 GITLEAKS_VERSION="8.30.1"
 TOOLS_DIR=".tools/bin"
 UV_BIN="$TOOLS_DIR/uv"
@@ -11,6 +12,14 @@ GITLEAKS_BIN="$TOOLS_DIR/gitleaks"
 export UV_CACHE_DIR="${UV_CACHE_DIR:-.local/uv-cache}"
 export UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-.local/python}"
 export UV_MANAGED_PYTHON=true
+export UV_PYTHON_CPYTHON_BUILD="$PYTHON_BUILD"
+# Use a reviewed, local-only catalog: uv 0.13.4 predates CPython 3.13.17.
+PYTHON_CATALOG="configs/python-downloads-3.13.17.json"
+if [ ! -f "$PYTHON_CATALOG" ]; then
+    echo "missing pinned Python download catalog: $PYTHON_CATALOG" >&2
+    exit 1
+fi
+export UV_PYTHON_DOWNLOADS_JSON_URL="$PWD/$PYTHON_CATALOG"
 
 usage() {
     echo "usage: $0 [--ci]" >&2
@@ -74,25 +83,25 @@ machine="$(uname -m)"
 case "$platform/$machine" in
     Darwin/arm64|Darwin/aarch64)
         uv_asset="uv-aarch64-apple-darwin.tar.gz"
-        uv_sha="50487ae565ccd96e499056b4674d438f4c53170202617b4c759defe0c6a1b544"
+        uv_sha="e0b1d4743ce64c55d9f0f4a444afa6b81125680070ee04e853fcd0f6c1ebf8f1"
         gitleaks_asset="gitleaks_${GITLEAKS_VERSION}_darwin_arm64.tar.gz"
         gitleaks_sha="b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5"
         ;;
     Darwin/x86_64|Darwin/amd64)
         uv_asset="uv-x86_64-apple-darwin.tar.gz"
-        uv_sha="960da44cb4b73685206ddd250b19e0a117fa41095710c1038f081f5cb613efb4"
+        uv_sha="7be2dcd316122f4b3e5a0a7889f6248266c14425374e105ff7dc9779184603a6"
         gitleaks_asset="gitleaks_${GITLEAKS_VERSION}_darwin_x64.tar.gz"
         gitleaks_sha="dfe101a4db2255fc85120ac7f3d25e4342c3c20cf749f2c20a18081af1952709"
         ;;
     Linux/aarch64|Linux/arm64)
         uv_asset="uv-aarch64-unknown-linux-gnu.tar.gz"
-        uv_sha="6524bd338177ed50d035d39354e12545e993bbeba2ecbddf0480c5b3a81d313f"
+        uv_sha="1ae72b4718729e2ccc4f1ae2c6d1e531ca8467800e0546e9130b3886023a60ab"
         gitleaks_asset="gitleaks_${GITLEAKS_VERSION}_linux_arm64.tar.gz"
         gitleaks_sha="e4a487ee7ccd7d3a7f7ec08657610aa3606637dab924210b3aee62570fb4b080"
         ;;
     Linux/x86_64|Linux/amd64)
         uv_asset="uv-x86_64-unknown-linux-gnu.tar.gz"
-        uv_sha="9167d72b3319674b6303c4cbe071854bba13ebdf3d76b1a7cbdc175471fb66d6"
+        uv_sha="2b428396f12572d4429cf210ca234dd599a33b3af0958a4d5ed569d63e3f344f"
         gitleaks_asset="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
         gitleaks_sha="551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
         ;;
@@ -155,14 +164,23 @@ if [ ! -x "$GITLEAKS_BIN" ] || [ "$($GITLEAKS_BIN version 2>/dev/null || true)" 
     install_gitleaks
 fi
 
-if ! "$UV_BIN" python find "$PYTHON_VERSION" >/dev/null 2>&1; then
+python_path="$("$UV_BIN" python find "$PYTHON_VERSION" --system --resolve-links 2>/dev/null || true)"
+if [ -z "$python_path" ]; then
     echo "installing Python $PYTHON_VERSION"
     "$UV_BIN" python install --no-bin "$PYTHON_VERSION"
+    python_path="$("$UV_BIN" python find "$PYTHON_VERSION" --system --resolve-links)"
+fi
+
+python_root="$(dirname "$(dirname "$python_path")")"
+if [ ! -f "$python_root/BUILD" ] || [ "$(cat "$python_root/BUILD")" != "$PYTHON_BUILD" ]; then
+    echo "managed Python build provenance mismatch; expected $PYTHON_BUILD" >&2
+    echo "preserve the existing install and provision the pinned build in a clean UV_PYTHON_INSTALL_DIR" >&2
+    exit 1
 fi
 
 echo "syncing locked dependencies"
 UV_PROJECT_ENVIRONMENT=.venv "$UV_BIN" sync \
-    --python "$PYTHON_VERSION" \
+    --python "$python_path" \
     --frozen \
     --all-groups
 

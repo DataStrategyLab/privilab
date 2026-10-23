@@ -23,7 +23,7 @@ make ci
 ```
 
 Until publication, cloning requires repository access. Bootstrap verifies and
-installs uv 0.12.23 and Gitleaks 8.30.1, selects managed Python 3.13.15 and installs
+installs uv 0.13.4 and Gitleaks 8.30.1, selects managed Python 3.13.17 and installs
 the frozen lockfile including development groups. Tools, interpreter and virtual
 environment live under ignored local directories. Bootstrap may download from
 upstream registries; subsequent CI is offline. No global Python setup is required.

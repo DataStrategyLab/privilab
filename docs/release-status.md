@@ -31,8 +31,8 @@ successor application are distinct artifacts.
 
 ## Local setup qualification
 
-- **Native setup: qualification pending.** The pinned uv/Python bootstrap remains
-  under security review. Wait for maintainer clearance before a new networked
+- **Native setup: qualification pending.** The patched uv 0.13.4 / Python 3.13.17 bootstrap candidate remains
+  under artifact and CI qualification review. Wait for maintainer clearance before a new networked
   bootstrap; the documented commands describe the existing engineering path.
   The intended public preview is native localhost with public/synthetic inputs
   only after the applicable tool/runtime findings have been resolved or explicitly

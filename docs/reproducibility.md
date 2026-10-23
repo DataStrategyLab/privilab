@@ -23,7 +23,9 @@ git status --short
 .tools/bin/gitleaks version
 ```
 
-Current pins: Python 3.13.15, uv/uv_build 0.12.23 and Gitleaks 8.30.1. Exact artifact
+Current native pins: Python 3.13.17, uv/uv_build 0.13.4 and Gitleaks 8.30.1. Native managed-Python sources are frozen in
+`configs/python-downloads-3.13.17.json`. The Dockerfile retains its separate
+unqualified, historically pinned image versions. Exact artifact
 provenance and applicable component records are in `licenses/registry.yaml`.
 Equal Python version strings alone do not establish identical distribution bytes.
 
