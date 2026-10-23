@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import json
 import logging
+import os
 import socket
 import traceback
 from dataclasses import fields
@@ -38,6 +39,30 @@ def offline(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(socket.socket, "connect_ex", forbidden)
     monkeypatch.setattr(socket, "create_connection", forbidden)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+
+@pytest.mark.parametrize("live_opt_in", ["0", "1"])
+def test_source_only_hold_precedes_credentials_and_client_construction(
+    live_opt_in: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("PRIVILAB_LIVE_EVAL", live_opt_in)
+    monkeypatch.setenv("OPENAI_API_KEY", "synthetic-key-cannot-lift-hold")
+    monkeypatch.setenv("OPENAI_BASE_URL", "https://synthetic.invalid")
+    monkeypatch.setenv("SSL_CERT_FILE", "/synthetic/cannot-lift-hold.pem")
+    touched: list[str] = []
+
+    def forbidden(*args: Any, **kwargs: Any) -> Any:
+        touched.append("credential or client")
+        raise AssertionError("the qualification hold must precede this operation")
+
+    monkeypatch.setattr(os.environ, "get", forbidden)
+    monkeypatch.setattr(adapter, "OpenAI", forbidden)
+    with pytest.raises(OpenAIProviderError, match="unavailable pending native trust"):
+        adapter._new_client(OpenAIProviderConfig())
+    request = ModelRequest("Synthetic task.", ())
+    with pytest.raises(OpenAIProviderError, match="^OpenAI model execution failed$"):
+        OpenAIProvider().generate(request)
+    assert touched == []
 
 
 @pytest.mark.parametrize(
@@ -128,6 +153,8 @@ def test_sensitive_values_do_not_escape_sdk_boundary(
         constructed.append(client)
         return client
 
+    # Test-local mock only; the real default client remains disabled.
+    monkeypatch.setattr(adapter, "_require_live_qualification", lambda: None)
     monkeypatch.setattr(adapter, "OpenAI", fake_constructor)
     provider = OpenAIProvider(OpenAIProviderConfig(max_retries=0))
     assert constructed == []

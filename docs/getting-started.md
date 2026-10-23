@@ -1,32 +1,36 @@
 # Getting started
 
-This guide runs the local synthetic fixture preview. It needs no API key, hosted
-service, frontend build or client data. Use a source checkout for the complete
-six-task trade/regulatory pack.
+This guide describes the local synthetic fixture preview for an existing,
+separately approved offline environment. It needs no API key, hosted service,
+frontend build or client data. The complete source checkout includes the six-task
+trade/regulatory pack; source visibility does not qualify its substantive use.
 
-**Setup qualification is pending.** Wait for maintainer clearance before a new
-networked native bootstrap. The commands below describe the existing engineering
-path, not a release-cleared public setup. Check
+**Fresh networked setup is on hold.** This release supplies no approved public
+bootstrap or Docker installation procedure. The default live SDK client is
+disabled even when credentials and opt-in flags are supplied. Check
 [local setup qualification](release-status.md#local-setup-qualification) first.
+If you lack a separately approved environment, use source inspection and
+documentation contribution; do not bypass the hold to run the preview.
 
 ## Requirements and installation
 
-Supported bootstrap platforms are macOS/Linux on ARM64 or x86-64. Install Git,
-make, curl, tar, a POSIX shell and shasum or sha256sum. Windows is not a supported
-native bootstrap platform. Docker setup is on a temporary security-qualification hold.
+The retained bootstrap targets macOS/Linux on ARM64 or x86-64; these are declared
+targets, not four verified public platforms. Native pins are uv 0.13.4, managed
+Python 3.13.17 and Gitleaks 8.30.1. Windows is not a native bootstrap target.
+Retained source and CI configuration document engineering provenance, not an
+installation clearance. Do not run the networked bootstrap or prescribe global
+CA changes as a workaround. Existing CI authorization is separate from public
+native setup qualification.
+
+In an existing, approved environment with all locked dependencies and tools
+already provisioned, verification runs offline:
 
 ```sh
-git clone https://github.com/DataStrategyLab/privilab.git
-cd privilab
-./scripts/bootstrap.sh --ci
 make ci
 ```
 
-Until publication, cloning requires repository access. Bootstrap verifies and
-installs uv 0.13.4 and Gitleaks 8.30.1, selects managed Python 3.13.17 and installs
-the frozen lockfile including development groups. Tools, interpreter and virtual
-environment live under ignored local directories. Bootstrap may download from
-upstream registries; subsequent CI is offline. No global Python setup is required.
+No tools, virtual environment, runtime or dependency bundle is distributed with
+the source-only release. Generated state stays ignored and untracked.
 
 ## Preview and expected behavior
 
@@ -113,14 +117,15 @@ with public/synthetic inputs, once the separate
 
 | Symptom | Action |
 | --- | --- |
-| Missing/wrong uv or virtualenv | Run the pinned bootstrap; do not change required versions ad hoc |
-| Bootstrap cannot reach upstream | Check permitted network access; bootstrap is the download step |
-| CI cannot build offline | Confirm bootstrap completed; preserve the failure and rerun bootstrap when permitted |
+| Missing/wrong uv or virtualenv | Stop; fresh networked setup is held. Read release status and ask a maintainer about qualification. |
+| Bootstrap cannot reach upstream | Do not retry or change TLS verification; bootstrap is not an approved public setup path. |
+| CI cannot build offline | Preserve the failure; an approved environment must have inputs provisioned. Do not fetch replacements under this guide. |
 | Port 8000 in use | Stop only your own preview, or use `PRIVILAB_PORT=8001 make preview` and the matching URL |
 | Database schema rejected | Preserve old DB and select a new absolute path |
 | Task/corpus unavailable | Use the complete source checkout and canonical corpus; do not fetch arbitrary replacements |
 | No draft on reopening | Expected: history is metadata-only |
-| Live-eval workflow fails | Expected: hosted live-eval is a deliberate fail-closed placeholder |
+| Live execution fails | Expected: the default live SDK client and hosted live-eval are blocked; credentials do not enable them. |
 
-For controlled live-model work, use the separate [live-smoke guide](architecture/live-eval.md).
-Do not make paid/live execution part of the normal quick start or CI.
+The [live-smoke reference](architecture/live-eval.md) records retained design and
+telemetry behavior, not an approved execution procedure. Native trust correction
+and explicit qualification are required before live execution can be re-enabled.

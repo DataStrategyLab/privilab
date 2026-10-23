@@ -4,8 +4,9 @@ PriviLAB's normal verification path is deterministic, fixture-based and secret-f
 It exercises application controls; it does not measure live-model stability or
 establish legal correctness. The canonical command is `make ci`.
 
-Native uv/Python setup qualification remains pending. Wait for maintainer
-clearance before using the bootstrap commands below for a new networked setup.
+Fresh networked native setup remains held. The commands below require an existing,
+separately approved offline environment; they do not authorize downloading tools
+or running the retained bootstrap. Live SDK use is disabled pending qualification.
 See [local setup qualification](release-status.md#local-setup-qualification).
 
 ## Record the inputs
@@ -31,24 +32,27 @@ Equal Python version strings alone do not establish identical distribution bytes
 
 ## Reproduce from source
 
-Use a fresh checkout at an exact existing commit, then bootstrap and verify:
+In an existing approved environment, record the exact checkout before verification.
+A fresh checkout may be inspected as source, but this guide does not qualify a
+fresh installation. Do not copy executable commands from historical evidence as
+current setup guidance. With all locked inputs already provisioned:
 
 ```sh
-git clone https://github.com/DataStrategyLab/privilab.git privilab-repro
-cd privilab-repro
-git checkout --detach YOUR_RECORDED_COMMIT
-./scripts/bootstrap.sh --ci
+git rev-parse HEAD
 make ci
 git diff --check
 git status --short
 ```
 
-Replace `YOUR_RECORDED_COMMIT` with a real commit you recorded. A successful final
+Retain the actual recorded commit. A successful final
 status is clean. No virtualenv, tool directory, old DB or generated result should
 be copied into Git. A fresh checkout using caches is cache-backed reproducibility,
 not independent fresh upstream acquisition.
 
-Bootstrap is the normal network/download step. Once inputs are provisioned,
+The retained bootstrap contains network/download operations and is not approved
+for public native setup. Existing CI has its separately scoped engineering
+authorization; successful CI does not qualify host certificate trust. Once inputs
+are provisioned in an approved offline environment,
 `make ci` invokes frozen offline lock checking, repository contracts, fixture/
 license validation, formatting/lint/type checks, wheel/sdist build and governed
 package smoke, unit/integration/security tests, deterministic smoke/golden

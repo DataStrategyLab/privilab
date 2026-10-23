@@ -1,7 +1,7 @@
 # Developer Preview release status
 
-**Status snapshot: October 22, 2026 (America/New_York).**
-**Planned source-only release target: Wednesday, October 21, 2026.**
+**Status snapshot: October 23, 2026 (America/New_York).**
+**Planned source-only release target: Friday, October 23, 2026.**
 **Publication status: not published yet; final owner decision pending.**
 
 The proposed release is **PriviLAB v0.1.0 Developer Preview**, a public,
@@ -16,10 +16,10 @@ do not backdate a release or treat the target as a PASS.
 | Area | Current disposition | Evidence/decision required |
 | --- | --- | --- |
 | Public files, history and repository surfaces | Review required | Exact release tree and reachable history; issues/PRs, Actions logs/artifacts and other exposed surfaces; owner clearance of exceptions |
-| Source, fixture and contributor rights | Owner confirmation required | Affirmative Apache-2.0 publishing authority and applicable notices for the actual included bytes |
-| Branding and attribution | Owner confirmation required | Public display/redistribution scope for included DSL marks; Andrew credited as Creator & Lead Architect; trademark rights remain separate |
+| Source, fixture and contributor rights | Prior defined source scope approved; final delta check required | Preserve contributor credit, Apache-2.0 source terms and applicable third-party notices; no new rights inferred |
+| Branding and attribution | Existing included logo scope approved | No new assets; Andrew credited as Creator & Lead Architect; trademark/endorsement rights remain reserved |
 | Actual published source execution path | Applicable material issues require disposition | Current local tool/runtime/dependency path, safe defaults and bounded claims; source-only does not waive a relevant security concern |
-| Final PR verification and review | Pending final head | Pinned bootstrap, `make ci`, disclosure/link checks, dedicated Codex review and genuine non-author human/CODEOWNER approval |
+| Final PR verification and review | Pending final head | Canonical `make ci` in an existing approved offline-capable environment, disclosure/link checks, dedicated Codex review and genuine non-author human/CODEOWNER approval; no held bootstrap execution |
 | Repository controls and publication | Owner decision pending | Effective settings, approved publication route, final GO, source-only pre-release and actual public readback |
 | Wheel, binary, container or hosted distribution | Excluded | Separate artifact rights, security qualification and distribution approval would be required |
 
@@ -31,12 +31,21 @@ successor application are distinct artifacts.
 
 ## Local setup qualification
 
-- **Native setup: qualification pending.** The patched uv 0.13.4 / Python 3.13.17 bootstrap candidate remains
-  under artifact and CI qualification review. Wait for maintainer clearance before a new networked
-  bootstrap; the documented commands describe the existing engineering path.
-  The intended public preview is native localhost with public/synthetic inputs
-  only after the applicable tool/runtime findings have been resolved or explicitly
-  dispositioned. This documentation does not apply a tool or interpreter fix.
+- **Fresh native networked setup: HOLD.** Patched uv 0.13.4 and managed Python
+  3.13.17 identities and bounded CI checks do not qualify every active TLS path.
+  Host Python/OpenSSL, SDK native trust, bootstrap curl and any networked pip
+  require their own evidence. Current public guides provide no bootstrap
+  execution procedure. Retained bootstrap/CI sources remain engineering
+  references; existing CI authorization does not clear general host setup.
+- **Default live SDK: disabled.** Client construction fails before credentials
+  or HTTP access; no runtime opt-in overrides the restriction. This restriction
+  does not remediate T01, establish affected-chain rejection or provide native
+  trust equivalence. An unmerged CA-trust prototype is outside this candidate.
+- **Fixture exploration: existing approved environments only.** Source inspection
+  and documentation contribution need no native execution. Fixture preview and
+  canonical offline CI remain usable where locked tools/inputs were already
+  provisioned and the environment separately approved; this is not a fresh
+  public installation qualification or a four-platform support claim.
 - **Docker: temporary security-qualification hold.**
   [ADR-008](decisions/ADR-008-preview-deployment.md) permits a local container as an
   architectural option. This release-specific hold preserves that decision;
@@ -57,8 +66,9 @@ scope. They do not establish current release-specific runtime qualification.
 Synthetic fixture execution, permission-scoped retrieval, deterministic critical
 evaluation, separate synthetic review, metadata history and offline verification
 are implemented. An OpenAI adapter and opt-in local live smoke exist separately
-from fixture preview/CI. No live or paid model call is required for normal preview
-or CI. See [capabilities](capabilities.md) and [getting started](getting-started.md).
+from fixture preview/CI but default client construction is now disabled. No live
+or paid model call is required for normal preview or CI. See
+[capabilities](capabilities.md) and [getting started](getting-started.md).
 
 ## Separate qualification work remains open
 
@@ -75,6 +85,15 @@ for source visibility by themselves. Source publication does not close them or
 approve substantive/prospect use. Any material issue applicable to the actual
 source and documented local execution path must still be addressed for that
 publication scope.
+
+## Planned publication scope
+
+[Proposed v0.1.0 notes](release-notes-v0.1.0.md) cover Apache-2.0 source and
+automatic source archives only, marked as a GitHub pre-release if published.
+No wheel, dependency/runtime bundle, binary, container image or hosted service
+is included. The October 23 target is conditional; publication has not occurred.
+The exact merged source, final human review, owner security-scope disposition
+and separate publication GO remain required. Do not backdate publication.
 
 ## Existing limitations remain in force
 

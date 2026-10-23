@@ -16,6 +16,19 @@ targets, immutable image references and loopback mappings do not establish
 security qualification. See
 [local setup qualification](docs/release-status.md#local-setup-qualification).
 
+The source-only preview disables default live SDK construction before credential
+access or HTTP-client creation. Opt-in flags and credentials do not lift the hold.
+This is a temporary execution restriction, not a correction to host Python,
+OpenSSL, curl, pip or native certificate stores. No affected-chain rejection or
+equivalent native trust protections have been established. The unmerged SDK trust
+prototype is not part of this release candidate.
+
+Current public guides omit actionable networked setup and live-run procedures.
+Retained bootstrap and container sources, CI configuration and historical records
+remain engineering references; their presence is not execution approval. Existing
+CI evidence supports its tested environment only. Do not disable certificate or
+hostname verification, change host trust stores, or add unsafe fallback paths.
+
 ## Report privately
 
 Send suspected vulnerabilities to
@@ -44,8 +57,8 @@ responsibilities; a scanner count alone does not supply them.
 - Run history retains minimum metadata, not prompt/source/answer bodies or secrets.
 - After bootstrap, `make ci` is offline/secret-free; Gitleaks checks history/worktree.
 - CI has read-only repository permissions and no deployment/model/client secrets.
-- Hosted live-eval remains deliberately blocked; local live smoke requires explicit
-  opt-in and is outside CI.
+- Hosted live-eval and default local live SDK construction are blocked; offline
+  fixture preview/CI do not require model calls or credentials.
 
 These are bounded implementation controls, not a penetration-test conclusion or
 absence-of-vulnerabilities claim. Do not expose this local preview as a public service.

@@ -34,11 +34,14 @@ main, such as `docs/getting-started-links`. No branch prefix or private project
 tool is required. Follow [Getting started](docs/getting-started.md).
 
 Check [local setup qualification](docs/release-status.md#local-setup-qualification)
-before new networked bootstrap: native uv/Python qualification is pending, and
-Docker setup is on a temporary security-qualification hold.
+before execution: fresh networked native bootstrap and Docker setup remain held.
+Contributors without an existing approved offline environment can submit source
+or documentation proposals and ask maintainers to coordinate verification. Do
+not provision an unreviewed environment to satisfy the test requirement.
+
+For an existing, approved offline-capable environment only:
 
 ```sh
-./scripts/bootstrap.sh --ci
 make ci
 git diff --check
 ```

@@ -5,8 +5,9 @@ Start with [Getting started](getting-started.md), then
 implemented behavior from limits and future work.
 
 Check [local setup qualification](release-status.md#local-setup-qualification)
-before new setup. Native uv/Python qualification is pending; Docker setup is on a
-temporary security-qualification hold.
+before execution. No fresh networked native setup is approved; Docker execution
+remains held and the default live SDK client is disabled. Public source
+inspection/contribution is separate from runtime qualification.
 
 ## Implementation
 
@@ -15,7 +16,7 @@ temporary security-qualification hold.
 - [Trust boundaries](architecture/trust-boundaries.md): authorization before context, untrusted text and review authority.
 - [Evaluation and scenarios](evaluation.md): structural checks and expected failure cases.
 - [Adversarial coverage](architecture/adversarial-coverage.md): existing test/control mapping and exclusions.
-- [Local live smoke](architecture/live-eval.md): explicit opt-in and telemetry limits.
+- [Local live smoke](architecture/live-eval.md): disabled execution and retained telemetry contracts.
 - [Accepted decisions](decisions/README.md): authoritative ADR index.
 
 ## Community and release

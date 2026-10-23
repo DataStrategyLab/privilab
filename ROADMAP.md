@@ -3,7 +3,7 @@
 PriviLAB's release direction is **v0.1.0 Developer Preview**, using local synthetic
 reference workflows. This roadmap describes direction, not a release commitment
 or approval for client/production use. [Release status](docs/release-status.md)
-records dated pending gates and the October 21, 2026 source-only release target.
+records dated pending gates and the October 23, 2026 source-only release target.
 Publication has not occurred; the target does not authorize merge or release.
 
 ## Implemented foundation
@@ -16,8 +16,8 @@ Publication has not occurred; the target does not authorize merge or release.
 - Metadata-only provenance/history, immutable decisions and restart persistence
   in the source-checkout preview.
 - Six synthetic trade/regulatory golden cases and adversarial/control tests.
-- Separately gated local live smoke with typed usage, latency and conditional
-  cost evidence; hosted live-eval remains blocked.
+- Local live-smoke implementation with typed telemetry and offline mocks; default
+  live SDK execution and hosted live-eval remain blocked pending qualification.
 - Reproducible offline CI and a local FastAPI/Jinja preview.
 
 ## Current qualification work

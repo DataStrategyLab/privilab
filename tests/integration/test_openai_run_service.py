@@ -232,8 +232,36 @@ def fake_sdk(
         )
 
     monkeypatch.setenv("OPENAI_API_KEY", "synthetic-integration-credential")
+    # Only this offline mock exercises historical transport behavior past the hold.
+    monkeypatch.setattr(adapter, "_require_live_qualification", lambda: None)
     monkeypatch.setattr(adapter, "OpenAI", client)
     return requests
+
+
+def test_default_governed_sdk_path_is_held_with_credentials_and_opt_in(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("OPENAI_API_KEY", "synthetic-key-cannot-lift-hold")
+    monkeypatch.setenv("PRIVILAB_LIVE_EVAL", "1")
+    constructed: list[bool] = []
+
+    def forbidden(**kwargs: Any) -> OpenAI:
+        constructed.append(True)
+        raise AssertionError("a held default client must not be constructed")
+
+    monkeypatch.setattr(adapter, "OpenAI", forbidden)
+    with (
+        closing(SQLiteFtsRetrievalProvider(":memory:")) as index,
+        closing(SQLiteProvenanceStore(tmp_path / "hold.sqlite3")) as store,
+    ):
+        index.index_source(source("source-a", "user-a"))
+        outcome = service(CountingRetrieval(index), store).run(
+            context=context(), task_text="Synthetic task.", query="boundarytoken"
+        )
+        assert outcome.status is RunStatus.FAILED
+        assert outcome.failure_stage is FailureStage.MODEL
+        assert store.get(outcome.run_id) is not None
+    assert constructed == []
 
 
 def test_governed_path_preserves_cross_context_isolation_and_identity(

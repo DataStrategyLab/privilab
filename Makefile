@@ -18,8 +18,8 @@ bootstrap:
 	./scripts/bootstrap.sh
 
 guard:
-	@test -x "$(UV)" || { echo "missing pinned uv; run ./scripts/bootstrap.sh" >&2; exit 1; }
-	@test -x "$(PYTHON)" || { echo "missing virtual environment; run ./scripts/bootstrap.sh" >&2; exit 1; }
+	@test -x "$(UV)" || { echo "missing pinned uv; setup is held: see docs/release-status.md" >&2; exit 1; }
+	@test -x "$(PYTHON)" || { echo "missing virtual environment; setup is held: see docs/release-status.md" >&2; exit 1; }
 
 ci: guard
 	@set -eu; \
