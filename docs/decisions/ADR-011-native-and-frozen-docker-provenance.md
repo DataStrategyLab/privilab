@@ -54,6 +54,20 @@ necessary. It would not establish that an updated image had been qualified.
 
 ## Required contract invariants
 
+### Proposed amendment: application-scoped SDK trust
+
+An isolated prototype may use exactly pinned certifi 2026.10.19, authenticated
+bundle bytes and a packaged, code-bound review policy for the existing SDK
+transport. This is application trust provenance, separate from uv bundled trust,
+Python defaults and frozen Docker provenance. It introduces no global CA change.
+
+**Amendment acceptance pending.** The prototype's `network_use_approved` flag
+remains false. A proposed 30-day review cutoff, `trust_env=False` (including loss
+of ambient proxy support), disabled redirects and loss of native platform trust
+features require explicit owner decision and applicable human review. Static
+trust does not establish equivalent revocation or alternate-chain protection.
+See [SDK trust scope and comparison](../architecture/sdk-tls-trust.md).
+
 - Native `uv`, `uv_build` and project uv version requirement match exactly.
 - Native managed CPython version and CI setup-python version match exactly; its
   selected upstream build date, source and hashes are recorded and checked.

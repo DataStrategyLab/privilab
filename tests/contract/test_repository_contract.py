@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
 import re
 import stat
 import subprocess
@@ -37,6 +39,7 @@ PUBLIC_DOCS = (
     "docs/getting-started.md",
     "docs/reproducibility.md",
     "docs/capabilities.md",
+    "docs/architecture/sdk-tls-trust.md",
     "docs/release-status.md",
     "docs/evidence-publication.md",
     "docs/review/code_review.md",
@@ -920,6 +923,27 @@ def test_bootstrap_dependency_set_excludes_out_of_scope_components() -> None:
         "sqlalchemy",
     ):
         assert forbidden not in declared
+
+
+def test_sdk_trust_prototype_has_pinned_provenance_and_remains_disabled() -> None:
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    lock = tomllib.loads((ROOT / "uv.lock").read_text(encoding="utf-8"))
+    package = next(p for p in lock["package"] if p["name"] == "certifi")
+    policy_path = ROOT / "src/privilab/adapters/models/resources/tls-trust-policy.json"
+    policy_bytes = policy_path.read_bytes()
+    policy = json.loads(policy_bytes)
+    source = (ROOT / "src/privilab/adapters/models/openai.py").read_text()
+    assert "certifi==2026.10.19" in project["project"]["dependencies"]
+    assert package["version"] == policy["certifi_version"] == "2026.10.19"
+    assert (
+        package["source"]["url"] == (project["tool"]["uv"]["sources"]["certifi"]["url"])
+    )
+    assert policy["artifact_sha256"] == (
+        "42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b"
+    )
+    assert package["wheels"][0]["hash"] == "sha256:" + policy["artifact_sha256"]
+    assert policy["network_use_approved"] is False
+    assert hashlib.sha256(policy_bytes).hexdigest() in source
 
 
 def test_smoke_harness_is_executed_by_ci() -> None:

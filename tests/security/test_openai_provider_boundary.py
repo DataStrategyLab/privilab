@@ -8,6 +8,7 @@ import logging
 import socket
 import traceback
 from dataclasses import fields
+from datetime import UTC, datetime
 from inspect import signature
 from pathlib import Path
 from typing import Any
@@ -114,9 +115,9 @@ def test_sensitive_values_do_not_escape_sdk_boundary(
         assert kwargs["max_retries"] == 0 and kwargs["timeout"] == 30
         if failure == "creation":
             raise RuntimeError(f"{credential} {private_error}")
-        client = OpenAI(
-            **kwargs, http_client=httpx2.Client(transport=httpx2.MockTransport(handle))
-        )
+        kwargs["http_client"].close()
+        kwargs["http_client"] = httpx2.Client(transport=httpx2.MockTransport(handle))
+        client = OpenAI(**kwargs)
         if failure == "close":
             close = client.close
 
@@ -128,6 +129,9 @@ def test_sensitive_values_do_not_escape_sdk_boundary(
         constructed.append(client)
         return client
 
+    context, _ = adapter._sdk_tls_context(now=datetime(2026, 10, 24, tzinfo=UTC))
+    # Test-only approval for mock HTTP; not a TLS qualification result.
+    monkeypatch.setattr(adapter, "_sdk_tls_context", lambda: (context, True))
     monkeypatch.setattr(adapter, "OpenAI", fake_constructor)
     provider = OpenAIProvider(OpenAIProviderConfig(max_retries=0))
     assert constructed == []

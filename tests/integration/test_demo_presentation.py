@@ -178,7 +178,7 @@ def test_presentation_keeps_the_approved_runtime_and_no_frontend_build() -> None
     assert {
         re.split(r"[<>=\[]", dependency)[0]
         for dependency in project["project"]["dependencies"]
-    } == {"fastapi", "jinja2", "openai", "uvicorn"}
+    } == {"certifi", "fastapi", "jinja2", "openai", "uvicorn"}
     for name in ("package.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock"):
         assert not (ROOT / name).exists()
         assert not list((ROOT / "src/privilab/web").rglob(name))

@@ -164,9 +164,9 @@ def sdk(
         return httpx2.Response(200, json=body)
 
     def client(**kwargs: Any) -> OpenAI:
-        return OpenAI(
-            **kwargs, http_client=httpx2.Client(transport=httpx2.MockTransport(handle))
-        )
+        kwargs["http_client"].close()
+        kwargs["http_client"] = httpx2.Client(transport=httpx2.MockTransport(handle))
+        return OpenAI(**kwargs)
 
     original_provider = adapter.OpenAIProvider
 
@@ -174,6 +174,9 @@ def sdk(
         return original_provider(settings, _sleep=clock.sleep)
 
     monkeypatch.setenv("OPENAI_API_KEY", "synthetic-credential-sentinel")
+    context, _ = adapter._sdk_tls_context(now=datetime(2026, 10, 24, tzinfo=UTC))
+    # Test-only approval for mock HTTP; not a TLS qualification result.
+    monkeypatch.setattr(adapter, "_sdk_tls_context", lambda: (context, True))
     monkeypatch.setattr(adapter, "OpenAI", client)
     monkeypatch.setattr(adapter, "OpenAIProvider", provider)
     return calls

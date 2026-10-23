@@ -728,6 +728,23 @@
   reviewer: "Codex"
   open_questions: []
 
+- id: "pypi:certifi"
+  kind: "dependency"
+  name: "certifi"
+  source: "https://pypi.org/project/certifi/2026.10.19/"
+  version_or_commit: "2026.10.19"
+  reviewed_date: "2026-10-23"
+  license: "MPL-2.0"
+  license_source: "Reviewed certifi-2026.10.19.dist-info/licenses/LICENSE in the SHA-256-verified upstream wheel; https://github.com/certifi/python-certifi/blob/2026.10.19/LICENSE"
+  intended_use: "Unmodified CA bundle for the application-scoped SDK trust prototype; live execution remains blocked pending qualification."
+  permitted_use_basis: "Use under MPL-2.0; preserve the license and notices for redistributed component files."
+  attribution_required: true
+  attribution: "Preserve the upstream Mozilla Public License 2.0 notice and CA-bundle attribution when redistributing component bytes."
+  restrictions: "No ad hoc CA-bundle modifications; project Apache-2.0 does not replace MPL-2.0 or establish TLS qualification."
+  repository_paths: ["pyproject.toml", "uv.lock", "src/privilab/adapters/models/resources/tls-trust-policy.json"]
+  reviewer: "Codex"
+  open_questions: []
+
 - id: "pypi:openai"
   kind: "dependency"
   name: "openai"

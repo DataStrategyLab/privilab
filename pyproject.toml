@@ -9,6 +9,7 @@ description = "Controlled legal-AI reference demo bootstrap"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
+  "certifi==2026.10.19",
   "fastapi>=0.116,<1",
   "jinja2>=3.1,<4",
   "openai>=3.19.2,<4",
@@ -26,6 +27,9 @@ dev = [
 [tool.uv]
 required-version = "==0.13.4"
 package = true
+
+[tool.uv.sources]
+certifi = { url = "https://files.pythonhosted.org/packages/c4/51/29046e48f693c54e5b7412216d447a1d8362c9653148d98c02cdf65fa733/certifi-2026.10.19-py3-none-any.whl" }
 
 [tool.uv.build-backend]
 module-name = "privilab"

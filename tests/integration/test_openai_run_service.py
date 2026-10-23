@@ -7,6 +7,7 @@ import socket
 import sqlite3
 from contextlib import closing
 from dataclasses import replace
+from datetime import UTC, datetime
 from inspect import signature
 from pathlib import Path
 from typing import Any
@@ -227,11 +228,14 @@ def fake_sdk(
         )
 
     def client(**kwargs: Any) -> OpenAI:
-        return OpenAI(
-            **kwargs, http_client=httpx2.Client(transport=httpx2.MockTransport(handle))
-        )
+        kwargs["http_client"].close()
+        kwargs["http_client"] = httpx2.Client(transport=httpx2.MockTransport(handle))
+        return OpenAI(**kwargs)
 
     monkeypatch.setenv("OPENAI_API_KEY", "synthetic-integration-credential")
+    context, _ = adapter._sdk_tls_context(now=datetime(2026, 10, 24, tzinfo=UTC))
+    # Test-only approval for mock HTTP; not a TLS qualification result.
+    monkeypatch.setattr(adapter, "_sdk_tls_context", lambda: (context, True))
     monkeypatch.setattr(adapter, "OpenAI", client)
     return requests
 
