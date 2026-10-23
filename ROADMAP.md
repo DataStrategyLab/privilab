@@ -1,10 +1,12 @@
 # Roadmap
 
-PriviLAB's release direction is **v0.1.0 Developer Preview**, using local synthetic
-reference workflows. This roadmap describes direction, not a release commitment
-or approval for client/production use. [Release status](docs/release-status.md)
-records dated pending gates and the October 23, 2026 source-only release target.
-Publication has not occurred; the target does not authorize merge or release.
+**PriviLAB v0.1.0 — Developer Preview** describes local synthetic reference
+workflows with source-only distribution. This roadmap describes direction, not a
+release commitment or approval for client/production use.
+[GitHub Releases](https://github.com/DataStrategyLab/privilab/releases) records
+publication status, actual release dates, tags and downloadable source archives.
+[Release status](docs/release-status.md) preserves the dated readiness assessment
+and separate security/qualification holds.
 
 ## Implemented foundation
 

@@ -10,9 +10,11 @@ examples use synthetic data and fixed fixture answers.
 
 **Creator & Lead Architect: Andrew Tsintsiruk.**
 
-**Planned source-only release: v0.1.0 Developer Preview, October 23, 2026.**
-The repository is not published yet. Final publication approval and the remaining
-qualification work are tracked in the [release status](docs/release-status.md).
+**PriviLAB v0.1.0 — Developer Preview (source-only).**
+[GitHub Releases](https://github.com/DataStrategyLab/privilab/releases) is the
+authoritative record of publication status, release dates, tags and downloadable
+source archives. Security restrictions and the dated readiness assessment are
+documented in [release status](docs/release-status.md).
 This is a local reference implementation with no production, legal-quality,
 security-certification or prospect-demo readiness claim.
 
@@ -45,8 +47,7 @@ needed. Stop the preview with Ctrl-C.
 See [Getting started](docs/getting-started.md) for expected scenarios, fresh
 databases, configuration and troubleshooting. Docker setup is on a temporary
 security-qualification hold. The Dockerfile remains an engineering reference;
-do not build, run or expose it for general use while the hold applies. Repository
-access is required until the owner makes the repository public.
+do not build, run or expose it for general use while the hold applies.
 
 ## What it demonstrates
 

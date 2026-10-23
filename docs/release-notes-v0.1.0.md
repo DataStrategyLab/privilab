@@ -1,9 +1,10 @@
 # PriviLAB v0.1.0 — Developer Preview
 
-**Proposed release notes; not published. Target: October 23, 2026.**
-Publication, the `v0.1.0` tag and the final source revision require a separate
-maintainer decision after release checks. Record the actual date and commit
-when publication occurs; do not backdate a deferred release.
+**Source-only Developer Preview.**
+[GitHub Releases](https://github.com/DataStrategyLab/privilab/releases) is the
+authoritative record of publication status, the actual publication date,
+the `v0.1.0` tag and downloadable source archives. These notes describe this
+version's scope and limitations; a package version alone is not a publication record.
 
 ## Included source
 
@@ -43,8 +44,8 @@ does not qualify successor images or approve prospect use.
 
 ## Distribution and use boundaries
 
-If approved, publish this release as a GitHub **pre-release** with automatic
-source ZIP/tar archives only. No wheels, compiled binaries, dependency/runtime
+The distribution scope is a GitHub **pre-release** with automatic source ZIP/tar
+archives only. No wheels, compiled binaries, dependency/runtime
 bundles, Docker images or hosted service are distributed as release assets.
 No client/matter processing, prospect demonstration, hosted/production deployment,
 legal-quality, privacy, privilege, compliance, security-certification or model

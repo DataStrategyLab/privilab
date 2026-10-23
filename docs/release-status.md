@@ -1,17 +1,23 @@
 # Developer Preview release status
 
-**Status snapshot: October 23, 2026 (America/New_York).**
-**Planned source-only release target: Friday, October 23, 2026.**
-**Publication status: not published yet; final owner decision pending.**
+## Publication record
 
-The proposed release is **PriviLAB v0.1.0 Developer Preview**, a public,
-Apache-2.0 source-only reference implementation using public/synthetic fixtures.
-The target date does not authorize merge, public repository visibility, a tag or
-release publication. Andrew separately makes those decisions after the final
-release-readiness review. If a required check fails, report the actual blocker;
-do not backdate a release or treat the target as a PASS.
+**PriviLAB v0.1.0 — Developer Preview** has an Apache-2.0 source-only distribution
+scope using public/synthetic fixtures.
+[GitHub Releases](https://github.com/DataStrategyLab/privilab/releases) is the
+authoritative record of whether a version has been published, its actual date,
+tag and downloadable source archives. This document is not a live publication
+or approval ledger. Source publication does not resolve the security findings
+or qualification holds below.
 
-## Source-publication gate
+## Historical pre-publication readiness assessment
+
+**Assessment date: October 23, 2026 (America/New_York), before publication.**
+The following table records that assessment's requirements and outstanding
+decisions at the time. Its pending entries do not describe later publication
+status; consult GitHub Releases for the publication record. Merge, visibility,
+tag and release actions require separate maintainer decisions after the required
+checks; a target date is not authorization or a PASS.
 
 | Area | Current disposition | Evidence/decision required |
 | --- | --- | --- |
@@ -86,14 +92,14 @@ approve substantive/prospect use. Any material issue applicable to the actual
 source and documented local execution path must still be addressed for that
 publication scope.
 
-## Planned publication scope
+## Distribution scope
 
-[Proposed v0.1.0 notes](release-notes-v0.1.0.md) cover Apache-2.0 source and
-automatic source archives only, marked as a GitHub pre-release if published.
+[v0.1.0 release notes](release-notes-v0.1.0.md) describe Apache-2.0 source and
+automatic source archives only. The release format is a GitHub **pre-release**.
 No wheel, dependency/runtime bundle, binary, container image or hosted service
-is included. The October 23 target is conditional; publication has not occurred.
-The exact merged source, final human review, owner security-scope disposition
-and separate publication GO remain required. Do not backdate publication.
+is included. Consult [GitHub Releases](https://github.com/DataStrategyLab/privilab/releases)
+for actual publication status, date and tag. Publication records do not qualify
+native setup, live SDK use, Docker or any separately held deployment scope.
 
 ## Existing limitations remain in force
 

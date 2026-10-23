@@ -17,7 +17,7 @@ data. Start with [Getting started](docs/getting-started.md),
 | Review responsibilities or project decisions | Read [Governance](GOVERNANCE.md) and the [review controls](docs/review/code_review.md). |
 
 Public contributors do not need access to private project-management tools.
-Repository access is required to use GitHub issues before public publication.
+GitHub's access requirements apply to issues and pull requests.
 
 ## Make a question or report useful
 
