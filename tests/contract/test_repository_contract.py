@@ -277,6 +277,10 @@ def assert_reviewed_non_pypi_artifacts_match(
             "license_source": f"https://github.com/{action}/blob/{commit}/LICENSE",
             "repository_paths": [".github/workflows/verify.yml"],
         }
+    expected["action:setup-python"]["intended_use"] = (
+        f"Install Python {workflow_python_version} for verify-ci "
+        "before repository bootstrap."
+    )
 
     dockerfile = dockerfile_override or (ROOT / "Dockerfile").read_text(
         encoding="utf-8"
@@ -559,6 +563,11 @@ def test_mismatched_uv_build_version_is_rejected() -> None:
         ("container:python", "version_or_commit", "0.0.0@sha256:stale"),
         ("action:checkout", "version_or_commit", "stale"),
         ("action:setup-python", "version_or_commit", "stale"),
+        (
+            "action:setup-python",
+            "intended_use",
+            "Install Python 3.13.15 for verify-ci before repository bootstrap.",
+        ),
         ("tool:uv", "source", "https://example.invalid/stale"),
     ],
 )
