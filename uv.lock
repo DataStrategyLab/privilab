@@ -33,6 +33,14 @@ wheels = [
 ]
 
 [[package]]
+name = "certifi"
+version = "2026.10.19"
+source = { url = "https://files.pythonhosted.org/packages/c4/51/29046e48f693c54e5b7412216d447a1d8362c9653148d98c02cdf65fa733/certifi-2026.10.19-py3-none-any.whl" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c4/51/29046e48f693c54e5b7412216d447a1d8362c9653148d98c02cdf65fa733/certifi-2026.10.19-py3-none-any.whl", hash = "sha256:42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b" },
+]
+
+[[package]]
 name = "click"
 version = "8.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -299,6 +307,7 @@ name = "privilab"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "certifi" },
     { name = "fastapi" },
     { name = "jinja2" },
     { name = "openai" },
@@ -315,6 +324,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "certifi", url = "https://files.pythonhosted.org/packages/c4/51/29046e48f693c54e5b7412216d447a1d8362c9653148d98c02cdf65fa733/certifi-2026.10.19-py3-none-any.whl" },
     { name = "fastapi", specifier = ">=0.116,<1" },
     { name = "jinja2", specifier = ">=3.1,<4" },
     { name = "openai", specifier = ">=3.19.2,<4" },

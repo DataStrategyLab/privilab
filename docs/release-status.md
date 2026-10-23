@@ -31,6 +31,12 @@ successor application are distinct artifacts.
 
 ## Local setup qualification
 
+The SDK-only trust prototype uses a pinned maintained CA source, but is **not
+qualified**. Its policy disables live client creation pending native-vs-static
+trust assessment, real-chain evidence and owner policy/architecture acceptance.
+See the [comparison, verification limits and rollback](architecture/sdk-tls-trust.md).
+This does not clear the native bootstrap, host TLS stores or publication gate.
+
 - **Native setup: qualification pending.** The patched uv 0.13.4 / Python 3.13.17 bootstrap candidate remains
   under artifact and CI qualification review. Wait for maintainer clearance before a new networked
   bootstrap; the documented commands describe the existing engineering path.

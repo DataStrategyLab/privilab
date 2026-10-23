@@ -840,10 +840,14 @@ def test_production_client_uses_official_endpoint_and_explicit_limits(
 ) -> None:
     monkeypatch.setenv("OPENAI_API_KEY", "synthetic-runtime-key")
     monkeypatch.setenv("OPENAI_BASE_URL", "https://alternate.invalid/v1")
+    context, _ = adapter._sdk_tls_context(now=datetime(2026, 10, 24, tzinfo=UTC))
+    monkeypatch.setattr(adapter, "_sdk_tls_context", lambda: (context, True))
     with adapter._new_client(OpenAIProviderConfig(timeout_seconds=7)) as client:
         assert str(client.base_url) == "https://api.openai.com/v1/"
         assert client.timeout == 7
         assert client.max_retries == 0
+        assert client._client.trust_env is False
+        assert client._client.follow_redirects is False
 
 
 def test_citation_support_remains_evaluator_responsibility() -> None:

@@ -1,5 +1,10 @@
 # DSL-116 local live smoke
 
+**Live execution is currently blocked by the SDK trust prototype's packaged
+policy.** The historical opt-in commands below do not override that restriction.
+See the [SDK trust comparison and acceptance gaps](sdk-tls-trust.md). Owner
+qualification and policy acceptance are required before enabling networked use.
+
 `make eval-live` explicitly opts into one controlled local OpenAI execution.
 It is outside `make ci`, `ci-stages`, tests, deterministic smoke/golden evaluation,
 and package building. The GitHub live-eval workflow remains disabled.

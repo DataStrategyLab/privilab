@@ -10,6 +10,7 @@ import zipfile
 from pathlib import Path
 
 _RESOURCE_PREFIX = "privilab/adapters/models/resources/governed_fixtures/"
+_TRUST_POLICY = "privilab/adapters/models/resources/tls-trust-policy.json"
 _WEB_FILES = {
     "privilab/web/static/app.css",
     "privilab/web/static/branding/DSL_primary_full-color_light-bg_1024w_v1.png",
@@ -54,6 +55,8 @@ def verify_built_package(wheel: Path, work_root: Path) -> None:
     if wheel.suffix != ".whl":
         raise ValueError("built package verification requires a wheel")
     with zipfile.ZipFile(wheel) as archive:
+        if _TRUST_POLICY not in archive.namelist():
+            raise ValueError("built wheel is missing SDK trust policy")
         if not _WEB_FILES.issubset(archive.namelist()):
             raise ValueError("built wheel is missing local preview presentation files")
         packaged_resources = {
@@ -96,6 +99,12 @@ def verify_built_package(wheel: Path, work_root: Path) -> None:
             "import sys",
             "from pathlib import Path",
             "import privilab",
+            "import json",
+            "from importlib.resources import files",
+            "policy = json.loads(files('privilab.adapters.models').joinpath("
+            "'resources', 'tls-trust-policy.json').read_bytes())",
+            "assert policy['schema_version'] == 1",
+            "assert policy['network_use_approved'] is False",
             "from privilab.adapters.models import load_governed_fixture",
             "assert Path(privilab.__file__).resolve().is_relative_to("
             "Path(sys.prefix).resolve())",

@@ -16,6 +16,7 @@ import their source/tasks or imply partnership. DSL marks retain trademark right
 | annotated-doc | 0.0.5 | MIT | [Recorded source](https://pypi.org/project/annotated-doc/0.0.5/) |
 | annotated-types | 0.8.0 | MIT | [Recorded source](https://pypi.org/project/annotated-types/0.8.0/) |
 | anyio | 4.14.2 | MIT | [Recorded source](https://pypi.org/project/anyio/4.14.2/) |
+| certifi | 2026.10.19 | MPL-2.0 | [Recorded source](https://pypi.org/project/certifi/2026.10.19/) |
 | click | 8.5.0 | BSD-3-Clause | [Recorded source](https://pypi.org/project/click/8.5.0/) |
 | colorama | 0.4.6 | BSD-3-Clause | [Recorded source](https://pypi.org/project/colorama/0.4.6/) |
 | fastapi | 0.141.1 | MIT | [Recorded source](https://pypi.org/project/fastapi/0.141.1/) |

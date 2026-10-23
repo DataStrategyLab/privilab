@@ -52,6 +52,28 @@ absence-of-vulnerabilities claim. Do not expose this local preview as a public s
 
 ## OpenAI adapter
 
+### SDK trust prototype
+
+The SDK-only CA configuration is an **unqualified prototype**. Its packaged
+trust policy has `network_use_approved: false`, so the default live client fails
+closed before creating an HTTP client. Offline fixture preview remains usable.
+Do not enable the policy or treat passing offline tests as native TLS clearance.
+
+The prototype authenticates the exact certifi 2026.10.19 bundle and supplies its
+bytes to a standard-library SSL context through the supported SDK HTTP client.
+It does not union host roots, accept ambient CA/proxy settings, follow redirects
+or disable certificate/hostname verification. A pinned policy enforces a proposed
+30-day review window; that window is a maintenance cutoff, not a guarantee that
+the bundle remains safe. New applicable advisories require immediate reassessment.
+
+Static CA trust can lose native macOS revocation, distrust and intermediate-chain
+handling. Equivalent incident-specific protection has **not** been established.
+No authentic affected-chain negative or independent positive control is credited.
+The [trust comparison and rollback](docs/architecture/sdk-tls-trust.md) records the
+acceptance limitations. Owner policy/architecture acceptance and independent
+review remain required. Python defaults, uv alternate stores, bootstrap curl,
+networked pip, other platforms and all existing release holds are separate.
+
 The adapter uses the official SDK behind the application provider contract, with
 credentials read only at execution from `OPENAI_API_KEY`. It uses a fixed official
 endpoint, bounded retries/timeouts and sanitized failures. Responses requests
