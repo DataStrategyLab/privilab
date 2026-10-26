@@ -36,17 +36,37 @@ is closed. Their qualification and any prospect rehearsal are separate from the
 source-publication gate; a material issue in the actual published execution path
 still requires disposition before publication.
 
-## Candidate future work
+## Planned model research — not shipped in v0.1.0
 
-Evidence may justify additional provider experiments, hosted open-weight models,
-workflow-specific fine-tuning, larger public/licensed evaluation sets, provider
-comparisons and better deployment patterns. DMS/enterprise identity integration,
+These are research directions, not approved integrations, delivery commitments or
+permission to execute models. The v0.1.0 setup, live-SDK and deployment holds
+remain in force. Research must preserve application-owned permission filtering
+before model context, deterministic critical evaluation, separate human review
+and metadata-oriented provenance.
+
+| Research area | Proposed evaluation scope |
+| --- | --- |
+| NVIDIA Nemotron-family models | Evaluate applicable openly available models after checking each model's actual license, availability, inference/deployment requirements and workflow suitability. Consider bounded legal-workflow evaluations and provider-adapter experiments under approved scope. |
+| Other open-weight models | Evaluate eligible models with common task-specific criteria: quality, groundedness, safety failures, latency, cost and deployment constraints. Explore fine-tuning only where permitted-use and evaluation evidence justify it. |
+| Fireworks AI | Explore hosted open-weight inference and potential training workflows while preserving provider portability and PriviLAB's application-level permission, evaluation, review and provenance boundaries. |
+
+Openly available weights do not establish a uniform license or unrestricted use.
+Any experiment needs eligible public/synthetic or properly licensed data, defined
+task criteria and an approved execution environment. Adoption must be supported
+by model-specific rights and evaluation evidence. Additional providers, hosted
+runtime or other architecture changes require an approved ADR and Andrew's
+approval before implementation; this roadmap grants no such approval.
+
+## Other candidate future work
+
+Evidence may justify larger public/licensed evaluation sets, deeper workflow
+evaluation and better deployment patterns. DMS/enterprise identity integration,
 additional regulated-industry examples and hosted/private deployment patterns
 require approved scope and architectural decisions before implementation.
 
-No Fireworks, Harvey/LAB, iManage, NetDocuments or other vendor partnership,
-endorsement, task compatibility or implemented integration is asserted. Named
-external ecosystems are research context, not shipped capabilities.
+No NVIDIA, Fireworks, Harvey/LAB, iManage, NetDocuments or other vendor partnership,
+endorsement, compatibility, certified deployment or implemented integration is
+asserted. Named external ecosystems are research context, not shipped capabilities.
 
 ## Contribute
 
